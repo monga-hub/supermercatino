@@ -12,19 +12,19 @@ development (scaffold completato)
 
 ## Current milestone
 
-[07 — Sprite dipinti](milestones/07-sprite-dipinti.md) (in corso: arredi fatti, personaggi da generare). Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md). 01–06 e 05b chiusi.
+[07 — Sprite dipinti](milestones/07-sprite-dipinti.md) (implementato, in attesa di playtest). Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md). 01–06 e 05b chiusi.
 
 ## Last action
 
-Milestone 07, parte arredi: foglio Gemini `art/sheets/arredi.jpg` (scaffale vuoto + 6 categorie, cassa, porta), `tools/kit.py` (scontorno + atlas `public/assets/kit.png/json`), `draw.ts` disegna gli sprite con i blocchi come riserva. Online (3a69e3b), browser test live 10/10. `npm test` 36 pass + 1 todo (personaggi).
+Milestone 07 implementata: fogli Gemini `art/sheets/arredi.jpg` (scaffale vuoto + 6 categorie, cassa, porta) e `personaggi.jpg` (cliente calma/arrabbiata, cassiere seduto/in piedi, magazziniere a mani vuote/con scatolone); `tools/kit.py` scontorna e impacchetta `public/assets/kit.png/json`; `draw.ts` disegna gli sprite (blocchi come riserva). `npm test` 37/37, browser 10/10.
 
 ## Next step
 
-Generare il foglio personaggi nella chat Gemini "Retro Italian Supermarket Sprite Sheet" (prompt in `art/prompts.md`, modalità Auto), scaricarlo in `art/sheets/personaggi.jpg`, `python3 tools/kit.py`, controllare screenshot, push. Oppure passare all'08 e tornare dopo.
+Playtest dell'utente sul telefono per chiudere il 07, poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md).
 
 ## Blockers
 
-Generazione immagini Gemini sovraccarica il 2026-11-26 (4 tentativi falliti).
+none
 
 ## Notes for next session
 

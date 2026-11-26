@@ -179,6 +179,126 @@
     "w": 90,
     "h": 135
    }
+  },
+  "cliente": {
+   "frame": {
+    "x": 222,
+    "y": 162,
+    "w": 33,
+    "h": 88
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 33,
+    "h": 88
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 33,
+    "h": 88
+   }
+  },
+  "cliente_arrabbiato": {
+   "frame": {
+    "x": 257,
+    "y": 162,
+    "w": 39,
+    "h": 88
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 39,
+    "h": 88
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 39,
+    "h": 88
+   }
+  },
+  "cassiere_seduto": {
+   "frame": {
+    "x": 298,
+    "y": 162,
+    "w": 39,
+    "h": 76
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 39,
+    "h": 76
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 39,
+    "h": 76
+   }
+  },
+  "cassiere": {
+   "frame": {
+    "x": 339,
+    "y": 162,
+    "w": 29,
+    "h": 92
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 29,
+    "h": 92
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 29,
+    "h": 92
+   }
+  },
+  "magazziniere": {
+   "frame": {
+    "x": 370,
+    "y": 162,
+    "w": 51,
+    "h": 92
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 51,
+    "h": 92
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 51,
+    "h": 92
+   }
+  },
+  "magazziniere_scatolone": {
+   "frame": {
+    "x": 423,
+    "y": 162,
+    "w": 44,
+    "h": 92
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 44,
+    "h": 92
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 44,
+    "h": 92
+   }
   }
  },
  "meta": {

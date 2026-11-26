@@ -21,7 +21,7 @@ object's two front faces turned toward the bottom-left and bottom-right. Same sc
 
 ## Foglio 2 — `personaggi.png` (3×2)
 
-Same style/angle/scale/outline, all facing bottom-left, small readable game characters:
+Same style/angle/scale/outline, all facing bottom-right (as generated), small readable game characters:
 1) Italian woman shopper in 1980s clothes with a shopping bag, calm; 2) same shopper red-faced and angry;
 3) cashier in red smock and white cap sitting on a stool, hands forward (no counter); 4) same cashier standing;
 5) stock boy in green work coat and white cap, walking; 6) same stock boy carrying a cardboard box.

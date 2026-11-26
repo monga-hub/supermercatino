@@ -81,8 +81,8 @@ const CUSTOMER = 0x3d6fb5;
 const CUSTOMER_ANGRY = 0xd64541;
 const CUSTOMER_H = 22;
 
-/** Characters face bottom-left; mirror them while walking towards screen right. */
-const facesRight = (a: { x: number; y: number }, to?: { x: number; y: number }) => !!to && to.x - a.x - (to.y - a.y) > 0.01;
+/** Characters are painted facing bottom-right; mirror them while walking towards screen left. */
+const goesLeft = (a: { x: number; y: number }, to?: { x: number; y: number }) => !!to && to.x - a.x - (to.y - a.y) < -0.01;
 
 /** Feet of a person standing at fractional cell (x, y): the centre of the diamond. */
 const feet = (x: number, y: number) => { const p = gridToIso(x, y); return { x: p.x, y: p.y + TILE_H / 2 }; };
@@ -90,7 +90,7 @@ const feet = (x: number, y: number) => { const p = gridToIso(x, y); return { x: 
 export function drawCustomer(g: G, over: G, c: Customer, put: Put = noPut, depth = 0) {
     const angry = c.state === 'leaving_angry';
     const f = feet(c.x, c.y);
-    const drawn = put(angry ? SPRITES.clienteArrabbiato : SPRITES.cliente, f.x, f.y + 2, depth, facesRight(c, c.path[0]));
+    const drawn = put(angry ? SPRITES.clienteArrabbiato : SPRITES.cliente, f.x, f.y + 2, depth, goesLeft(c, c.path[0]));
     if (!drawn) box(g, c.x, c.y, CUSTOMER_H, angry ? CUSTOMER_ANGRY : CUSTOMER, 0.35);
     if (c.state === 'leaving' || angry) return;
     // patience bar over the head
@@ -115,7 +115,7 @@ export function drawStaff(g: G, st: Staff, put: Put = noPut, depth = 0) {
     const frame = st.role === 'cassiere'
         ? (st.state === 'at_till' ? SPRITES.cassiereSeduto : SPRITES.cassiere)
         : (st.job?.units ? SPRITES.magazziniereScatolone : SPRITES.magazziniere);
-    if (put(frame, f.x, f.y + 2, depth, facesRight(st, st.path[0]))) return;
+    if (put(frame, f.x, f.y + 2, depth, goesLeft(st, st.path[0]))) return;
     box(g, st.x - o, st.y - o, 24, ROLE_COLOR[st.role], 0.38);
     box(g, st.x - o, st.y - o, 28, 0xf4efe6, 0.24); // berretto bianco
     if (st.job?.units) box(g, st.x + 0.15, st.y + 0.15, 16, CRATE, 0.3); // scatolone in mano

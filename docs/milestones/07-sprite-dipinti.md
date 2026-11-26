@@ -2,7 +2,7 @@
 
 ## Status
 
-in progress — arredi fatti e online (3a69e3b); personaggi in attesa: generazione immagini Gemini sovraccarica (2026-11-26), riprovare
+implemented — in attesa del playtest dell'utente
 
 ## Objective
 
@@ -30,7 +30,7 @@ Sostituire i blocchi colorati con sprite isometrici **dipinti** (non pixel art) 
 ## Acceptance criteria
 
 - [x] Ogni tipo di oggetto ha un frame in `kit.json` — test: `tests/assets.test.ts::every drawable has a frame: furniture`
-- [ ] Ogni personaggio ha un frame — test: `tests/assets.test.ts::every drawable has a frame: people` (todo finché manca `art/sheets/personaggi.jpg`)
+- [x] Ogni personaggio ha un frame — test: `tests/assets.test.ts::every drawable has a frame: people`
 - [x] Il gioco carica l'atlas senza errori in console e disegna gli sprite — test: `scripts/browser-test.mjs::no console errors` + screenshot
 - [ ] Merce sullo scaffale visibile e distinguibile per categoria; scaffale vuoto riconoscibile — screenshot + verified by user playtest
 - [ ] Sprite coerenti e leggibili su telefono (zoom minimo e normale) — verified by user playtest
@@ -48,4 +48,5 @@ L'utente apre il gioco dal telefono e vede un supermercato dipinto: pavimenti, s
 ## Notes
 
 - Promuove dal backlog: "Sprite dipinti AI". Chiude l'open question "Strumento AI per gli sprite e formato atlas": Gemini + atlas PNG/JSON fatto in casa.
+- Il foglio personaggi è venuto da una chat Gemini nuova ("1980s Italian Supermarket Sprite Sheet"): la prima chat falliva sempre. I personaggi guardano in basso a destra; `draw.ts` li specchia quando vanno verso sinistra.
 - Riferimento: pipeline di `spesa-nonna` (`tools/kit.py`, `tools/scontorna.py`), che però produceva pixel art: qui lo stile resta dipinto (gameplan).
