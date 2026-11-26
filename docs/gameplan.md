@@ -6,9 +6,9 @@ Gestisci un supermercato di quartiere italiano anni '80-'90: costruisci reparti,
 
 ## Core gameplay loop
 
-Un livello = un negozio vuoto con obiettivi. Tempo reale con pausa e 3 velocità.
+Un livello = un negozio già costruito (stanze e porta fisse) con obiettivi; ogni livello sblocca una o due meccaniche nuove (campagna, ADR-0003). Tempo reale con pausa e 3 velocità. La modalità **Negozio libero** (lotto vuoto, tutto sbloccato) si apre dopo il livello 3.
 
-1. **Costruisci** — disegni stanze sulla griglia isometrica (sala vendita, magazzino, banco salumi, forno, casse, spogliatoio staff) e ci piazzi dentro oggetti (scaffali, frighi, banconi, casse, cestini).
+1. **Costruisci** — nei livelli piazzi gli arredi nelle stanze già pronte; nel Negozio libero disegni stanze sulla griglia isometrica (sala vendita, magazzino, banco salumi, forno, casse, spogliatoio staff) e ci piazzi dentro oggetti (scaffali, frighi, banconi, casse, cestini).
 2. **Assumi** — scegli staff da una lista candidati (stipendio vs abilità/tratto) e li assegni a un ruolo.
 3. **Rifornisci** — ordini merce per categoria; il magazziniere la porta dal magazzino agli scaffali. Tocchi 📦 su uno scaffale che si svuota per metterlo in coda con priorità; senza tocco il magazziniere interviene solo quando è quasi vuoto (ADR-0002).
 4. **Servi** — i clienti entrano con una lista spesa, girano per i reparti, prendono la merce, fanno la fila e pagano. Quando il conto è pronto compare 💰 sulla cassa: toccandola incassi subito con una mancia, altrimenti il cassiere chiude da solo dopo qualche secondo (ADR-0002).
@@ -54,7 +54,7 @@ Un livello = un negozio vuoto con obiettivi. Tempo reale con pausa e 3 velocità
 ## Player goals
 
 - **Breve (livello)**: tenere clienti contenti e cassa positiva, raggiungere le soglie.
-- **Lungo (campagna, dopo v1)**: superare livelli con negozi più grandi e difficili, sbloccare reparti e oggetti nuovi.
+- **Lungo (campagna)**: 7 negozi inventati tipici italiani, dall'Alimentari da Pina all'Ipermercato Stella; ogni livello insegna una o due meccaniche (milestone 20–22, ADR-0003).
 
 ## Anti-goals
 
@@ -64,7 +64,7 @@ Un livello = un negozio vuoto con obiettivi. Tempo reale con pausa e 3 velocità
 
 ## Scope v1 (vertical slice)
 
-- **1 livello completo** con obiettivi.
+- **Campagna di 7 livelli** a negozi prestabiliti + Negozio libero (ADR-0003).
 - 6 tipi stanza (sala vendita, magazzino, banco salumi, forno, area casse, spogliatoio staff).
 - ~8 oggetti (scaffale, frigo, bancone, affettatrice, forno, cassa, cestino, porta d'ingresso).
 - 4 ruoli staff, 4 tipi cliente, 3 imprevisti.

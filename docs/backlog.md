@@ -61,9 +61,23 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: user 2026-11-26
   - Notes: → milestone 19-guardia-e-capo-reparto.md
 
-- [ ] Barra strumenti raggruppata — con 16 tasti (6 stanze + 8 oggetti + Ruota/Demolisci) su telefono occupa 3–4 righe; raggruppare in "Stanze" / "Arredi" a tendina.
+- [x] Barra strumenti raggruppata — con 16 tasti (6 stanze + 8 oggetti + Ruota/Demolisci) su telefono occupa 3–4 righe; raggruppare in "Stanze" / "Arredi" a tendina.
   - Source: milestone 18 (2026-11-26)
   - Rough size: S · Rough value: M
+  - Notes: → milestone 21-interfaccia-facile.md
+
+- [x] Campagna a livelli — negozi prestabiliti, arredi e staff, una meccanica nuova per livello, interfaccia più facile.
+  - Source: utente 2026-11-27
+  - Rough size: L · Rough value: L
+  - Notes: → milestone 20-campagna-negozi-prestabiliti.md, 21-interfaccia-facile.md, 22-livelli-4-7.md (ADR-0003)
+
+- [ ] Stanze da costruire nei livelli — un pezzo di lotto libero per espandere il negozio prestabilito.
+  - Source: milestone planning 2026-11-27 (scartato per ora dall'utente: stanze fisse)
+  - Rough size: M · Rough value: S
+
+- [ ] Stelle o punteggio per livello — rigiocare i livelli per fare meglio.
+  - Source: milestone planning 2026-11-27
+  - Rough size: S · Rough value: S
 
 - [x] Salvataggio locale — stato sim serializzato in localStorage. → milestone 11-salvataggio-e-menu.md
   - Source: gameplan v1
