@@ -30,7 +30,6 @@ export function check(s: GameState, c: Command): Result {
         const def = ROOMS[c.room];
         if (!def) return fail('Tipo di stanza sconosciuto');
         if (c.x < 0 || c.y < 0 || c.x + c.w > s.grid.w || c.y + c.h > s.grid.h) return fail('Fuori dal lotto');
-        if (c.w < def.minW || c.h < def.minH) return fail(`Minimo ${def.minW}×${def.minH}`);
         if (s.rooms.some((r) => overlaps(r, c))) return fail('Si sovrappone a un\'altra stanza');
         return afford(s, roomCost(c.room, c.w, c.h));
     }
@@ -42,7 +41,8 @@ export function check(s: GameState, c: Command): Result {
         if (objectAt(s, c.x, c.y)) return fail('Cella occupata');
         if (c.object === 'scaffale' && !CATEGORIES.includes(c.category as Category)) return fail('Scegli una categoria');
         if (c.object === 'porta') {
-            const edge = c.x === room.x || c.y === room.y || c.x === room.x + room.w - 1 || c.y === room.y + room.h - 1;
+            // edge of the whole sales floor: rooms of the same type side by side form one area
+            const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => roomAt(s, c.x + dx, c.y + dy)?.type !== 'sala_vendita');
             if (!edge) return fail('La porta va sul bordo della sala');
         }
         return afford(s, def.cost);

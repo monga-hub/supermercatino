@@ -25,11 +25,11 @@ export const DEMOLISH_REFUND = 0.5;
 
 export const CATEGORIES = ['Pasta', 'Latticini', 'Salumi', 'Pane', 'Frutta', 'Detersivi'] as const;
 
-/** Room types: cost per cell (€) and minimum size in cells. */
+/** Room types: cost per cell (€). Any size: same-type rooms side by side form one area. */
 export const ROOMS = {
-    sala_vendita: { label: 'Sala vendita', costPerCell: 20, minW: 3, minH: 3 },
-    magazzino: { label: 'Magazzino', costPerCell: 15, minW: 2, minH: 2 },
-    area_casse: { label: 'Area casse', costPerCell: 20, minW: 2, minH: 2 },
+    sala_vendita: { label: 'Sala vendita', costPerCell: 20 },
+    magazzino: { label: 'Magazzino', costPerCell: 15 },
+    area_casse: { label: 'Area casse', costPerCell: 20 },
 } as const;
 
 /** Objects: cost (€) and the room type they must stand in. */

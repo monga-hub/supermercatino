@@ -18,11 +18,11 @@ test('buildRoom validates and charges', () => {
 
     const before = structuredClone(s);
     assert.equal(apply(s, sala(2, 2)).ok, false, 'overlap');
-    assert.equal(apply(s, sala(10, 10, 2, 2)).ok, false, 'below min size');
     assert.equal(apply(s, sala(GRID_W - 2, 0)).ok, false, 'outside lot');
     assert.deepEqual(s, before, 'failed commands do not change state');
 
     assert.equal(apply(s, casse()).ok, true);
+    assert.equal(apply(s, sala(4, 3, 1, 1)).ok, true, 'single cell extension');
 });
 
 test('objects only in the right room', () => {
@@ -47,6 +47,9 @@ test('door on sales-floor edge', () => {
     apply(s, sala());
     assert.equal(apply(s, place('porta', 1, 1)).ok, false, 'interior cell');
     assert.equal(apply(s, place('porta', 0, 2)).ok, true, 'edge cell');
+    apply(s, sala(4, 1, 1, 1)); // extension: (3,1) is now inside the sales floor
+    assert.equal(apply(s, place('porta', 3, 1)).ok, false, 'inside the extended floor');
+    assert.equal(apply(s, place('porta', 4, 1)).ok, true, 'edge of the extension');
 });
 
 test('no money no build', () => {
