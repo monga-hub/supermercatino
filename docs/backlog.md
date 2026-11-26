@@ -60,25 +60,25 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 
 ## Polish & juice
 
-- [ ] Fila visibile — chi aspetta alla cassa si mette in coda su celle diverse invece di sovrapporsi sulla stessa.
+- [x] Fila visibile — chi aspetta alla cassa si mette in coda su celle diverse invece di sovrapporsi sulla stessa.
   - Source: milestone 03, 2026-11-26
   - Rough size: S · Rough value: M
-  - Notes: oggi la fila è solo logica (`queuedAt`); serve scegliere celle di coda libere davanti alla cassa.
+  - Notes: → milestone 08-rifiniture-rapide.md; oggi la fila è solo logica (`queuedAt`); serve scegliere celle di coda libere davanti alla cassa.
 
-- [ ] Sprite dipinti AI — sostituire i placeholder con sprite iso dipinti, foglio di stile/prompt unico.
+- [x] Sprite dipinti AI — sostituire i placeholder con sprite iso dipinti, foglio di stile/prompt unico.
   - Source: milestone planning 2026-11-26 (utente: placeholder ora, sprite AI dopo il 03; poi rimandato a dopo il 06, decisione utente 2026-11-26)
   - Rough size: L · Rough value: L
-  - Notes: richiede di chiudere l'open question su strumento AI e formato atlas; riferimento moodboard `spesa-nonna`.
+  - Notes: → milestone 07-sprite-dipinti.md; richiede di chiudere l'open question su strumento AI e formato atlas; riferimento moodboard `spesa-nonna`.
 - [ ] Audio — muzak in loop, annunci comici all'altoparlante, SFX (bip cassa, carrello, rovescio).
   - Source: gameplan v1
   - Rough size: M · Rough value: M
 
 ## Tech & refactors
 
-- [ ] Clienti e demolizioni — se demolisci il pavimento o lo scaffale verso cui un cliente sta camminando, il cliente finisce il percorso vecchio.
+- [x] Clienti e demolizioni — se demolisci il pavimento o lo scaffale verso cui un cliente sta camminando, il cliente finisce il percorso vecchio.
   - Source: milestone 03, 2026-11-26
   - Rough size: S · Rough value: S
-  - Notes: ricalcolare i percorsi dopo ogni comando di costruzione, o vietare la demolizione con clienti dentro.
+  - Notes: → milestone 08-rifiniture-rapide.md; ricalcolare i percorsi dopo ogni comando di costruzione, o vietare la demolizione con clienti dentro.
 
 - [ ] Upgrade dipendenze del template — `npm audit` segnala vulnerabilità high (nanoid, picomatch via Vite 6.3); valutare Vite/Phaser più recenti (Phaser 4.2.1 disponibile).
   - Source: scaffold 2026-11-26
@@ -93,7 +93,7 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 
 ## Open questions
 
-- [ ] Strumento AI per gli sprite e formato atlas — da decidere prima del milestone sprite.
+- [x] Strumento AI per gli sprite e formato atlas — Gemini (decisione utente 2026-11-26) + atlas PNG/JSON fatto in casa → milestone 07-sprite-dipinti.md
   - Source: gameplan
 - [ ] Fonte audio — muzak/annunci AI, CC0 o sintesi vocale?
   - Source: gameplan

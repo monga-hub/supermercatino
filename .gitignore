@@ -26,3 +26,6 @@ dist-ssr
 # Playwright / test output
 output/
 test-results/
+
+# local secrets (Gemini API key)
+.env.local

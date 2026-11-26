@@ -2,7 +2,7 @@
 
 ## Status
 
-in-progress — automated AC green; waiting for user playtest (a full level on phone)
+done — playtest utente ok da telefono (2026-11-26)
 
 ## Objective
 
@@ -34,7 +34,7 @@ Trasformare la sandbox in un livello vincibile e perdibile da 15–20 minuti. La
 - [x] Reputazione sale/scende con serviti/persi e cambia la frequenza degli arrivi — test: `tests/day.test.ts::reputation drives arrivals`
 - [x] Vittoria quando le soglie sono raggiunte; sconfitta per bancarotta o reputazione minima — test: `tests/day.test.ts::win and lose conditions`
 - [x] Nel browser, il riepilogo appare a fine giornata e *Continua* riparte — test: `scripts/browser-test.mjs::day summary and continue`
-- [ ] Un livello si gioca in 15–20 minuti ed è vincibile con un negozio ragionevole — verified by user playtest
+- [x] Un livello si gioca in 15–20 minuti ed è vincibile con un negozio ragionevole — verified by user playtest
 
 ## Exit condition
 

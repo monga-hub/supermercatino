@@ -12,7 +12,7 @@ development (scaffold completato)
 
 ## Current milestone
 
-[06 — Fine giornata e obiettivi](milestones/06-fine-giornata-e-obiettivi.md) (in-progress, AC automatiche verdi). 04, 05, 05b chiusi. Dopo il 06: milestone sprite AI (da scrivere).
+[07 — Sprite dipinti](milestones/07-sprite-dipinti.md) (planned, in attesa di accesso a Gemini). Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md). 01–06 e 05b chiusi.
 
 ## Last action
 
@@ -20,7 +20,7 @@ Milestone 06: chiusura vera (stop arrivi nell'ultima ora, negozio svuotato), aff
 
 ## Next step
 
-Playtest utente di un livello intero da telefono; taratura numeri in `config.ts` (obiettivi, affitto, prezzi). Se ok: 06 → done, poi milestone planning per gli sprite AI.
+Ottenere accesso a Gemini per generare i fogli del 07 (chiave API in `.env.local` non versionato, oppure Gemini web via Claude in Chrome). Nel frattempo si può fare l'08.
 
 ## Blockers
 
