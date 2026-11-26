@@ -163,7 +163,7 @@ await check('shelves get restocked', async () => {
         const cand = (await st()).candidates.find((c) => c.role === role);
         expect((await run({ type: 'hire', candidateId: cand.id })).ok, `hire ${role} failed`);
     }
-    await p4.evaluate(() => window.advanceTime(120000)); // half a day at 1x
+    await p4.evaluate(() => window.advanceTime(180000)); // ~9 game hours at 1x
     const s1 = await st();
     const shelves = s1.objects.filter((o) => o.type === 'scaffale');
     expect(s1.servedToday > 10, `too few served: ${s1.servedToday}`); // nobody taps here: bills close alone (ADR-0002)
