@@ -2,7 +2,7 @@
 
 ## Status
 
-in-progress — automated AC green; waiting for user playtest (Staff panel on phone)
+done — playtest utente ok da telefono (2026-11-26)
 
 ## Objective
 
@@ -40,7 +40,7 @@ Introdurre lo staff, secondo verbo del loop ("Assumi"). Il giocatore sceglie da 
 - [x] Un cassiere più veloce serve in meno tick — test: `tests/staff.test.ts::faster cashier serves faster`
 - [x] A fine giornata gli stipendi vengono scalati dalla cassa — test: `tests/staff.test.ts::wages paid at day end`
 - [x] Nel browser, assumere un cassiere via `dispatch` in un negozio costruito porta clienti serviti dopo un'ora di gioco — test: `scripts/browser-test.mjs::hired cashier serves`
-- [ ] Pannello Staff leggibile e usabile su desktop e telefono — verified by user playtest
+- [x] Pannello Staff leggibile e usabile su desktop e telefono — verified by user playtest
 
 ## Exit condition
 

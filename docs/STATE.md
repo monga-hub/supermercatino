@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[04 — Assumi il cassiere](milestones/04-assumi-il-cassiere.md) (in-progress, AC automatiche verdi). Poi 05 Rifornisci gli scaffali, 06 Fine giornata e obiettivi; sprite AI dopo il 06.
+[05 — Rifornisci gli scaffali](milestones/05-rifornisci-gli-scaffali.md) (da iniziare). 04 chiuso. Poi 06 Fine giornata e obiettivi; sprite AI dopo il 06.
 
 ## Last action
 
-Milestone 04 implementato: candidati generati dalla seed (3 per ruolo, tratti Normale/Svelto/Chiacchierone), comandi `hire`/`fire`, cassiere che entra e si siede alla cassa, casse che servono solo con cassiere, velocità di pagamento per tratto, stipendi a fine giornata; pannello Staff nell'HUD. Test: `npm test` 23/23, `npm run test:browser` 6/6.
+Milestone 04 implementato: candidati generati dalla seed (3 per ruolo, tratti Normale/Svelto/Chiacchierone), comandi `hire`/`fire`, cassiere che entra e si siede alla cassa, casse che servono solo con cassiere, velocità di pagamento per tratto, stipendi a fine giornata; pannello Staff nell'HUD. Test: `npm test` 23/23, `npm run test:browser` 6/6. Playtest utente ok. Poi, su richiesta utente: stanze di qualsiasi misura (niente minimo), stanze dello stesso tipo affiancate formano un'unica area; la porta va sul bordo dell'area intera.
 
 ## Next step
 
-Playtest utente del 04 da telefono (pannello Staff, assumere/licenziare). Se ok: 04 → done e si parte col 05 (Rifornisci gli scaffali): test rossi `tests/restock.test.ts`.
+Milestone 05 (Rifornisci gli scaffali): test rossi `tests/restock.test.ts`, poi implementazione.
 
 ## Blockers
 
