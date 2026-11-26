@@ -1,9 +1,10 @@
 // Opening hours, day end, reputation and level outcome (milestone 06). Pure, deterministic.
 import {
     ENERGY_MAX,     DAY_OPEN_MIN, DAILY_RENT, SPAWN_EVERY_MIN_AT_0, SPAWN_EVERY_MIN_AT_100, BANKRUPT_BELOW, BAD_DAYS,
-    REP_MIN, LEVEL, SPILL_REP,
+    REP_MIN, SPILL_REP,
 } from './config.ts';
 import { checkout } from './customers.ts';
+import { goalsOf } from './levels.ts';
 import type { GameState } from './state.ts';
 
 /** Minutes between arrivals: fewer at low reputation, more at high. */
@@ -22,11 +23,11 @@ export function closeDay(s: GameState) {
         day: s.day, income: s.incomeToday, goods: s.goodsToday, wages, rent: DAILY_RENT,
         money: s.money, served: s.servedToday, lost: s.lostToday, reputation: s.reputation,
     };
-    const g = LEVEL.goals;
+    const { goals: g, days } = goalsOf(s);
     if (s.money >= g.money && s.reputation >= g.reputation && s.servedTotal >= g.served) s.outcome = { win: true, reason: 'Obiettivi raggiunti!' };
     else if (s.redDays >= BAD_DAYS) s.outcome = { win: false, reason: `Bancarotta: cassa in rosso per ${BAD_DAYS} chiusure di fila` };
     else if (s.lowRepDays >= BAD_DAYS) s.outcome = { win: false, reason: `Reputazione sotto il ${REP_MIN}% per ${BAD_DAYS} chiusure di fila: i clienti non vengono più` };
-    else if (s.day >= LEVEL.days) s.outcome = { win: false, reason: 'Tempo scaduto: obiettivi non raggiunti' };
+    else if (s.day >= days) s.outcome = { win: false, reason: 'Tempo scaduto: obiettivi non raggiunti' };
     s.paused = true;
 }
 

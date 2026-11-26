@@ -9,7 +9,7 @@ interface Window {
     dispatch: (cmd: import('./sim/build.ts').Command) => import('./sim/build.ts').Result;
     /** Select a build tool as if from the toolbar (null = none). */
     selectTool: (tool: import('./game/scenes/Game.ts').Tool) => void;
-    /** Open menu card: 'start', 'briefing' or null (milestone 11). */
+    /** Open menu card: 'start', 'levels', 'briefing' or null (milestones 11, 20). */
     menuState: () => string | null;
     /** Audio mute preference and whether the context started (milestone 16). */
     audioState: () => { muted: boolean; started: boolean };

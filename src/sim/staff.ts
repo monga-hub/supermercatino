@@ -2,6 +2,7 @@
 import { SERVED_BY, ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW,
     ENERGY_MAX, ENERGY_DRAIN_PER_H, REST_PER_H, BREAK_BELOW, TIRED_SPEED, GAME_MIN_PER_SEC, STEP_MS,
     TAP_ICON_BELOW, GUARD_RADIUS, BOSS_EVERY_SEC } from './config.ts';
+import { allows } from './levels.ts';
 import { rand, pick } from './rng.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import type { GameState, Role, Trait, Staff, ShopObject, Cart } from './state.ts';
@@ -11,7 +12,7 @@ import { check, apply, type Command } from './build.ts';
 
 /** Top up the candidate list to CANDIDATES_PER_ROLE per role. */
 export function refillCandidates(s: GameState) {
-    for (const role of Object.keys(ROLES) as Role[]) {
+    for (const role of (Object.keys(ROLES) as Role[]).filter((r) => allows(s, 'roles', r))) {
         while (s.candidates.filter((c) => c.role === role).length < CANDIDATES_PER_ROLE) {
             const trait = pick(s, Object.keys(TRAITS) as Trait[]);
             const wage = TRAITS[trait].wage + ROLES[role].extra + Math.round((rand(s) * 2 - 1) * WAGE_SPREAD);
@@ -267,7 +268,7 @@ export function updateStaff(s: GameState) {
             rest(st);
             continue;
         }
-        st.energy = Math.max(0, st.energy - ENERGY_DRAIN_PER_H * STEP_H);
+        if (allows(s, 'features', 'tiredness')) st.energy = Math.max(0, st.energy - ENERGY_DRAIN_PER_H * STEP_H);
         if (wantsBreak(s, st) && free(s, st) && goRest(s, st, w)) continue;
         if (st.role === 'cassiere' || st.role === 'banconiere') updateCashier(s, st, w);
         else if (st.role === 'pulizie') updateCleaner(s, st, w);

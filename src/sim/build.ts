@@ -4,6 +4,9 @@ import { readyAt, checkout, rerouteCustomers, walkableFor, tricking, catchFurbet
 import { nextDay } from './day.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
 import { hire, fire, rerouteStaff } from './staff.ts';
+import { allows } from './levels.ts';
+
+const FIXED = 'In questo negozio le stanze sono già fatte';
 
 export type Command =
     | { type: 'buildRoom'; room: RoomType; x: number; y: number; w: number; h: number }
@@ -39,6 +42,7 @@ export function check(s: GameState, c: Command): Result {
     if (c.type === 'buildRoom') {
         const def = ROOMS[c.room];
         if (!def) return fail('Tipo di stanza sconosciuto');
+        if (s.level) return fail(FIXED);
         if (c.x < 0 || c.y < 0 || c.x + c.w > s.grid.w || c.y + c.h > s.grid.h) return fail('Fuori dal lotto');
         if (s.rooms.some((r) => overlaps(r, c))) return fail('Si sovrappone a un\'altra stanza');
         return afford(s, roomCost(c.room, c.w, c.h));
@@ -46,6 +50,7 @@ export function check(s: GameState, c: Command): Result {
     if (c.type === 'placeObject') {
         const def = OBJECTS[c.object];
         if (!def) return fail('Oggetto sconosciuto');
+        if (!allows(s, 'objects', c.object)) return fail(`${def.label}: non c'è in questo negozio`);
         const room = roomAt(s, c.x, c.y);
         if (!room || room.type !== def.room) return fail(`${def.label}: va in ${ROOMS[def.room].label}`);
         if (objectAt(s, c.x, c.y)) return fail('Cella occupata');
@@ -94,15 +99,18 @@ export function check(s: GameState, c: Command): Result {
     if (c.type === 'order') {
         if (!CATEGORIES.includes(c.category as Category)) return fail('Categoria sconosciuta');
         if (c.category === 'Pane') return fail('Il pane lo sforna il forno');
+        if (!allows(s, 'features', 'orders')) return fail('Qui la merce arriva da sola');
         if (!s.rooms.some((r) => r.type === 'magazzino')) return fail('Serve un magazzino');
         return afford(s, ORDER_UNITS * UNIT_COST[c.category as Category]);
     }
     if (c.type === 'fire') return s.staff.some((x) => x.id === c.staffId) ? { ok: true, cost: 0 } : fail('Dipendente non trovato');
     // demolish
     const obj = objectAt(s, c.x, c.y);
+    if (obj && s.level && obj.type === 'porta') return fail('La porta resta dov\'è');
     if (obj) return { ok: true, cost: -Math.floor(OBJECTS[obj.type].cost * DEMOLISH_REFUND) };
     const room = roomAt(s, c.x, c.y);
     if (!room) return fail('Niente da demolire');
+    if (s.level) return fail(FIXED);
     if (s.objects.some((o) => roomAt(s, o.x, o.y) === room)) return fail('Svuota prima la stanza');
     return { ok: true, cost: -Math.floor(roomCost(room.type, room.w, room.h) * DEMOLISH_REFUND) };
 }

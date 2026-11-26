@@ -5,6 +5,7 @@ import { STEP_MS, TAP_ICON_BELOW, BEAR_BONUS_MONEY, BEAR_BONUS_REP, INSPECTION_D
 import { readyAt, tricking } from '../../sim/customers.ts';
 import { tired } from '../../sim/staff.ts';
 import { saveGame, loadGame, SAVE_KEY } from '../../sim/save.ts';
+import { loadProgress, winLevel, PROGRESS_KEY, type Progress } from '../../sim/levels.ts';
 import { gridToIso, cellAt, TILE_H, TILE_W } from '../../render/iso.ts';
 import { drawFloor, drawThings, drawObject, tile, type Put } from '../../render/draw.ts';
 import { KIT_SCALE } from '../../render/sprites.ts';
@@ -56,6 +57,8 @@ export class Game extends Scene {
     saving = !this.manual || new URLSearchParams(location.search).has('save');
     /** The game found in localStorage at startup ("Continua"), if any. */
     saved: GameState | null = null;
+    /** Campaign levels won (milestone 20), kept apart from the save. */
+    progress: Progress = { won: [] };
     saveAt = 0;
 
     constructor() {
@@ -91,6 +94,7 @@ export class Game extends Scene {
         this.setupInput();
         this.registry.events.on('changedata-tool', () => this.preview.clear());
         this.saved = this.saving ? loadGame(localStorage.getItem(SAVE_KEY)) : null;
+        if (this.saving) this.progress = loadProgress(localStorage.getItem(PROGRESS_KEY));
         this.registry.set('menu', this.saving ? 'start' : null);
         document.addEventListener('visibilitychange', () => document.hidden && this.store());
         window.addEventListener('pagehide', () => this.store());
@@ -121,6 +125,11 @@ export class Game extends Scene {
             this.game.events.emit('toast', `L'orso è contento! +€${BEAR_BONUS_MONEY} e +${BEAR_BONUS_REP} reputazione`);
         this.bears = this.sim.happyBears;
         this.events_();
+        const lv = this.sim.level;
+        if (this.sim.outcome?.win && lv && !this.progress.won.includes(lv)) {
+            this.progress = winLevel(this.progress, lv);
+            if (this.saving) localStorage.setItem(PROGRESS_KEY, JSON.stringify(this.progress));
+        }
         const now = snap(this.sim);
         play(cues(this.heard, now));
         this.heard = now;
@@ -210,7 +219,7 @@ export class Game extends Scene {
 
     /** Write the game to localStorage (not while the start menu still offers the old one); a finished level is erased. */
     store() {
-        if (!this.saving || this.registry.get('menu') === 'start') return;
+        if (!this.saving || ['start', 'levels'].includes(this.registry.get('menu'))) return;
         if (this.sim.outcome) localStorage.removeItem(SAVE_KEY);
         else localStorage.setItem(SAVE_KEY, saveGame(this.sim));
     }
@@ -221,9 +230,9 @@ export class Game extends Scene {
         this.registry.set('menu', null);
     }
 
-    /** New level from scratch ("Nuova partita", or after a win or a loss): the briefing first. */
-    restart() {
-        this.useState(createState());
+    /** A level from scratch (0 = free shop; default: the same one again): the briefing first. */
+    restart(level = this.sim.level) {
+        this.useState(createState(level));
         if (this.saving) this.registry.set('menu', 'briefing');
         this.store();
     }
@@ -299,10 +308,15 @@ export class Game extends Scene {
         const cam = this.cameras.main;
         const { w, h } = this.sim.grid;
         const top = 130, bottom = 110; // ponytail: HUD bar heights on a phone; measure from Hud if its layout changes
-        const fit = Math.min(cam.width / (((w + h) * TILE_W) / 2 + 16), (cam.height - top - bottom) / (((w + h) * TILE_H) / 2 + 16));
+        const fitOf = (bw: number, bh: number) => Math.min(cam.width / (((bw + bh) * TILE_W) / 2 + 16), (cam.height - top - bottom) / (((bw + bh) * TILE_H) / 2 + 16));
+        const fit = fitOf(w, h);
         this.zoomMin = Math.min(ZOOM_MIN, fit);
-        cam.setZoom(Math.max(this.zoomMin, Math.min(1, fit)));
-        const c = gridToIso(w / 2, h / 2); // centre of the lot diamond
+        // campaign (milestone 20): frame the pre-built shop, not the empty lot around it
+        const rs = this.sim.level ? this.sim.rooms : [];
+        const x0 = Math.min(...rs.map((r) => r.x)), y0 = Math.min(...rs.map((r) => r.y));
+        const box = rs.length ? { x: x0, y: y0, w: Math.max(...rs.map((r) => r.x + r.w)) - x0, h: Math.max(...rs.map((r) => r.y + r.h)) - y0 } : { x: 0, y: 0, w, h };
+        cam.setZoom(Math.max(this.zoomMin, Math.min(rs.length ? 2 : 1, fitOf(box.w, box.h))));
+        const c = gridToIso(box.x + box.w / 2, box.y + box.h / 2); // centre of the framed diamond
         cam.centerOn(c.x, c.y - (top - bottom) / 2 / cam.zoom);
     }
 

@@ -269,13 +269,19 @@ const openSaved = async () => {
     await ps.waitForTimeout(300);
 };
 
+const openLevel1 = async () => {
+    expect((await tapMenu(false)) === 'levels', 'Campagna did not open the levels');
+    expect((await tapMenu(true)) === 'briefing', 'level 1 did not open the briefing');
+    expect((await tapMenu(false)) === null, 'Inizia did not close the briefing');
+};
+
 await check('save survives reload', async () => {
     await openSaved();
     expect((await menuOf()) === 'start', `no start menu: ${await menuOf()}`);
-    expect((await tapMenu(false)) === 'briefing', 'Nuova partita did not open the briefing');
-    expect((await tapMenu(false)) === null, 'Inizia did not close the briefing');
-    const r = await ps.evaluate(() => window.dispatch({ type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 4, h: 4 }));
-    expect(r.ok, 'build failed');
+    await openLevel1();
+    expect((await stS()).level === 1, 'not level 1');
+    const r = await ps.evaluate(() => window.dispatch({ type: 'placeObject', object: 'scaffale', x: 5, y: 4, category: 'Pasta' }));
+    expect(r.ok, `place failed: ${r.reason}`);
     await start(ps);
     await ps.evaluate(() => window.advanceTime(20000));
     await ps.waitForTimeout(3500); // autosave
@@ -284,20 +290,44 @@ await check('save survives reload', async () => {
     expect((await menuOf()) === 'start', 'no start menu after reload');
     expect((await tapMenu(true)) === null, 'Continua did not close the menu');
     const s1 = await stS();
-    expect(s1.rooms.length === 1 && s1.money === s0.money && s1.clockSec === s0.clockSec, `not restored: ${JSON.stringify([s1.rooms.length, s1.money, s1.clockSec, s0.clockSec])}`);
+    expect(s1.level === 1 && s1.objects.length === 2 && s1.money === s0.money && s1.clockSec === s0.clockSec, `not restored: ${JSON.stringify([s1.objects.length, s1.money, s1.clockSec, s0.clockSec])}`);
     expect(s1.paused, 'a loaded game should start paused');
 });
 
 await check('menu continue and new game', async () => {
     await openSaved();
-    expect((await tapMenu(false)) === 'briefing', 'Nuova partita did not open the briefing');
-    const s = await stS();
-    expect(s.rooms.length === 0 && s.day === 1, 'new game is not empty');
-    await tapMenu(false);
+    await openLevel1();
+    expect((await stS()).objects.length === 1, 'new level 1 is not just the door');
     await ps.waitForTimeout(3500);
     await openSaved();
-    await tapMenu(true); // with a fresh save Continua is there again, and it is the empty shop
-    expect((await stS()).rooms.length === 0, 'Nuova partita did not overwrite the save');
+    await tapMenu(true); // with a fresh save Continua is there again, and it is the bare shop
+    expect((await stS()).objects.length === 1, 'the new level did not overwrite the save');
+});
+
+await check('campaign: a win opens the next level, the free shop after level 3', async () => {
+    await openSaved();
+    await openLevel1();
+    // a saved level 1 a moment before closing, goals already met
+    const s = { ...(await stS()), money: 9000, reputation: 90, servedTotal: 999, clockSec: 20 * 3600 - 18, paused: true };
+    // written when the page is left, after the game's own autosave (pagehide, then visibilitychange)
+    await ps.evaluate((j) => {
+        const put = () => localStorage.setItem('supermercatino-save', j);
+        addEventListener('pagehide', put);
+        document.addEventListener('visibilitychange', put);
+    }, JSON.stringify({ v: 1, s }));
+    await openSaved();
+    expect((await tapMenu(true)) === null, 'Continua did not close the menu');
+    await start(ps);
+    await ps.evaluate(() => window.advanceTime(1000));
+    { const w = await stS(); expect(w.outcome?.win, `no win: ${JSON.stringify([w.outcome, w.summary, w.clockSec, w.paused, w.money])}`); }
+    expect((await tapMenu(true)) === 'briefing', 'Livello successivo did not open the briefing');
+    expect((await stS()).level === 2, 'not level 2');
+    expect(JSON.parse(await ps.evaluate(() => localStorage.getItem('supermercatino-campagna'))).won.includes(1), 'win not saved');
+    await ps.evaluate(() => localStorage.setItem('supermercatino-campagna', '{"won":[1,2,3]}'));
+    await openSaved();
+    expect((await tapMenu(false)) === 'briefing', 'Negozio libero did not open the briefing');
+    const f = await stS();
+    expect(f.level === 0 && f.rooms.length === 0, 'free shop is not the empty lot');
 });
 await ps.close();
 

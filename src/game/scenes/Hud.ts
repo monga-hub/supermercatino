@@ -1,10 +1,11 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { setSpeed, togglePause, type GameState, type Speed } from '../../sim/state.ts';
-import { ROOMS, OBJECTS, CATEGORIES, ONLY_IN, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN, DAY_OPEN_MIN, BAD_DAYS, INSPECTION_DAY } from '../../sim/config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, ONLY_IN, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, REP_MIN, DAY_OPEN_MIN, BAD_DAYS, INSPECTION_DAY } from '../../sim/config.ts';
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
 import type { Tool, Game } from './Game.ts';
 import * as audio from '../../audio/synth.ts';
+import { LEVELS, FREE_AFTER, allows, goalsOf, levelOf, levelOpen, freeOpen } from '../../sim/levels.ts';
 
 const TEXT = { fontFamily: 'Arial Black', fontSize: 22, color: '#fff3d6', stroke: '#3a2418', strokeThickness: 5 };
 const LIGHT = '#fff3d6';
@@ -13,7 +14,8 @@ const BTN_BG = '#7a2e1f';
 const BTN_ACTIVE_BG = '#e0a030';
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 
-type Btn = { t: GameObjects.Text; active: () => boolean; bg: string; fg?: string };
+/** show: hidden (and left out of the layout) when it returns false, e.g. locked in this level. */
+type Btn = { t: GameObjects.Text; active: () => boolean; bg: string; fg?: string; show?: () => boolean };
 
 const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'in attesa', cleaning: 'pulisce', cart: 'sposta un carrello', resting: 'in pausa', at_till: 'al suo posto', fetching: 'va in magazzino', delivering: 'porta la merce' };
 
@@ -35,6 +37,8 @@ export class Hud extends Scene {
     panelKey = '';
     panelScroll = 0;
     panelRect = { x: 0, y: 0, w: 0, h: 0 };
+    /** Level the buttons were laid out for: another level shows other buttons. */
+    lvl = -1;
     /** True if (x, y) is on the open panel: the shop ignores gestures that start there. */
     onPanel(x: number, y: number) {
         const r = this.panelRect;
@@ -57,12 +61,12 @@ export class Hud extends Scene {
         this.registry.set('tool', t);
     }
 
-    button(label: string, onClick: () => void, active: () => boolean, bg = BTN_BG, fg?: string): Btn {
+    button(label: string, onClick: () => void, active: () => boolean, bg = BTN_BG, fg?: string, show?: () => boolean): Btn {
         const t = this.add
             .text(0, 0, label, { ...TEXT, fontSize: 17, strokeThickness: 0, backgroundColor: bg, padding: { x: 10, y: 7 } })
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', onClick);
-        return { t, active, bg, fg };
+        return { t, active, bg, fg, show };
     }
 
     create() {
@@ -78,7 +82,7 @@ export class Hud extends Scene {
         );
         this.speedBtns.push(
             this.button('Staff', () => this.togglePanel('staff'), () => !!this.panel && this.panelKind === 'staff', '#3d5a80'),
-            this.button('Merce', () => this.togglePanel('merce'), () => !!this.panel && this.panelKind === 'merce', '#3d5a80'),
+            this.button('Merce', () => this.togglePanel('merce'), () => !!this.panel && this.panelKind === 'merce', '#3d5a80', undefined, () => allows(this.sim, 'features', 'orders')),
             this.button('Audio', () => audio.setMuted(!audio.muted), () => !audio.muted, '#3d5a80'),
         );
 
@@ -86,16 +90,18 @@ export class Hud extends Scene {
         const toggle = (t: Tool) => () => this.setTool(same(t) ? null : t);
         const isRoom = (room: string) => () => this.tool?.kind === 'room' && this.tool.room === room;
         const isObj = (object: string) => () => this.tool?.kind === 'object' && this.tool.object === object;
+        const has = (object: string) => () => allows(this.sim, 'objects', object);
+        const free = () => !this.sim.level; // rooms are fixed in the campaign
 
         this.toolBtns = [
             ...(Object.keys(ROOMS) as (keyof typeof ROOMS)[]).map((room) =>
-                this.button(ROOMS[room].label, toggle({ kind: 'room', room }), isRoom(room), hex(ROOM_FLOOR[room][1])),
+                this.button(ROOMS[room].label, toggle({ kind: 'room', room }), isRoom(room), hex(ROOM_FLOOR[room][1]), undefined, free),
             ),
-            this.button(OBJECTS.porta.label, toggle({ kind: 'object', object: 'porta' }), isObj('porta')),
-            this.button(OBJECTS.scaffale.label, () => this.setTool(isObj('scaffale')() ? null : { kind: 'object', object: 'scaffale', category: CATEGORIES[0] }), isObj('scaffale')),
-            this.button(OBJECTS.cassa.label, toggle({ kind: 'object', object: 'cassa' }), isObj('cassa')),
-            this.button(OBJECTS.cestino.label, toggle({ kind: 'object', object: 'cestino' }), isObj('cestino')),
-            ...(['bancone', 'forno', 'frigo', 'armadietti'] as const).map((object) => this.button(OBJECTS[object].label, toggle({ kind: 'object', object }), isObj(object))),
+            this.button(OBJECTS.porta.label, toggle({ kind: 'object', object: 'porta' }), isObj('porta'), BTN_BG, undefined, free),
+            this.button(OBJECTS.scaffale.label, () => this.setTool(isObj('scaffale')() ? null : { kind: 'object', object: 'scaffale', category: CATEGORIES[0] }), isObj('scaffale'), BTN_BG, undefined, has('scaffale')),
+            this.button(OBJECTS.cassa.label, toggle({ kind: 'object', object: 'cassa' }), isObj('cassa'), BTN_BG, undefined, has('cassa')),
+            this.button(OBJECTS.cestino.label, toggle({ kind: 'object', object: 'cestino' }), isObj('cestino'), BTN_BG, undefined, has('cestino')),
+            ...(['bancone', 'forno', 'frigo', 'armadietti'] as const).map((object) => this.button(OBJECTS[object].label, toggle({ kind: 'object', object }), isObj(object), BTN_BG, undefined, has(object))),
             this.button('Ruota', toggle({ kind: 'rotate' }), () => this.tool?.kind === 'rotate', '#6b5a8e'),
             this.button('Demolisci', toggle({ kind: 'demolish' }), () => this.tool?.kind === 'demolish', '#4a4a4a'),
         ];
@@ -128,6 +134,8 @@ export class Hud extends Scene {
     flow(btns: Btn[], top: number, maxW: number, gap = 6) {
         let x = 12, y = top, rowH = 0;
         for (const b of btns) {
+            if (b.show) b.t.setVisible(b.show());
+            if (!b.t.visible && b.show) continue;
             if (x + b.t.width > maxW - 12 && x > 12) {
                 x = 12;
                 y += rowH + gap;
@@ -152,6 +160,7 @@ export class Hud extends Scene {
         this.served.setY(rowEnd + 16 > width - 12 - this.served.width || rowsEnd > 92 ? rowsEnd + 8 : 44);
         this.hint.setPosition(width / 2, this.served.y + this.served.height + 8);
         // toolbar anchored to the bottom: measure, then place
+        this.lvl = this.sim?.level ?? -1;
         const toolsH = this.flow(this.toolBtns, 0, width);
         this.flow(this.toolBtns, height - 12 - toolsH, width);
         const catH = this.flow(this.catBtns, 0, width);
@@ -187,7 +196,7 @@ export class Hud extends Scene {
         // between the top bar and the toolbar
         const x0 = (width - w) / 2;
         const y0 = Math.max(...this.speedBtns.map((b) => b.t.y + b.t.height), this.served.y + this.served.height) + 8;
-        const viewH = Math.min(...this.toolBtns.map((b) => b.t.y)) - 8 - y0;
+        const viewH = Math.min(...this.toolBtns.filter((b) => b.t.visible).map((b) => b.t.y)) - 8 - y0;
         this.panelRect = { x: x0, y: y0, w, h: viewH };
         const c = (this.panel = this.add.container(0, 0).setDepth(5));
         const bg = this.add.rectangle(x0, y0, w, viewH, 0x2b1d16, 0.96).setOrigin(0).setStrokeStyle(3, 0xe0a030);
@@ -283,34 +292,51 @@ export class Hud extends Scene {
         return this.scene.get('Game') as unknown as Game;
     }
 
-    /** Start menu, level briefing, closing summary or level outcome. Blocks taps on the shop below. */
+    /** Start menu, campaign levels, level briefing, closing summary or level outcome. Blocks taps on the shop below. */
     showCard() {
         const s = this.sim;
-        const menu = this.registry.get('menu') as 'start' | 'briefing' | null;
-        const key = JSON.stringify([menu, s.summary, s.outcome]);
+        const game = this.game_;
+        const menu = this.registry.get('menu') as 'start' | 'levels' | 'briefing' | null;
+        const key = JSON.stringify([menu, s.level, s.summary, s.outcome, game.progress]);
         if (key === this.cardKey) return;
         this.cardKey = key;
         this.card?.destroy();
         this.card = null;
         const eur = (n: number) => `€${n.toLocaleString('it-IT')}`;
-        const g = LEVEL.goals;
+        const { goals: g, days } = goalsOf(s);
+        const lv = levelOf(s);
         const close = () => this.registry.set('menu', null);
-        if (menu === 'start') {
-            const game = this.game_;
+        const toMenu = { label: 'Menu', fn: () => { game.saved = null; this.registry.set('menu', 'levels'); } }; // the finished level erased its save
+        if (menu === 'start')
             return this.drawCard('Il Supermercatino', [
                 'Un supermercato di quartiere, anni \'80.',
-                'Costruisci, assumi, rifornisci e servi i clienti.',
+                'Arreda, assumi, rifornisci e servi i clienti.',
             ], [
                 ...(game.saved ? [{ label: 'Continua', fn: () => game.continueSaved() }] : []),
-                { label: 'Nuova partita', fn: () => game.restart() },
+                { label: 'Campagna', fn: () => this.registry.set('menu', 'levels') },
+                ...(freeOpen(game.progress) ? [{ label: 'Negozio libero', fn: () => game.restart(0) }] : []),
             ]);
-        }
+        if (menu === 'levels')
+            return this.drawCard('Campagna', [
+                'Ogni negozio è già costruito: tu metti gli arredi, assumi e servi.',
+                `Il Negozio libero si apre dopo il livello ${FREE_AFTER}.`,
+            ], [
+                ...LEVELS.map((l, i) => {
+                    const n = i + 1, open = levelOpen(game.progress, n);
+                    return open
+                        ? { label: `${n}. ${l.name}${game.progress.won.includes(n) ? ' ✓' : ''}`, fn: () => game.restart(n) }
+                        : { label: `🔒 ${n}. ${l.name}`, fn: () => this.showToast(`Vinci prima il livello ${n - 1}`) };
+                }),
+                { label: 'Indietro', fn: () => this.registry.set('menu', 'start') },
+            ]);
         if (menu === 'briefing')
-            return this.drawCard('Livello 1', [
-                `Hai ${LEVEL.days} giorni per arrivare a:`,
+            return this.drawCard(lv ? `Livello ${s.level}: ${lv.name}` : 'Negozio libero', [
+                ...(lv ? [lv.blurb, ''] : []),
+                `Hai ${days} giorni per arrivare a:`,
                 `• Cassa ${eur(g.money)}`,
                 `• Reputazione ${g.reputation}%`,
                 `• ${g.served} clienti serviti`,
+                ...(lv ? ['', 'Novità:', ...lv.news.map((x) => `• ${x}`)] : []),
                 '',
                 `Perdi se chiudi ${BAD_DAYS} giorni di fila in rosso o con la reputazione sotto il ${REP_MIN}%.`,
             ], [{ label: 'Inizia', fn: close }]);
@@ -331,12 +357,14 @@ export class Hud extends Scene {
             `${mark(sum.reputation >= g.reputation)} Reputazione ${sum.reputation}% / ${g.reputation}%`,
             `${mark(s.servedTotal >= g.served)} Serviti ${s.servedTotal} / ${g.served}`,
         ];
-        if (!o && sum.day === INSPECTION_DAY - 1) body.push('', 'Domani passa l\'ispettore sanitario: tieni pulito!');
+        if (!o && sum.day === INSPECTION_DAY - 1 && allows(s, 'features', 'inspection')) body.push('', 'Domani passa l\'ispettore sanitario: tieni pulito!');
         if (o) body.push('', o.reason);
         else if (sum.reputation < REP_MIN) body.push('', `Attenzione: reputazione sotto il ${REP_MIN}%. Un'altra chiusura così e perdi.`);
         else if (sum.money < 0) body.push('', 'Attenzione: cassa in rosso. Un\'altra chiusura così e perdi.');
-        this.drawCard(o ? (o.win ? 'Hai vinto!' : 'Hai perso') : `Fine giornata ${sum.day} di ${LEVEL.days}`, body,
-            [o ? { label: 'Ricomincia', fn: () => this.game_.restart() } : { label: 'Continua', fn: () => this.run({ type: 'continue' }) }],
+        const next = o?.win && s.level && s.level < LEVELS.length ? [{ label: 'Livello successivo', fn: () => game.restart(s.level + 1) }] : [];
+        const end = [...next, { label: o?.win ? 'Rigioca' : 'Riprova', fn: () => game.restart() }, ...(s.level ? [toMenu] : [])];
+        this.drawCard(o ? (o.win ? 'Hai vinto!' : 'Hai perso') : `Fine giornata ${sum.day} di ${days}`, body,
+            o ? end : [{ label: 'Continua', fn: () => this.run({ type: 'continue' }) }],
             !!o && !o.win);
     }
 
@@ -375,9 +403,10 @@ export class Hud extends Scene {
         const s = this.sim;
         const hh = String(Math.floor(s.clockSec / 3600)).padStart(2, '0');
         const mm = String(Math.floor((s.clockSec % 3600) / 60)).padStart(2, '0');
-        this.clock.setText(`Giorno ${s.day}/${LEVEL.days}   ${hh}:${mm}`);
+        if (s.level !== this.lvl) this.layout();
+        const { goals: g, days } = goalsOf(s);
+        this.clock.setText(`Giorno ${s.day}/${days}   ${hh}:${mm}`);
         this.money.setText(`€ ${s.money.toLocaleString('it-IT')}`);
-        const g = LEVEL.goals;
         const servedText = `Serviti ${s.servedToday} · Persi ${s.lostToday} · Rep ${s.reputation}%\n`
             + `Obiettivi: €${g.money.toLocaleString('it-IT')} · rep ${g.reputation}% · serviti ${s.servedTotal}/${g.served}`;
         if (this.served.text !== servedText) {
@@ -390,7 +419,7 @@ export class Hud extends Scene {
             b.t.setColor(on ? DARK : (b.fg ?? LIGHT));
         }
         const fresh = s.day === 1 && s.clockSec === DAY_OPEN_MIN * 60;
-        this.hint.setText(fresh ? 'Costruisci il negozio, poi premi 1x' : 'In pausa: premi 1x')
+        this.hint.setText(fresh ? (s.level ? 'Metti scaffali e cassa, assumi, poi premi 1x' : 'Costruisci il negozio, poi premi 1x') : 'In pausa: premi 1x')
             .setVisible(s.paused && !s.summary && !s.outcome && !this.registry.get('menu'));
         if (this.panel && this.panelState() !== this.panelKey) this.openPanel();
         this.showCard();

@@ -2,6 +2,7 @@
 import { STEP_MS, SPILL_CHANCE, BIN_RADIUS, SPILL_MAX, CUSTOMER_TYPES, STAFF_SPEED, CLEAN_SEC } from './config.ts';
 import { pace } from './staff.ts';
 import { rand } from './rng.ts';
+import { allows } from './levels.ts';
 import { findPath, walk, type Walkable } from './path.ts';
 import type { GameState, Customer, Staff } from './state.ts';
 
@@ -19,7 +20,7 @@ export function addSpill(s: GameState, x: number, y: number): Spill | null {
 
 /** A customer just stepped onto a new cell: maybe they spill something (half as often near a bin). */
 export function maybeSpill(s: GameState, c: Customer) {
-    if (s.objects.some((o) => o.x === c.x && o.y === c.y)) return; // not on the doormat
+    if (!allows(s, 'features', 'spills') || s.objects.some((o) => o.x === c.x && o.y === c.y)) return; // not on the doormat
     const type = CUSTOMER_TYPES[c.kind];
     const bin = s.objects.some((o) => o.type === 'cestino' && near(o, c.x, c.y, BIN_RADIUS));
     if (rand(s) < SPILL_CHANCE * ('spill' in type ? type.spill : 1) * (bin ? 0.5 : 1)) addSpill(s, c.x, c.y);

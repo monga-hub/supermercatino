@@ -12,6 +12,7 @@ import { rand } from './rng.ts';
 import { cashierAt, pace, tired, wantsBreak } from './staff.ts';
 import { spawnEveryMin } from './day.ts';
 import { maybeSpill, spillNear } from './dirt.ts';
+import { allows, sellable } from './levels.ts';
 import type { GameState, Customer, CustomerKind, Category, ShopObject } from './state.ts';
 
 const STEP_S = STEP_MS / 1000;
@@ -45,10 +46,10 @@ function pickTill(s: GameState, w: Walkable, from: Cell) {
 }
 
 const KINDS = Object.keys(CUSTOMER_TYPES) as CustomerKind[];
-const WEIGHT_SUM = KINDS.reduce((n, k) => n + CUSTOMER_TYPES[k].weight, 0);
 function pickKind(s: GameState): CustomerKind {
-    let r = rand(s) * WEIGHT_SUM;
-    return KINDS.find((k) => (r -= CUSTOMER_TYPES[k].weight) < 0) ?? 'signora';
+    const kinds = KINDS.filter((k) => allows(s, 'customers', k));
+    let r = rand(s) * kinds.reduce((n, k) => n + CUSTOMER_TYPES[k].weight, 0);
+    return kinds.find((k) => (r -= CUSTOMER_TYPES[k].weight) < 0) ?? kinds[0];
 }
 
 /**
@@ -62,9 +63,9 @@ export function spawnCustomer(s: GameState, list?: Category[], kind?: CustomerKi
     if (!pickTill(s, w, d)) return null;
     kind ??= list ? 'signora' : pickKind(s);
     if (!list) {
-        const pool = [...CATEGORIES];
+        const pool = s.level ? sellable(s) : [...CATEGORIES];
         const [lo, hi] = CUSTOMER_TYPES[kind].list;
-        const n = lo + Math.floor(rand(s) * (hi - lo + 1));
+        const n = Math.min(pool.length, lo + Math.floor(rand(s) * (hi - lo + 1)));
         list = Array.from({ length: n }, () => pool.splice(Math.floor(rand(s) * pool.length), 1)[0]);
     }
     const c: Customer = {
@@ -135,7 +136,7 @@ function arrive(s: GameState, c: Customer, w: Walkable) {
         if (c.kind === 'ispettore') { /* looks, writes, buys nothing */ } else if (shelf?.stock) {
             shelf.stock--;
             c.basket.push(shelf.category!);
-            if (s.carts.length < CART_MAX && rand(s) < CART_CHANCE) s.carts.push({ id: s.nextId++, x: c.x, y: c.y }); // left the cart here
+            if (s.carts.length < CART_MAX && allows(s, 'features', 'carts') && rand(s) < CART_CHANCE) s.carts.push({ id: s.nextId++, x: c.x, y: c.y }); // left the cart here
         } else c.patience -= PATIENCE_MISSING; // emptied while walking there
         c.next++;
         c.goal = null;
@@ -295,7 +296,7 @@ export function updateCustomers(s: GameState) {
         s.spawnAcc -= every;
         if (s.clockSec < (DAY_CLOSE_MIN - LAST_ARRIVAL_MIN) * 60) spawnCustomer(s);
     }
-    if (s.day === INSPECTION_DAY && !s.inspection && s.clockSec >= INSPECTION_HOUR * 3600 && !s.customers.some((c) => c.kind === 'ispettore'))
+    if (s.day === INSPECTION_DAY && allows(s, 'features', 'inspection') && !s.inspection && s.clockSec >= INSPECTION_HOUR * 3600 && !s.customers.some((c) => c.kind === 'ispettore'))
         spawnCustomer(s, undefined, 'ispettore');
     if (!s.customers.length) return;
 

@@ -6,6 +6,7 @@ import { updateStaff, refillCandidates } from './staff.ts';
 import { bake } from './bakery.ts';
 import type { Cell } from './path.ts';
 import type { Spill } from './dirt.ts';
+import { LEVELS } from './levels.ts';
 
 export type Speed = (typeof SPEEDS)[number];
 
@@ -67,6 +68,8 @@ export type Customer = {
 };
 
 export type GameState = {
+    /** Campaign level (1..), 0 = free shop (milestone 20). */
+    level: number;
     grid: { w: number; h: number };
     day: number;
     /** Game seconds since midnight (integer: no float drift). */
@@ -126,8 +129,9 @@ export type DaySummary = {
     money: number; served: number; lost: number; reputation: number;
 };
 
-export function createState(): GameState {
+export function createState(level = 0): GameState {
     const s: GameState = {
+        level,
         grid: { w: GRID_W, h: GRID_H },
         day: 1,
         clockSec: DAY_OPEN_MIN * 60,
@@ -164,6 +168,14 @@ export function createState(): GameState {
         summary: null,
         outcome: null,
     };
+    const l = LEVELS[level - 1];
+    if (l) {
+        s.grid = { ...l.grid };
+        s.money = l.money;
+        for (const r of l.rooms) s.rooms.push({ id: s.nextId++, ...r });
+        s.objects.push({ id: s.nextId++, type: 'porta', ...l.door });
+        Object.assign(s.warehouse, l.warehouse);
+    }
     refillCandidates(s);
     return s;
 }
