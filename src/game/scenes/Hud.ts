@@ -1,6 +1,6 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { setSpeed, togglePause, type GameState, type Speed } from '../../sim/state.ts';
-import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN } from '../../sim/config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN, DAY_OPEN_MIN } from '../../sim/config.ts';
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
 import type { Tool, Game } from './Game.ts';
@@ -22,6 +22,7 @@ export class Hud extends Scene {
     money: GameObjects.Text;
     served: GameObjects.Text;
     toast: GameObjects.Text;
+    hint: GameObjects.Text;
     speedBtns: Btn[] = [];
     toolBtns: Btn[] = [];
     catBtns: Btn[] = [];
@@ -67,6 +68,7 @@ export class Hud extends Scene {
         this.clock = this.add.text(12, 12, '', TEXT);
         this.money = this.add.text(0, 12, '', TEXT).setOrigin(1, 0);
         this.served = this.add.text(0, 44, '', { ...TEXT, fontSize: 14, strokeThickness: 4, align: 'right' }).setOrigin(1, 0);
+        this.hint = this.add.text(0, 0, '', { ...TEXT, fontSize: 16, backgroundColor: '#000000aa', padding: { x: 10, y: 6 } }).setOrigin(0.5, 0);
         this.toast = this.add.text(0, 100, '', { ...TEXT, fontSize: 18, backgroundColor: '#000000aa', padding: { x: 10, y: 6 } }).setOrigin(0.5, 0).setVisible(false).setDepth(10);
 
         // speed: index 0 = pause, 1..3 = speed
@@ -142,6 +144,7 @@ export class Hud extends Scene {
         // served/lost under the money, or below the speed row when the screen is narrow
         const rowEnd = Math.max(...this.speedBtns.map((b) => b.t.x + b.t.width));
         this.served.setY(rowEnd + 16 > width - 12 - this.served.width ? 92 : 44);
+        this.hint.setPosition(width / 2, this.served.y + this.served.height + 8);
         // toolbar anchored to the bottom: measure, then place
         const toolsH = this.flow(this.toolBtns, 0, width);
         this.flow(this.toolBtns, height - 12 - toolsH, width);
@@ -343,6 +346,9 @@ export class Hud extends Scene {
             b.t.setBackgroundColor(on ? BTN_ACTIVE_BG : b.bg);
             b.t.setColor(on ? DARK : (b.fg ?? LIGHT));
         }
+        const fresh = s.day === 1 && s.clockSec === DAY_OPEN_MIN * 60;
+        this.hint.setText(fresh ? 'Costruisci il negozio, poi premi 1x' : 'In pausa: premi 1x')
+            .setVisible(s.paused && !s.summary && !s.outcome);
         if (this.panel && this.panelState() !== this.panelKey) this.openPanel();
         this.showCard();
         const showCats = this.tool?.kind === 'object' && this.tool.object === 'scaffale';

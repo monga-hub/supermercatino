@@ -1,9 +1,9 @@
 // Build commands. Commands are plain data so UI, tests and agents share one entry point.
 import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_CAPACITY, ORDER_UNITS, UNIT_COST, TIP } from './config.ts';
-import { readyAt, checkout } from './customers.ts';
+import { readyAt, checkout, rerouteCustomers } from './customers.ts';
 import { nextDay } from './day.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
-import { hire, fire } from './staff.ts';
+import { hire, fire, rerouteStaff } from './staff.ts';
 
 export type Command =
     | { type: 'buildRoom'; room: RoomType; x: number; y: number; w: number; h: number }
@@ -124,6 +124,10 @@ export function apply(s: GameState, c: Command): Result {
         const obj = objectAt(s, c.x, c.y);
         if (obj) s.objects.splice(s.objects.indexOf(obj), 1);
         else s.rooms.splice(s.rooms.indexOf(roomAt(s, c.x, c.y)!), 1);
+    }
+    if (c.type === 'buildRoom' || c.type === 'placeObject' || c.type === 'demolish') {
+        rerouteCustomers(s);
+        rerouteStaff(s);
     }
     return r;
 }

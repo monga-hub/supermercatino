@@ -19,6 +19,7 @@ export function shop({ door = true, till = true, cashier = true } = {}): GameSta
         assert.ok(untilTicks(s, () => s.staff[0].state === 'at_till') >= 0, 'cashier reaches the till');
         s.spawnAcc = 0;
     }
+    s.paused = false; // the player pressed 1x
     return s;
 }
 

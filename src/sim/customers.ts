@@ -128,7 +128,73 @@ function arrive(s: GameState, c: Customer, w: Walkable) {
     c.x = Number.NaN; // reached the door: gone
 }
 
-/** At each staffed till, the front of the queue starts paying when the till is free. */
+/** Re-plan from the cell the customer stands on (mid-step: the nearest one), keeping the walk continuous. */
+function replan(c: Customer, plan: () => void) {
+    const at = { x: Math.round(c.x), y: Math.round(c.y) };
+    const { x, y } = c;
+    Object.assign(c, at, { path: [] });
+    plan();
+    if (Number.isNaN(c.x)) return;
+    if (x !== at.x || y !== at.y) c.path.unshift(at);
+    Object.assign(c, { x, y });
+}
+
+/** Line cells for a till: the cell customers reach it by from the door, then away from the till, turning when blocked. */
+function queueCells(s: GameState, w: Walkable, till: ShopObject, n: number): Cell[] {
+    const d = door(s);
+    const adj = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => ({ x: till.x + dx, y: till.y + dy })).filter((c) => w(c.x, c.y));
+    // ponytail: A* from the door per till per tick while someone queues; cache per layout change if lots get big
+    const front = (d && pathToObject(w, d, till)?.slice(-1)[0]) || adj[0];
+    if (!front) return [];
+    const cells = [front];
+    const used = new Set([`${front.x},${front.y}`]);
+    const [dx, dy] = [front.x - till.x, front.y - till.y];
+    for (let cur = front; cells.length < n; ) {
+        const next = [[dx, dy], [dy, dx], [-dy, -dx]].map(([a, b]) => ({ x: cur.x + a, y: cur.y + b }))
+            .find((c) => w(c.x, c.y) && !used.has(`${c.x},${c.y}`));
+        if (!next) break; // no room: the rest share the last cell
+        cells.push(next);
+        used.add(`${next.x},${next.y}`);
+        cur = next;
+    }
+    return cells;
+}
+
+/** Everyone at a till stands in line on their own cell: whoever is paying first, then by arrival. */
+function lineUp(s: GameState, w: Walkable) {
+    for (const till of s.objects.filter((o) => o.type === 'cassa')) {
+        const rank = (c: Customer) => (c.state === 'queueing' ? 1 : 0);
+        const line = s.customers
+            .filter((c) => c.goal?.kind === 'till' && c.goal.id === till.id && c.state !== 'shopping')
+            .sort((a, b) => rank(a) - rank(b) || a.queuedAt - b.queuedAt);
+        if (!line.length) continue;
+        const cells = queueCells(s, w, till, line.length);
+        line.forEach((c, i) => {
+            const to = cells[i] ?? cells[cells.length - 1];
+            const end = c.path[c.path.length - 1] ?? c;
+            if (c.state !== 'queueing' || !to || (end.x === to.x && end.y === to.y)) return;
+            replan(c, () => (c.path = findPath(w, c, to) ?? []));
+        });
+    }
+}
+
+/** After the layout changes (build/demolish): customers re-plan from where they stand; with no way out they vanish. */
+export function rerouteCustomers(s: GameState) {
+    const w = walkableFor(s);
+    for (const c of s.customers) {
+        if (c.goal?.kind === 'till' && !s.objects.some((o) => c.goal?.kind === 'till' && o.id === c.goal.id)) c.state = 'shopping'; // till gone
+        if (c.state === 'shopping') replan(c, () => { c.goal = null; nextGoal(s, c, w); });
+        else if (c.state === 'leaving' || c.state === 'leaving_angry') replan(c, () => {
+            const d = door(s);
+            const p = d && findPath(w, c, d);
+            if (p) c.path = p;
+            else c.x = Number.NaN;
+        });
+    }
+    s.customers = s.customers.filter((c) => !Number.isNaN(c.x));
+}
+
+/** At each staffed till, the front of the queue starts paying when the till is free and it is at the counter. */
 function serveTills(s: GameState) {
     for (const till of s.objects.filter((o) => o.type === 'cassa')) {
         const cashier = cashierAt(s, till);
@@ -136,7 +202,7 @@ function serveTills(s: GameState) {
         const here = s.customers.filter((c) => c.goal?.kind === 'till' && c.goal.id === till.id);
         if (here.some((c) => c.state === 'paying' || c.state === 'ready')) continue;
         const front = here.filter((c) => c.state === 'queueing').sort((a, b) => a.queuedAt - b.queuedAt)[0];
-        if (front) {
+        if (front && !front.path.length) {
             front.state = 'paying';
             front.timer = PAY_SEC / TRAITS[cashier.trait].speed;
         }
@@ -197,9 +263,13 @@ export function updateCustomers(s: GameState) {
             if (c.timer <= 0) checkout(s, c, 0, w); // nobody tapped: the cashier closes it, no tip
             continue;
         }
-        if (c.state === 'queueing') continue;
+        if (c.state === 'queueing') {
+            if (c.path.length) walk(c, CUSTOMER_SPEED * type.speed); // moving up the line
+            continue;
+        }
         if (c.path.length) walk(c, CUSTOMER_SPEED * type.speed);
         else arrive(s, c, w);
     }
     s.customers = s.customers.filter((c) => !Number.isNaN(c.x));
+    lineUp(s, w); // after moving: whoever just reached a till already has their place in line
 }

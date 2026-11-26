@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createState, advance, type GameState } from '../src/sim/state.ts';
+import { createState, advance, setSpeed, type GameState } from '../src/sim/state.ts';
 import { apply } from '../src/sim/build.ts';
 import { spawnCustomer } from '../src/sim/customers.ts';
 import { DAILY_RENT, TRAITS, ROLES, STAFF_NAMES, CANDIDATES_PER_ROLE, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC } from '../src/sim/config.ts';
@@ -80,7 +80,19 @@ test('wages paid at day end', () => {
     noArrivals(s);
     const st = hireCashier(s);
     const m0 = s.money;
+    setSpeed(s, 1);
     advance(s, ((DAY_CLOSE_MIN - DAY_OPEN_MIN) / GAME_MIN_PER_SEC) * 1000);
     assert.ok(s.summary, 'day closed');
     assert.equal(s.money, m0 - st.wage - DAILY_RENT);
+});
+
+test('staff whose path gets blocked re-plan instead of walking through it', () => {
+    const s = shop({ cashier: false });
+    noArrivals(s);
+    const st = hireCashier(s);
+    untilTicks(s, () => st.path.length > 3);
+    const cell = st.path[2];
+    assert.equal(apply(s, { type: 'placeObject', object: 'scaffale', x: cell.x, y: cell.y, category: 'Pane' }).ok, true);
+    assert.ok(!st.path.some((c) => c.x === cell.x && c.y === cell.y), 'path avoids the new shelf');
+    assert.ok(untilTicks(s, () => st.state === 'at_till') >= 0, 'still reaches the till');
 });

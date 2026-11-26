@@ -10,8 +10,19 @@ test('state is JSON-serializable', () => {
     assert.deepEqual(JSON.parse(JSON.stringify(s)), s);
 });
 
+test('level starts paused', () => {
+    const s = createState();
+    assert.equal(s.paused, true);
+    const t0 = s.clockSec;
+    advance(s, 10_000);
+    assert.equal(s.clockSec, t0, 'time stands still while building');
+    setSpeed(s, 1);
+    assert.equal(s.paused, false);
+});
+
 test('clock advances with speed and stops on pause', () => {
     const s = createState();
+    setSpeed(s, 1);
     const t0 = s.clockSec;
     advance(s, 10_000); // 10 real seconds at 1x
     assert.equal(s.clockSec - t0, 10 * GAME_MIN_PER_SEC * 60);
@@ -38,6 +49,7 @@ test('clock advances with speed and stops on pause', () => {
 
 test('day rolls over at closing time', () => {
     const s = createState();
+    setSpeed(s, 1);
     assert.equal(s.day, 1);
     assert.equal(s.clockSec, DAY_OPEN_MIN * 60);
     const dayRealMs = ((DAY_CLOSE_MIN - DAY_OPEN_MIN) / GAME_MIN_PER_SEC) * 1000;

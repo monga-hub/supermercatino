@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+implemented — in attesa del playtest dell'utente
 
 ## Objective
 
@@ -21,15 +21,15 @@ Togliere i piccoli fastidi emersi nei playtest prima di aggiungere contenuti: la
 
 ## Dependencies
 
-- **Depends on:** milestone 06
+- **Depends on:** milestone 06 (fatto dopo 10)
 - **Blocks:** nessuno
 
 ## Acceptance criteria
 
-- [ ] Clienti in fila alla stessa cassa stanno su celle diverse, il primo accanto alla cassa — test: `tests/queue.test.ts::queue on distinct cells`
-- [ ] Il livello parte in pausa e resta in pausa finché il giocatore non sceglie una velocità — test: `tests/sim.test.ts::level starts paused` + browser
-- [ ] Demolire lo scaffale o il pavimento verso cui un cliente cammina gli fa ricalcolare il percorso (o uscire) — test: `tests/customers.test.ts::reroute after demolish`
-- [ ] All'avvio il lotto intero è visibile su telefono in verticale e orizzontale — screenshot + verified by user playtest
+- [x] Clienti in fila alla stessa cassa stanno su celle diverse, il primo accanto alla cassa — test: `tests/customers.test.ts::queue on distinct cells`
+- [x] Il livello parte in pausa e resta in pausa finché il giocatore non sceglie una velocità — test: `tests/sim.test.ts::level starts paused` + browser `hooks expose and advance state`
+- [x] Demolire lo scaffale o il pavimento verso cui un cliente cammina gli fa ricalcolare il percorso (o uscire) — test: `tests/customers.test.ts::reroute after demolish`, staff: `tests/staff.test.ts::staff whose path gets blocked*`
+- [ ] All'avvio il lotto intero è visibile su telefono in verticale e orizzontale — screenshot (`output/shots-08.mjs`) + verified by user playtest
 
 ## Exit condition
 
@@ -43,3 +43,6 @@ L'utente apre il gioco dal telefono: vede tutto il lotto, il tempo è fermo finc
 ## Notes
 
 - Promuove dal backlog: "Fila visibile", "Clienti e demolizioni", e le note di STATE.md (partenza in pausa, camera).
+- La fila parte dalla cella da cui si arriva alla cassa dalla porta e si allontana dalla cassa, girando quando trova un ostacolo (`queueCells` in `src/sim/customers.ts`); chi è in fila e avanza mostra la camminata.
+- Lo zoom minimo scende fino a far stare il lotto intero (su telefono ~0.3); hook di test `window.cellToScreen` per i clic dei test browser.
+- Insieme: le icone di tocco ora fluttuano sopra scaffale e cassa (richiesta utente 2026-11-26).

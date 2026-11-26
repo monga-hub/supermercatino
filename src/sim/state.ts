@@ -107,7 +107,7 @@ export function createState(): GameState {
         day: 1,
         clockSec: DAY_OPEN_MIN * 60,
         speed: 1,
-        paused: false,
+        paused: true, // milestone 08: build first, start the clock with 1x
         money: START_MONEY,
         rooms: [],
         objects: [],

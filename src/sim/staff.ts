@@ -127,6 +127,21 @@ function updateStocker(s: GameState, st: Staff, w: Walkable) {
     st.state = 'idle';
 }
 
+/** After the layout changes: staff whose path got blocked stop on their cell and re-plan next tick. */
+export function rerouteStaff(s: GameState) {
+    const w = walkableFor(s);
+    for (const st of s.staff) {
+        if (st.path.every((c) => w(c.x, c.y))) continue;
+        // ponytail: snap to the nearest cell and drop the errand (goods go back to the warehouse); re-plan from scratch
+        Object.assign(st, { x: Math.round(st.x), y: Math.round(st.y), path: [], state: 'idle' });
+        if (st.role === 'cassiere') st.tillId = null;
+        else if (st.job) {
+            s.warehouse[st.job.category] += st.job.units;
+            st.job = null;
+        }
+    }
+}
+
 export function updateStaff(s: GameState) {
     if (!s.staff.length) return;
     const w = walkableFor(s);

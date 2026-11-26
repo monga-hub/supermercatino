@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { advance, tick } from '../src/sim/state.ts';
 import { spawnCustomer } from '../src/sim/customers.ts';
-import { shop, noArrivals, runOut } from './helpers.ts';
+import { shop, noArrivals, runOut, untilTicks } from './helpers.ts';
+import { apply } from '../src/sim/build.ts';
 import { PRICES, SHELF_CAPACITY } from '../src/sim/config.ts';
 
 test('spawn only with door and reachable till', () => {
@@ -69,4 +70,36 @@ test('deterministic with seed', () => {
         return JSON.stringify(s);
     };
     assert.equal(run(), run());
+});
+
+test('queue on distinct cells', () => {
+    const s = shop({ cashier: false }); // nobody pays: the queue only grows
+    noArrivals(s);
+    const till = s.objects.find((o) => o.type === 'cassa')!;
+    const cs = [0, 1, 2].map(() => {
+        const c = spawnCustomer(s, ['Pasta'])!;
+        Object.assign(c, { basket: ['Pasta'], next: 1 }); // list done: straight to the till
+        return c;
+    });
+    assert.ok(untilTicks(s, () => cs.every((c) => c.state === 'queueing' && !c.path.length)) >= 0, 'all lined up');
+    const cells = cs.map((c) => `${c.x},${c.y}`);
+    assert.equal(new Set(cells).size, 3, cells.join(' '));
+    const first = [...cs].sort((a, b) => a.queuedAt - b.queuedAt)[0];
+    assert.equal(Math.abs(first.x - till.x) + Math.abs(first.y - till.y), 1, 'first in line next to the till');
+});
+
+test('reroute after demolish', () => {
+    const s = shop();
+    noArrivals(s);
+    assert.equal(apply(s, { type: 'placeObject', object: 'scaffale', x: 3, y: 3, category: 'Pasta' }).ok, true);
+    const far = s.objects.at(-1)!;
+    const c = spawnCustomer(s, ['Pasta'])!;
+    for (let i = 0; i < 3; i++) tick(s); // on its way to the near shelf, between two cells
+    const near = s.objects.find((o) => o.type === 'scaffale' && o !== far)!;
+    assert.equal(c.goal?.kind === 'shelf' && c.goal.id, near.id);
+    assert.equal(apply(s, { type: 'demolish', x: near.x, y: near.y }).ok, true);
+    assert.equal(c.goal?.kind === 'shelf' && c.goal.id, far.id, 'heads to the other Pasta shelf right away');
+    const p0 = c.path[0];
+    assert.ok(Math.abs(p0.x - c.x) + Math.abs(p0.y - c.y) <= 1, 'path starts where it stands');
+    assert.ok(untilTicks(s, () => c.basket.length === 1) >= 0, 'gets the pasta');
 });

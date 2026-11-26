@@ -4,7 +4,7 @@
 
 ## Last updated
 
-2026-11-26 by Claude / make-game milestone 10
+2026-11-26 by Claude / make-game milestone 08
 
 ## Current phase
 
@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[10 — Clienti diversi](milestones/10-clienti-diversi.md) (implementato, in attesa di playtest). 07, 07b, 09 implementati, in attesa di playtest. Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md).
+[08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md) (implementato, in attesa di playtest). 07, 07b, 09, 10 implementati, in attesa di playtest. Poi: nuovo giro di milestone planning dal backlog.
 
 ## Last action
 
-Milestone 10: sei tipi di cliente (`CUSTOMER_TYPES` in `src/sim/config.ts`: signora, mamma col bambino, vecchietta, giovane, Signor Ponzone, orso), ognuno col suo foglio Gemini 3×3 in `art/sheets/`. L'orso contento alla cassa dà +€60 e +6 reputazione con un messaggio. `npm test` 51/51, browser 10/10.
+Icone di tocco alzate sopra gli oggetti; milestone 08: fila su celle diverse, livello che parte in pausa con il messaggio "Costruisci il negozio, poi premi 1x", camera che inquadra tutto il lotto all'avvio e al ricomincia, clienti e staff che ricalcolano il percorso dopo costruzioni e demolizioni. `npm test` 55/55, browser 10/10.
 
 ## Next step
 
-Playtest dell'utente (07, 07b, 09, 10) sul telefono, poi 08.
+Playtest dell'utente (07, 07b, 09, 10, 08) sul telefono, poi milestone planning dal backlog.
 
 ## Blockers
 
@@ -29,8 +29,6 @@ none
 ## Notes for next session
 
 - Con 10 pezzi per scaffale e un cliente ogni 10 minuti di gioco, gli scaffali si svuotano in ~3 ore di gioco: ora c'è il magazziniere; bilanciamento costi/prezzi da tarare col 06.
-- Il livello parte col tempo che scorre a 1x mentre si costruisce: valutare partenza in pausa.
-- La camera parte centrata sul lotto: un negozio costruito in alto a sinistra finisce mezzo fuori schermo. Da valutare.
 - `npm audit` segnala vulnerabilità nelle devDependencies del template (Vite 6.3.x); valutare upgrade in un milestone dedicato, non è bloccante per lo sviluppo locale.
 - `node --test` gira sui `.ts` con lo type stripping di Node 24 (verificato). Lo script `npm test` è limitato a `tests/**/*.test.ts` perché il pattern di default prendeva anche `scripts/browser-test.mjs`.
 - Il pannello browser di Claude manda click/trascinamenti con down e up nello stesso frame: utile per screenshot, ma per verificare l'input usare Playwright (`page.mouse` con `steps`).

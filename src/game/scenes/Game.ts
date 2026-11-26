@@ -3,12 +3,14 @@ import { createState, tick, advance, type GameState, type RoomType, type ObjectT
 import { apply, check, type Command } from '../../sim/build.ts';
 import { STEP_MS, TAP_ICON_BELOW, BEAR_BONUS_MONEY, BEAR_BONUS_REP } from '../../sim/config.ts';
 import { readyAt } from '../../sim/customers.ts';
-import { gridToIso, cellAt, TILE_H } from '../../render/iso.ts';
+import { gridToIso, cellAt, TILE_H, TILE_W } from '../../render/iso.ts';
 import { drawFloor, drawThings, drawObject, tile, type Put } from '../../render/draw.ts';
 import { KIT_SCALE } from '../../render/sprites.ts';
 import type { Hud } from './Hud.ts';
 
 const ZOOM_MIN = 0.4;
+/** Tap icons float just above the shelf (80 px) / till (51 px) sprite. */
+const ICON_LIFT = { shelf: 86, till: 58 };
 const ZOOM_MAX = 2.5;
 const TAP_SLOP = 10; // px a pointer may move and still count as a tap
 const OK = 0x4caf50;
@@ -38,6 +40,7 @@ export class Game extends Scene {
     pinch: { d: number; mx: number; my: number } | null = null;
     pinched = false; // a pinch happened during this touch: its pointerup must not build
     /** Tap icons over shelves and tills, pooled by key; each carries its command in data 'cmd'. */
+    zoomMin = ZOOM_MIN;
     icons = new Map<string, GameObjects.Image>();
     /** happyBears last seen, to celebrate each new one. */
     bears = 0;
@@ -81,6 +84,11 @@ export class Game extends Scene {
         window.advanceTime = (ms: number) => advance(this.sim, ms);
         window.dispatch = (cmd: Command) => this.run(cmd);
         window.selectTool = (t: Tool) => this.registry.set('tool', t);
+        window.cellToScreen = (x, y, lift = 0) => {
+            const cam = this.cameras.main;
+            const p = gridToIso(x, y);
+            return { x: (p.x - cam.worldView.x) * cam.zoom, y: (p.y + TILE_H / 2 - lift - cam.worldView.y) * cam.zoom, zoom: cam.zoom };
+        };
     }
 
     update(_time: number, delta: number) {
@@ -122,7 +130,8 @@ export class Game extends Scene {
             }
             const p = gridToIso(w.x, w.y);
             const bob = w.cmd ? Math.sin(time / 180) * 3 : 0;
-            t.setFrame(w.frame).setOrigin(0.5, 1).setPosition(p.x, p.y + TILE_H / 2 - 40 + bob).setScale(scale * KIT_SCALE).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
+            const lift = w.key[0] === 's' ? ICON_LIFT.shelf : ICON_LIFT.till;
+            t.setFrame(w.frame).setOrigin(0.5, 1).setPosition(p.x, p.y + TILE_H / 2 - lift + bob).setScale(scale * KIT_SCALE).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
         }
     }
 
@@ -147,6 +156,7 @@ export class Game extends Scene {
         for (const t of this.icons.values()) t.destroy();
         this.icons.clear();
         drawFloor(this.floor, this.sim);
+        this.frameLot();
     }
 
     run(cmd: Command) {
@@ -199,11 +209,22 @@ export class Game extends Scene {
         }
     }
 
+    /** Fit the whole lot between the HUD bars (milestone 08); pinch can't zoom out further than this. */
+    frameLot() {
+        const cam = this.cameras.main;
+        const { w, h } = this.sim.grid;
+        const top = 130, bottom = 110; // ponytail: HUD bar heights on a phone; measure from Hud if its layout changes
+        const fit = Math.min(cam.width / (((w + h) * TILE_W) / 2 + 16), (cam.height - top - bottom) / (((w + h) * TILE_H) / 2 + 16));
+        this.zoomMin = Math.min(ZOOM_MIN, fit);
+        cam.setZoom(Math.max(this.zoomMin, Math.min(1, fit)));
+        const c = gridToIso(w / 2, h / 2); // centre of the lot diamond
+        cam.centerOn(c.x, c.y - (top - bottom) / 2 / cam.zoom);
+    }
+
     setupCamera() {
         const cam = this.cameras.main;
         cam.setBackgroundColor('#2b1d16');
-        const c = gridToIso(this.sim.grid.w / 2, this.sim.grid.h / 2);
-        cam.centerOn(c.x, c.y);
+        this.frameLot();
         this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => this.zoomBy(dy > 0 ? 0.9 : 1.1));
     }
 
@@ -270,6 +291,6 @@ export class Game extends Scene {
 
     zoomBy(f: number) {
         const cam = this.cameras.main;
-        cam.setZoom(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, cam.zoom * f)));
+        cam.setZoom(Math.min(ZOOM_MAX, Math.max(this.zoomMin, cam.zoom * f)));
     }
 }

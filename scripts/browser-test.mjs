@@ -31,10 +31,19 @@ async function check(name, fn) {
     }
 }
 const expect = (cond, msg) => { if (!cond) throw new Error(msg); };
+/** The level starts paused (milestone 08): press 1x like the player. */
+const start = async (p) => {
+    await p.keyboard.press('1');
+    await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+};
 
 await check('hooks expose and advance state', async () => {
     const s0 = await state();
     for (const k of ['grid', 'day', 'clockSec', 'speed', 'paused']) expect(k in s0, `missing ${k}`);
+    expect(s0.paused, 'level should start paused');
+    await advance(60000);
+    expect((await state()).clockSec === s0.clockSec, 'clock moved before pressing 1x');
+    await start(page);
     await advance(60000);
     const s1 = await state();
     expect(s1.clockSec > s0.clockSec || s1.day > s0.day, `clock did not move: ${s0.clockSec} -> ${s1.clockSec}`);
@@ -83,14 +92,17 @@ await check('build with mouse', async () => {
     await p2.waitForTimeout(300);
     const st = async () => JSON.parse(await p2.evaluate(() => window.render_game_to_text()));
     await p2.evaluate(() => window.selectTool({ kind: 'room', room: 'sala_vendita' }));
-    await p2.mouse.move(400, 100);
+    const at = (x, y, lift) => p2.evaluate(([a, b, c]) => window.cellToScreen(a, b, c), [x, y, lift]);
+    const [a, b] = [await at(8, 8), await at(12, 12)];
+    await p2.mouse.move(a.x, a.y);
     await p2.mouse.down();
-    await p2.mouse.move(400, 200, { steps: 8 });
+    await p2.mouse.move(b.x, b.y, { steps: 8 });
     await p2.mouse.up();
     const s1 = await st();
     expect(s1.rooms.length === 1 && s1.rooms[0].type === 'sala_vendita', `room not built: ${JSON.stringify(s1.rooms)}`);
     await p2.evaluate(() => window.selectTool({ kind: 'object', object: 'scaffale', category: 'Pasta' }));
-    await p2.mouse.click(400, 150); // inside the room
+    const inside = await at(10, 10);
+    await p2.mouse.click(inside.x, inside.y);
     const s2 = await st();
     expect(s2.objects.length === 1 && s2.objects[0].category === 'Pasta', `shelf not placed: ${JSON.stringify(s2.objects)}`);
     expect(s2.money < s1.money, 'shelf not charged');
@@ -101,6 +113,7 @@ await check('hired cashier serves', async () => {
     const p3 = await browser.newPage({ viewport: { width: 800, height: 600 } });
     await p3.goto(new URL('?manual', base).href);
     await p3.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    await start(p3);
     const run = (c) => p3.evaluate((x) => window.dispatch(x), c);
     for (const c of [
         { type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 6, h: 5 },
@@ -130,6 +143,7 @@ await check('shelves get restocked', async () => {
     const p4 = await browser.newPage({ viewport: { width: 800, height: 600 } });
     await p4.goto(new URL('?manual', base).href);
     await p4.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    await start(p4);
     const run = (c) => p4.evaluate((x) => window.dispatch(x), c);
     const st = async () => JSON.parse(await p4.evaluate(() => window.render_game_to_text()));
     const cats = ['Pasta', 'Pane', 'Latticini'];
@@ -159,11 +173,10 @@ await check('shelves get restocked', async () => {
 });
 
 await check('tap icon collects', async () => {
-    // fresh page, camera centred on cell (10,10) at zoom 1: cell (x,y) centre is at
-    // screen (400 + (x-y)*32, 300 + ((x+y)*16 + 16) - 336)
     const p5 = await browser.newPage({ viewport: { width: 800, height: 600 } });
     await p5.goto(new URL('?manual', base).href);
     await p5.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    await start(p5);
     const run = (c) => p5.evaluate((x) => window.dispatch(x), c);
     const st = async () => JSON.parse(await p5.evaluate(() => window.render_game_to_text()));
     for (const c of [
@@ -184,7 +197,8 @@ await check('tap icon collects', async () => {
     expect(ready, 'no customer reached a ready bill');
     await frames5();
     const s0 = await st();
-    await p5.mouse.click(400 + (4 - 9) * 32, 300 + (13 * 16 + 16) - 336 - 45); // the 💰 icon over the till
+    const icon = await p5.evaluate(() => window.cellToScreen(4, 9, 58)); // ICON_LIFT.till: bottom of the 💰 badge
+    await p5.mouse.click(icon.x, icon.y - 10); // the badge is ~21 screen px tall at any zoom
     const s1 = await st();
     expect(s1.servedToday === s0.servedToday + 1, `not collected: served ${s0.servedToday} -> ${s1.servedToday}`);
     expect(s1.money > s0.money, 'money did not grow');
@@ -199,6 +213,7 @@ await check('day summary and continue', async () => {
     const p6 = await browser.newPage({ viewport: { width: 800, height: 600 } });
     await p6.goto(new URL('?manual', base).href);
     await p6.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    await start(p6);
     const st = async () => JSON.parse(await p6.evaluate(() => window.render_game_to_text()));
     await p6.evaluate(() => window.advanceTime(240000)); // a whole day at 1x
     const s0 = await st();
@@ -218,6 +233,7 @@ await check('restart after the level ends', async () => {
     const p7 = await browser.newPage({ viewport: { width: 800, height: 600 } });
     await p7.goto(new URL('?manual', base).href);
     await p7.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    await start(p7);
     const st = async () => JSON.parse(await p7.evaluate(() => window.render_game_to_text()));
     await p7.evaluate(() => window.dispatch({ type: 'buildRoom', room: 'sala_vendita', x: 0, y: 0, w: 3, h: 3 }));
     for (let d = 0; d < 10 && !(await st()).outcome; d++) {

@@ -35,7 +35,7 @@ const SCAN_SEC = 54;
 /** Character frame for the sim state. Pure: tests/sprites.test.ts. */
 export function personFrame(s: GameState, p: Customer | Staff): string {
     if (!('role' in p)) {
-        if (p.state === 'queueing') return `${p.kind}_idle`;
+        if (p.state === 'queueing' && !p.path.length) return `${p.kind}_idle`;
         if (p.state === 'paying' || p.state === 'ready') return `${p.kind}_pay`;
         return `${p.kind}_${p.state === 'leaving_angry' ? 'angry' : 'walk'}_${step(p)}`;
     }
