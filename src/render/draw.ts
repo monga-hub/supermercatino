@@ -1,7 +1,7 @@
 // Placeholder drawing: flat iso tiles and boxes. Replaced by AI sprites after milestone 03.
 import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
-import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role } from '../sim/state.ts';
+import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role, Category } from '../sim/state.ts';
 
 type G = GameObjects.Graphics;
 
@@ -84,7 +84,7 @@ export function drawCustomer(g: G, c: Customer) {
     g.fillRect(p.x - 12, top, 24 * v, 4);
 }
 
-export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b };
+export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazziniere: 0x2e7d5b };
 
 /** A seated cashier is drawn half a cell behind the till, so the till doesn't hide them. */
 const SEAT_OFFSET = 0.45;
@@ -93,6 +93,20 @@ export function drawStaff(g: G, st: Staff) {
     const o = st.state === 'at_till' ? SEAT_OFFSET : 0;
     box(g, st.x - o, st.y - o, 24, ROLE_COLOR[st.role], 0.38);
     box(g, st.x - o, st.y - o, 28, 0xf4efe6, 0.24); // berretto bianco
+    if (st.job?.units) box(g, st.x + 0.15, st.y + 0.15, 16, CRATE, 0.3); // scatolone in mano
+    if (st.job?.units) box(g, st.x + 0.15, st.y + 0.15, 17, CATEGORY_COLOR[st.job.category], 0.18);
+}
+
+const CRATE = 0xa8794a;
+
+/** Warehouse stock: one crate stack per category on the warehouse cells, taller with more units. */
+function crates(s: GameState) {
+    const cells: { x: number; y: number }[] = [];
+    for (const r of s.rooms)
+        if (r.type === 'magazzino')
+            for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) cells.push({ x, y });
+    const cats = (Object.keys(s.warehouse) as Category[]).filter((c) => s.warehouse[c] > 0);
+    return cats.slice(0, cells.length).map((cat, i) => ({ ...cells[i], cat, h: 8 + Math.min(24, s.warehouse[cat]) }));
 }
 
 /** Floor layer: lot and rooms. Redraw only when the layout changes. */
@@ -117,6 +131,10 @@ export function drawThings(g: G, s: GameState) {
     const items: { d: number; draw: () => void }[] = [
         ...s.objects.map((o) => ({ d: o.x + o.y, draw: () => drawObject(g, o) })),
         ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: () => drawCustomer(g, c) })),
+        ...crates(s).map((c) => ({ d: c.x + c.y - 0.01, draw: () => {
+            box(g, c.x, c.y, c.h, CRATE, 0.6);
+            box(g, c.x, c.y, c.h + 2, CATEGORY_COLOR[c.cat], 0.3);
+        } })),
         ...s.staff.map((st) => ({ d: st.x + st.y + (st.state === 'at_till' ? -2 * SEAT_OFFSET : 0.02), draw: () => drawStaff(g, st) })),
     ];
     for (const it of items.sort((a, b) => a.d - b.d)) it.draw();

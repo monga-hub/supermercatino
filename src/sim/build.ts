@@ -1,5 +1,5 @@
 // Build commands. Commands are plain data so UI, tests and agents share one entry point.
-import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_STOCK } from './config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_CAPACITY, ORDER_UNITS, UNIT_COST } from './config.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
 import { hire, fire } from './staff.ts';
 
@@ -8,7 +8,8 @@ export type Command =
     | { type: 'placeObject'; object: ObjectType; x: number; y: number; category?: string }
     | { type: 'demolish'; x: number; y: number }
     | { type: 'hire'; candidateId: number }
-    | { type: 'fire'; staffId: number };
+    | { type: 'fire'; staffId: number }
+    | { type: 'order'; category: string };
 
 export type Result = { ok: true; cost: number } | { ok: false; reason: string };
 
@@ -48,6 +49,11 @@ export function check(s: GameState, c: Command): Result {
         return afford(s, def.cost);
     }
     if (c.type === 'hire') return s.candidates.some((x) => x.id === c.candidateId) ? { ok: true, cost: 0 } : fail('Candidato non trovato');
+    if (c.type === 'order') {
+        if (!CATEGORIES.includes(c.category as Category)) return fail('Categoria sconosciuta');
+        if (!s.rooms.some((r) => r.type === 'magazzino')) return fail('Serve un magazzino');
+        return afford(s, ORDER_UNITS * UNIT_COST[c.category as Category]);
+    }
     if (c.type === 'fire') return s.staff.some((x) => x.id === c.staffId) ? { ok: true, cost: 0 } : fail('Dipendente non trovato');
     // demolish
     const obj = objectAt(s, c.x, c.y);
@@ -73,13 +79,15 @@ export function apply(s: GameState, c: Command): Result {
         const o: ShopObject = { id: s.nextId++, type: c.object, x: c.x, y: c.y };
         if (c.object === 'scaffale') {
             o.category = c.category as Category;
-            o.stock = SHELF_STOCK;
+            o.stock = SHELF_CAPACITY;
         }
         s.objects.push(o);
     } else if (c.type === 'hire') {
         hire(s, c.candidateId);
     } else if (c.type === 'fire') {
         fire(s, c.staffId);
+    } else if (c.type === 'order') {
+        s.warehouse[c.category as Category] += ORDER_UNITS;
     } else {
         const obj = objectAt(s, c.x, c.y);
         if (obj) s.objects.splice(s.objects.indexOf(obj), 1);

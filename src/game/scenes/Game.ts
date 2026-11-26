@@ -4,6 +4,7 @@ import { apply, check, type Command } from '../../sim/build.ts';
 import { STEP_MS } from '../../sim/config.ts';
 import { gridToIso, cellAt } from '../../render/iso.ts';
 import { drawFloor, drawThings, drawObject, tile } from '../../render/draw.ts';
+import type { Hud } from './Hud.ts';
 
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 2.5;
@@ -139,7 +140,10 @@ export class Game extends Scene {
         const buildsOnDrag = (p: Input.Pointer) =>
             this.tool?.kind === 'room' && !p.rightButtonDown() && !p.middleButtonDown();
 
+        const hud = this.scene.get('Hud') as Hud;
+        const onPanel = (p: Input.Pointer) => p.isDown && hud.onPanel(p.downX, p.downY);
         this.input.on('pointermove', (p: Input.Pointer) => {
+            if (onPanel(p)) return;
             const down = downPointers();
             if (down.length >= 2) {
                 const [a, b] = down;
@@ -173,7 +177,7 @@ export class Game extends Scene {
                 this.pinch = null;
                 this.pinched = false;
             }
-            if (wasPinch || !this.tool || !p.leftButtonReleased()) return;
+            if (wasPinch || !this.tool || !p.leftButtonReleased() || hud.onPanel(p.downX, p.downY)) return;
             const isTap = p.getDistance() <= TAP_SLOP;
             if (this.tool.kind === 'room' || isTap) {
                 const cmd = this.commandFor(p);

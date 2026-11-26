@@ -1,7 +1,7 @@
 // Staff: candidates, hiring, and per-role behaviour. Pure, deterministic.
-import { ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED } from './config.ts';
+import { ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, RESTOCK_BELOW } from './config.ts';
 import { rand, pick } from './rng.ts';
-import { pathToObject, walk, type Walkable } from './path.ts';
+import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import type { GameState, Role, Trait, Staff, ShopObject } from './state.ts';
 
 /** Top up the candidate list to CANDIDATES_PER_ROLE per role. */
@@ -10,7 +10,9 @@ export function refillCandidates(s: GameState) {
         while (s.candidates.filter((c) => c.role === role).length < CANDIDATES_PER_ROLE) {
             const trait = pick(s, Object.keys(TRAITS) as Trait[]);
             const wage = TRAITS[trait].wage + Math.round((rand(s) * 2 - 1) * WAGE_SPREAD);
-            s.candidates.push({ id: s.nextId++, role, name: pick(s, STAFF_NAMES), trait, wage });
+            const used = new Set([...s.candidates, ...s.staff].map((c) => c.name));
+            const free = STAFF_NAMES.filter((n) => !used.has(n));
+            s.candidates.push({ id: s.nextId++, role, name: pick(s, free.length ? free : STAFF_NAMES), trait, wage });
         }
     }
 }
@@ -19,7 +21,7 @@ export function refillCandidates(s: GameState) {
 export function hire(s: GameState, candidateId: number) {
     const c = s.candidates.splice(s.candidates.findIndex((x) => x.id === candidateId), 1)[0];
     const door = s.objects.find((o) => o.type === 'porta');
-    s.staff.push({ ...c, state: 'arriving', x: door?.x ?? 0, y: door?.y ?? 0, path: [], tillId: null });
+    s.staff.push({ ...c, state: 'arriving', x: door?.x ?? 0, y: door?.y ?? 0, path: [], tillId: null, job: null });
     refillCandidates(s);
 }
 
@@ -68,8 +70,64 @@ function updateCashier(s: GameState, st: Staff, w: Walkable) {
     st.y = till.y;
 }
 
+/** Shortest path to any free warehouse cell. */
+function pathToWarehouse(s: GameState, w: Walkable, from: Cell) {
+    let best: Cell[] | null = null;
+    for (const r of s.rooms) {
+        if (r.type !== 'magazzino') continue;
+        for (let x = r.x; x < r.x + r.w; x++)
+            for (let y = r.y; y < r.y + r.h; y++) {
+                const p = findPath(w, from, { x, y });
+                if (p && (!best || p.length < best.length)) best = p;
+            }
+    }
+    return best;
+}
+
+/** One trip at a time: warehouse -> low shelf, filling it up to capacity. */
+function updateStocker(s: GameState, st: Staff, w: Walkable) {
+    if (!st.job) {
+        st.state = 'idle';
+        const taken = new Set(s.staff.map((o) => o.job?.shelfId));
+        // ponytail: idle stockers re-search every tick; fine while shelves are few
+        const shelf = s.objects.find((o) =>
+            o.type === 'scaffale' && o.stock! < RESTOCK_BELOW && s.warehouse[o.category!] > 0 && !taken.has(o.id));
+        const path = shelf && pathToWarehouse(s, w, st);
+        if (!shelf || !path) return;
+        st.job = { shelfId: shelf.id, category: shelf.category!, units: 0 };
+        st.path = path;
+        st.state = 'fetching';
+    }
+    if (st.path.length) return walk(st, STAFF_SPEED * TRAITS[st.trait].speed);
+    const job = st.job;
+    const shelf = s.objects.find((o) => o.id === job.shelfId);
+    if (st.state === 'fetching') {
+        // in the warehouse: load what the shelf is missing
+        const units = Math.min(shelf ? SHELF_CAPACITY - shelf.stock! : 0, s.warehouse[job.category]);
+        const path = shelf && units > 0 ? pathToObject(w, st, shelf) : null;
+        if (!path) {
+            st.job = null;
+            return;
+        }
+        s.warehouse[job.category] -= units;
+        job.units = units;
+        st.path = path;
+        st.state = 'delivering';
+        return;
+    }
+    // at the shelf; whatever doesn't fit (or a demolished shelf) goes back to the warehouse
+    const put = shelf ? Math.min(job.units, SHELF_CAPACITY - shelf.stock!) : 0;
+    if (shelf) shelf.stock! += put;
+    s.warehouse[job.category] += job.units - put;
+    st.job = null;
+    st.state = 'idle';
+}
+
 export function updateStaff(s: GameState) {
     if (!s.staff.length) return;
     const w = walkableFor(s);
-    for (const st of s.staff) if (st.role === 'cassiere') updateCashier(s, st, w);
+    for (const st of s.staff) {
+        if (st.role === 'cassiere') updateCashier(s, st, w);
+        else updateStocker(s, st, w);
+    }
 }

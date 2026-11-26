@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[05 — Rifornisci gli scaffali](milestones/05-rifornisci-gli-scaffali.md) (da iniziare). 04 chiuso. Poi 06 Fine giornata e obiettivi; sprite AI dopo il 06.
+[05 — Rifornisci gli scaffali](milestones/05-rifornisci-gli-scaffali.md) (in-progress, AC automatiche verdi). 04 chiuso. Poi 06 Fine giornata e obiettivi; sprite AI dopo il 06.
 
 ## Last action
 
-Milestone 04 implementato: candidati generati dalla seed (3 per ruolo, tratti Normale/Svelto/Chiacchierone), comandi `hire`/`fire`, cassiere che entra e si siede alla cassa, casse che servono solo con cassiere, velocità di pagamento per tratto, stipendi a fine giornata; pannello Staff nell'HUD. Test: `npm test` 23/23, `npm run test:browser` 6/6. Playtest utente ok. Poi, su richiesta utente: stanze di qualsiasi misura (niente minimo), stanze dello stesso tipo affiancate formano un'unica area; la porta va sul bordo dell'area intera.
+Milestone 05 implementato: `warehouse` per categoria, comando `order` (serve un magazzino), ruolo Magazziniere che va in magazzino, prende quanto manca e riempie gli scaffali sotto soglia; pannello Merce nell'HUD; pannelli scorrevoli. Test: `npm test` 26/26, `npm run test:browser` 7/7. Prima: stanze di qualsiasi misura (stesso tipo affiancato = un'area unica).
 
 ## Next step
 
-Milestone 05 (Rifornisci gli scaffali): test rossi `tests/restock.test.ts`, poi implementazione.
+Playtest utente del 05 da telefono (magazzino, Merce → Ordina, magazziniere che rifornisce). Se ok: 05 → done e si parte col 06 (Fine giornata e obiettivi).
 
 ## Blockers
 
@@ -28,7 +28,8 @@ none
 
 ## Notes for next session
 
-- Con 10 pezzi per scaffale e un cliente ogni 10 minuti di gioco, gli scaffali si svuotano in ~3 ore di gioco: voluto (niente rifornimento fino allo staff), ma da tarare.
+- Con 10 pezzi per scaffale e un cliente ogni 10 minuti di gioco, gli scaffali si svuotano in ~3 ore di gioco: ora c'è il magazziniere; bilanciamento costi/prezzi da tarare col 06.
+- La camera parte centrata sul lotto: un negozio costruito in alto a sinistra finisce mezzo fuori schermo. Da valutare.
 - `npm audit` segnala vulnerabilità nelle devDependencies del template (Vite 6.3.x); valutare upgrade in un milestone dedicato, non è bloccante per lo sviluppo locale.
 - `node --test` gira sui `.ts` con lo type stripping di Node 24 (verificato). Lo script `npm test` è limitato a `tests/**/*.test.ts` perché il pattern di default prendeva anche `scripts/browser-test.mjs`.
 - Il pannello browser di Claude manda click/trascinamenti con down e up nello stesso frame: utile per screenshot, ma per verificare l'input usare Playwright (`page.mouse` con `steps`).

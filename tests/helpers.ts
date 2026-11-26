@@ -23,8 +23,11 @@ export function shop({ door = true, till = true, cashier = true } = {}): GameSta
 }
 
 /** Hire the first cashier candidate (optionally forcing a trait). */
-export function hireCashier(s: GameState, trait?: string) {
-    const cand = s.candidates.find((c) => c.role === 'cassiere')!;
+export const hireCashier = (s: GameState, trait?: string) => hireStaff(s, 'cassiere', trait);
+
+/** Hire the first candidate for a role (optionally forcing a trait). */
+export function hireStaff(s: GameState, role: string, trait?: string) {
+    const cand = s.candidates.find((c) => c.role === role)!;
     if (trait) cand.trait = trait as typeof cand.trait;
     assert.equal(apply(s, { type: 'hire', candidateId: cand.id }).ok, true);
     return s.staff.at(-1)!;

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createState, advance, type GameState } from '../src/sim/state.ts';
 import { apply } from '../src/sim/build.ts';
 import { spawnCustomer } from '../src/sim/customers.ts';
-import { TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC } from '../src/sim/config.ts';
+import { TRAITS, ROLES, STAFF_NAMES, CANDIDATES_PER_ROLE, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC } from '../src/sim/config.ts';
 import { shop, hireCashier, noArrivals, untilTicks, runOut } from './helpers.ts';
 
 test('candidates are seeded and valid', () => {
@@ -24,7 +24,7 @@ test('hire and fire', () => {
     assert.equal(apply(s, { type: 'hire', candidateId: first.id }).ok, true);
     assert.equal(s.staff.length, 1);
     assert.equal(s.staff[0].name, first.name);
-    assert.equal(s.candidates.length, CANDIDATES_PER_ROLE, 'candidate replaced');
+    assert.equal(s.candidates.length, CANDIDATES_PER_ROLE * Object.keys(ROLES).length, 'candidate replaced');
     assert.ok(!s.candidates.some((c) => c.id === first.id));
 
     const before = structuredClone(s);

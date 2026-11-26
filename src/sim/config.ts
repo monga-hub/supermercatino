@@ -41,8 +41,8 @@ export const OBJECTS = {
 
 // --- Customers (milestone 03). "per second" = real second at 1x.
 
-/** Units on a newly placed shelf. No restocking until the staff milestone. */
-export const SHELF_STOCK = 10;
+/** Units a shelf holds (and has when placed). */
+export const SHELF_CAPACITY = 10;
 
 /** Sale price per unit (€). */
 export const PRICES = { Pasta: 2, Latticini: 3, Salumi: 6, Pane: 2, Frutta: 3, Detersivi: 5 } as const;
@@ -73,8 +73,8 @@ export const RNG_SEED = 12345;
 
 // --- Staff (milestone 04)
 
-/** Staff roles. Later milestones add magazziniere, pulizie, banconiere. */
-export const ROLES = { cassiere: { label: 'Cassiere' } } as const;
+/** Staff roles. Later milestones add pulizie, banconiere. */
+export const ROLES = { cassiere: { label: 'Cassiere' }, magazziniere: { label: 'Magazziniere' } } as const;
 
 /** Candidates on offer for each role at any time. */
 export const CANDIDATES_PER_ROLE = 3;
@@ -82,8 +82,8 @@ export const CANDIDATES_PER_ROLE = 3;
 /** Traits: work speed multiplier and base wage (€/day). Chiacchierone gives paying customers patience back. */
 export const TRAITS = {
     normale: { label: 'Normale', desc: 'fa il suo', speed: 1, wage: 60, patienceBonus: 0 },
-    svelto: { label: 'Svelto', desc: 'serve in fretta, costa di più', speed: 1.5, wage: 90, patienceBonus: 0 },
-    chiacchierone: { label: 'Chiacchierone', desc: 'lento, ma mette di buonumore', speed: 0.7, wage: 45, patienceBonus: 30 },
+    svelto: { label: 'Svelto', desc: 'lavora in fretta, costa di più', speed: 1.5, wage: 90, patienceBonus: 0 },
+    chiacchierone: { label: 'Chiacchierone', desc: 'lento ed economico; alla cassa mette di buonumore', speed: 0.7, wage: 45, patienceBonus: 30 },
 } as const;
 
 /** Wage spread around the trait's base (± €). */
@@ -93,3 +93,14 @@ export const STAFF_NAMES = ['Pina', 'Gino', 'Rosa', 'Tonino', 'Carla', 'Beppe', 
 
 /** Staff walking speed, cells per second. */
 export const STAFF_SPEED = 2.5;
+
+// --- Restocking (milestone 05)
+
+/** Units in one ordered crate, delivered straight to the warehouse. */
+export const ORDER_UNITS = 20;
+
+/** Purchase cost per unit (€): roughly half the sale price. */
+export const UNIT_COST = { Pasta: 1, Latticini: 2, Salumi: 3, Pane: 1, Frutta: 2, Detersivi: 3 } as const;
+
+/** A stocker refills a shelf when its stock drops below this. */
+export const RESTOCK_BELOW = 4;

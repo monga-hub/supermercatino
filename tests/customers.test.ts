@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { advance, tick } from '../src/sim/state.ts';
 import { spawnCustomer } from '../src/sim/customers.ts';
 import { shop, noArrivals, runOut } from './helpers.ts';
-import { PRICES, SHELF_STOCK } from '../src/sim/config.ts';
+import { PRICES, SHELF_CAPACITY } from '../src/sim/config.ts';
 
 test('spawn only with door and reachable till', () => {
     for (const opts of [{ door: false }, { till: false }]) {
@@ -24,7 +24,7 @@ test('happy path pays', () => {
     assert.ok(c, 'spawned');
     const seen = runOut(s);
     assert.deepEqual(seen.get(c.id), ['shopping', 'queueing', 'paying', 'leaving']);
-    assert.equal(s.objects.find((o) => o.type === 'scaffale')!.stock, SHELF_STOCK - 1);
+    assert.equal(s.objects.find((o) => o.type === 'scaffale')!.stock, SHELF_CAPACITY - 1);
     assert.equal(s.money, m0 + PRICES.Pasta);
     assert.equal(s.servedToday, 1);
     assert.equal(s.lostToday, 0);

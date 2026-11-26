@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+in-progress — automated AC green; waiting for user playtest (Merce panel and stocker on phone)
 
 ## Objective
 
@@ -30,10 +30,10 @@ Terzo verbo del loop: "Rifornisci". Oggi uno scaffale vuoto resta vuoto per semp
 
 ## Acceptance criteria
 
-- [ ] `order` scala il costo e aggiunge pezzi al magazzino; senza magazzino o senza soldi → errore — test: `tests/restock.test.ts::order goes to warehouse`
-- [ ] Il magazziniere rifornisce uno scaffale sotto soglia fino alla capienza, scalando il magazzino — test: `tests/restock.test.ts::stocker refills low shelf`
-- [ ] Senza merce in magazzino il magazziniere non parte; senza magazziniere nessun rifornimento — test: `tests/restock.test.ts::no stock or no stocker no refill`
-- [ ] Nel browser, con magazziniere e merce ordinata, dopo mezza giornata gli scaffali non sono vuoti — test: `scripts/browser-test.mjs::shelves get restocked`
+- [x] `order` scala il costo e aggiunge pezzi al magazzino; senza magazzino o senza soldi → errore — test: `tests/restock.test.ts::order goes to warehouse`
+- [x] Il magazziniere rifornisce uno scaffale sotto soglia fino alla capienza, scalando il magazzino — test: `tests/restock.test.ts::stocker refills low shelf`
+- [x] Senza merce in magazzino il magazziniere non parte; senza magazziniere nessun rifornimento — test: `tests/restock.test.ts::no stock or no stocker no refill`
+- [x] Nel browser, con magazziniere e merce ordinata, dopo mezza giornata gli scaffali non sono vuoti — test: `scripts/browser-test.mjs::shelves get restocked`
 - [ ] Pannello Merce chiaro su telefono, trasporto della merce visibile — verified by user playtest
 
 ## Exit condition
@@ -49,3 +49,5 @@ L'utente costruisce un magazzino, assume un magazziniere, ordina Pasta → quand
 ## Notes
 
 - Promuove dal backlog: "Rifornimento".
+- Implementato: `ORDER_UNITS` 20 pezzi per cassa, `UNIT_COST` circa metà prezzo di vendita, `RESTOCK_BELOW` 4, `SHELF_CAPACITY` 10 (tutto in `config.ts`). Il tratto del magazziniere cambia la velocità di camminata.
+- I pannelli Staff e Merce ora scorrono col dito e stanno tra barra in alto e toolbar (su telefono orizzontale non ci stavano). Nomi dei candidati senza doppioni.

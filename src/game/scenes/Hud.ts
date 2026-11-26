@@ -1,6 +1,6 @@
-import { Scene, type GameObjects } from 'phaser';
+import { Scene, type GameObjects, type Input } from 'phaser';
 import { setSpeed, togglePause, type GameState, type Speed } from '../../sim/state.ts';
-import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS } from '../../sim/config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST } from '../../sim/config.ts';
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
 import type { Tool, Game } from './Game.ts';
@@ -14,7 +14,7 @@ const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 
 type Btn = { t: GameObjects.Text; active: () => boolean; bg: string; fg?: string };
 
-const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'senza cassa', at_till: 'alla cassa' };
+const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'senza cassa', at_till: 'alla cassa', fetching: 'va in magazzino', delivering: 'porta la merce' };
 
 // Overlay scene: own camera, so it doesn't zoom/pan with the shop.
 export class Hud extends Scene {
@@ -26,7 +26,17 @@ export class Hud extends Scene {
     toolBtns: Btn[] = [];
     catBtns: Btn[] = [];
     panel: GameObjects.Container | null = null;
+    panelKind: 'staff' | 'merce' = 'staff';
     panelKey = '';
+    panelScroll = 0;
+    panelRect = { x: 0, y: 0, w: 0, h: 0 };
+    /** True if (x, y) is on the open panel: the shop ignores gestures that start there. */
+    onPanel(x: number, y: number) {
+        const r = this.panelRect;
+        return !!this.panel && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+    }
+    /** Scrolls the open panel's body by dy pixels (set by openPanel). */
+    scrollPanel = (_dy: number) => {};
 
     constructor() {
         super('Hud');
@@ -60,7 +70,10 @@ export class Hud extends Scene {
         this.speedBtns = ['II', '1x', '2x', '3x'].map((label, i) =>
             this.button(label, () => this.press(i), () => (this.sim.paused ? 0 : this.sim.speed) === i),
         );
-        this.speedBtns.push(this.button('Staff', () => this.togglePanel(), () => !!this.panel, '#3d5a80'));
+        this.speedBtns.push(
+            this.button('Staff', () => this.togglePanel('staff'), () => !!this.panel && this.panelKind === 'staff', '#3d5a80'),
+            this.button('Merce', () => this.togglePanel('merce'), () => !!this.panel && this.panelKind === 'merce', '#3d5a80'),
+        );
 
         const same = (t: Tool) => JSON.stringify(this.tool) === JSON.stringify(t);
         const toggle = (t: Tool) => () => this.setTool(same(t) ? null : t);
@@ -135,9 +148,14 @@ export class Hud extends Scene {
         return (this.scene.get('Game') as Game).run(cmd);
     }
 
-    togglePanel() {
-        if (this.panel) this.closePanel();
-        else this.openPanel();
+    togglePanel(kind: 'staff' | 'merce') {
+        const same = this.panel && this.panelKind === kind;
+        this.closePanel();
+        if (!same) {
+            this.panelKind = kind;
+            this.panelScroll = 0;
+            this.openPanel();
+        }
     }
 
     closePanel() {
@@ -145,24 +163,34 @@ export class Hud extends Scene {
         this.panel = null;
     }
 
-    /** Staff panel: candidates to hire, staff to fire. Rebuilt whenever what it shows changes. */
+    /** Staff panel (hire/fire) or Merce panel (order goods). Rebuilt whenever what it shows changes. */
     openPanel() {
         this.closePanel();
         const s = this.sim;
-        this.panelKey = this.staffKey();
-        const { width, height } = this.scale;
+        this.panelKey = this.panelState();
+        const { width } = this.scale;
         const w = Math.min(520, width - 24);
-        const x0 = (width - w) / 2, y0 = 124;
+        // between the top bar and the toolbar
+        const x0 = (width - w) / 2;
+        const y0 = Math.max(...this.speedBtns.map((b) => b.t.y + b.t.height), this.served.y + this.served.height) + 8;
+        const viewH = Math.min(...this.toolBtns.map((b) => b.t.y)) - 8 - y0;
+        this.panelRect = { x: x0, y: y0, w, h: viewH };
         const c = (this.panel = this.add.container(0, 0).setDepth(5));
-        const bg = this.add.rectangle(x0, y0, w, height - y0 - 90, 0x2b1d16, 0.96).setOrigin(0).setStrokeStyle(3, 0xe0a030);
-        bg.setInteractive(); // swallow taps so they don't reach the shop below
+        const bg = this.add.rectangle(x0, y0, w, viewH, 0x2b1d16, 0.96).setOrigin(0).setStrokeStyle(3, 0xe0a030);
+        // swallows taps so they don't reach the shop below; drag or wheel scrolls the body
+        bg.setInteractive()
+            .on('pointermove', (p: Input.Pointer) => p.isDown && this.scrollPanel(p.prevPosition.y - p.y))
+            .on('wheel', (_p: unknown, _dx: number, dy: number) => this.scrollPanel(dy));
         c.add(bg);
-        let y = y0 + 12;
+        // scrollable body: rows outside the panel are hidden (hidden objects get no taps)
+        const body = this.add.container(0, 0);
+        c.add(body);
+        let y = y0 + 48; // body starts under the fixed title row
         const small = { ...TEXT, fontSize: 14, strokeThickness: 0, color: '#d9c7a7' };
         const row = (title: string, sub: string, label: string, cmd: Command) => {
-            c.add(this.add.text(x0 + 12, y, title, { ...TEXT, fontSize: 17, strokeThickness: 0 }));
+            body.add(this.add.text(x0 + 12, y, title, { ...TEXT, fontSize: 17, strokeThickness: 0 }));
             const subT = this.add.text(x0 + 12, y + 22, sub, { ...small, wordWrap: { width: w - 140 } });
-            c.add(subT);
+            body.add(subT);
             const b = this.add
                 .text(x0 + w - 12, y + 6, label, { ...TEXT, fontSize: 16, strokeThickness: 0, backgroundColor: BTN_BG, padding: { x: 10, y: 6 } })
                 .setOrigin(1, 0)
@@ -171,33 +199,59 @@ export class Hud extends Scene {
                     this.run(cmd);
                     this.openPanel();
                 });
-            c.add(b);
+            body.add(b);
             y += Math.max(50, 22 + subT.height + 10);
         };
         const header = (t: string) => {
-            c.add(this.add.text(x0 + 12, y, t, { ...TEXT, fontSize: 19, color: '#e0a030', strokeThickness: 0 }));
+            body.add(this.add.text(x0 + 12, y, t, { ...TEXT, fontSize: 19, color: '#e0a030', strokeThickness: 0 }));
             y += 30;
         };
+        c.add(this.add.text(x0 + 12, y0 + 12, this.panelKind === 'merce' ? 'Merce in magazzino' : 'Staff', { ...TEXT, fontSize: 19, color: '#e0a030', strokeThickness: 0 }));
         c.add(
             this.add.text(x0 + w - 12, y0 + 10, '✕', { ...TEXT, fontSize: 22, strokeThickness: 0 })
                 .setOrigin(1, 0).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.closePanel()),
         );
-        header('Candidati');
+        if (this.panelKind === 'merce') {
+            if (!s.rooms.some((r) => r.type === 'magazzino')) {
+                body.add(this.add.text(x0 + 12, y, 'Costruisci un magazzino per ordinare.', small));
+                y += 30;
+            }
+            for (const cat of CATEGORIES)
+                row(`${cat} · ${s.warehouse[cat]} pezzi`, `Cassa da ${ORDER_UNITS} pezzi: €${ORDER_UNITS * UNIT_COST[cat]}`, 'Ordina', { type: 'order', category: cat });
+            const note = this.add.text(x0 + 12, y, 'Il magazziniere porta la merce agli scaffali quasi vuoti.', { ...small, wordWrap: { width: w - 24 } });
+            body.add(note);
+            y += note.height + 12;
+        } else {
+            header('Candidati');
         for (const k of s.candidates)
             row(`${k.name} · €${k.wage}/giorno`, `${ROLES[k.role].label} · ${TRAITS[k.trait].label}: ${TRAITS[k.trait].desc}`, 'Assumi', { type: 'hire', candidateId: k.id });
         y += 8;
         header('Assunti');
         if (!s.staff.length) {
-            c.add(this.add.text(x0 + 12, y, 'Nessuno. Senza cassiere le casse non servono!', small));
+            body.add(this.add.text(x0 + 12, y, 'Nessuno. Senza cassiere le casse non servono!', small));
             y += 30;
         }
         for (const st of s.staff)
             row(`${st.name} · €${st.wage}/giorno`, `${ROLES[st.role].label} · ${STAFF_STATE[st.state]}`, 'Licenzia', { type: 'fire', staffId: st.id });
+        }
+        const maxScroll = Math.max(0, y - y0 - viewH + 8);
+        const more = this.add.text(x0 + w / 2, y0 + viewH - 4, '▼ trascina per vedere il resto', { ...small, backgroundColor: '#2b1d16' }).setOrigin(0.5, 1);
+        c.add(more);
+        this.scrollPanel = (dy) => {
+            this.panelScroll = Math.min(maxScroll, Math.max(0, this.panelScroll + dy));
+            body.y = -this.panelScroll;
+            for (const o of body.list as GameObjects.Text[]) {
+                const top = o.y - this.panelScroll - (o.originY ?? 0) * o.height;
+                o.setVisible(top >= y0 + 44 && top + o.height <= y0 + viewH - (this.panelScroll < maxScroll ? 24 : 4));
+            }
+            more.setVisible(this.panelScroll < maxScroll);
+        };
+        this.scrollPanel(0);
     }
 
-    staffKey() {
+    panelState() {
         const s = this.sim;
-        return JSON.stringify([s.candidates.map((c) => c.id), s.staff.map((st) => [st.id, st.state])]);
+        return JSON.stringify([this.panelKind, s.candidates.map((c) => c.id), s.staff.map((st) => [st.id, st.state]), s.warehouse, s.rooms.length]);
     }
 
     showToast(msg: string) {
@@ -227,7 +281,7 @@ export class Hud extends Scene {
             b.t.setBackgroundColor(on ? BTN_ACTIVE_BG : b.bg);
             b.t.setColor(on ? DARK : (b.fg ?? LIGHT));
         }
-        if (this.panel && this.staffKey() !== this.panelKey) this.openPanel();
+        if (this.panel && this.panelState() !== this.panelKey) this.openPanel();
         const showCats = this.tool?.kind === 'object' && this.tool.object === 'scaffale';
         for (const b of this.catBtns) b.t.setVisible(showCats);
     }

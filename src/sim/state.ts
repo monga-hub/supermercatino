@@ -16,7 +16,7 @@ export type ShopObject = { id: number; type: ObjectType; x: number; y: number; c
 export type Role = keyof typeof ROLES;
 export type Trait = keyof typeof TRAITS;
 export type Candidate = { id: number; role: Role; name: string; trait: Trait; wage: number };
-export type StaffState = 'arriving' | 'idle' | 'at_till';
+export type StaffState = 'arriving' | 'idle' | 'at_till' | 'fetching' | 'delivering';
 export type Staff = Candidate & {
     state: StaffState;
     x: number;
@@ -24,6 +24,8 @@ export type Staff = Candidate & {
     path: Cell[];
     /** Till this cashier works at (walking there or seated). */
     tillId: number | null;
+    /** Stocker trip: shelf to refill, units in hand (0 while fetching). */
+    job: { shelfId: number; category: Category; units: number } | null;
 };
 
 export type CustomerState = 'shopping' | 'queueing' | 'paying' | 'leaving' | 'leaving_angry';
@@ -69,6 +71,8 @@ export type GameState = {
     rng: number;
     candidates: Candidate[];
     staff: Staff[];
+    /** Units per category in the warehouse. */
+    warehouse: Record<Category, number>;
 };
 
 export function createState(): GameState {
@@ -90,6 +94,7 @@ export function createState(): GameState {
         rng: RNG_SEED,
         candidates: [],
         staff: [],
+        warehouse: Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Category, number>,
     };
     refillCandidates(s);
     return s;

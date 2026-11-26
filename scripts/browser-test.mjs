@@ -127,6 +127,38 @@ await check('hired cashier serves', async () => {
     await p3.close();
 });
 
+await check('shelves get restocked', async () => {
+    const p4 = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    await p4.goto(new URL('?manual', base).href);
+    await p4.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    const run = (c) => p4.evaluate((x) => window.dispatch(x), c);
+    const st = async () => JSON.parse(await p4.evaluate(() => window.render_game_to_text()));
+    const cats = ['Pasta', 'Pane', 'Latticini'];
+    for (const c of [
+        { type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 6, h: 5 },
+        ...cats.map((category, i) => ({ type: 'placeObject', object: 'scaffale', x: 5 + i, y: 4, category })),
+        { type: 'placeObject', object: 'porta', x: 8, y: 5 },
+        { type: 'buildRoom', room: 'area_casse', x: 3, y: 8, w: 3, h: 2 },
+        { type: 'placeObject', object: 'cassa', x: 4, y: 9 },
+        { type: 'buildRoom', room: 'magazzino', x: 0, y: 3, w: 3, h: 3 },
+        ...cats.flatMap((category) => [{ type: 'order', category }, { type: 'order', category }]),
+    ]) {
+        const r = await run(c);
+        expect(r.ok, `setup failed: ${JSON.stringify(c)} ${JSON.stringify(r)}`);
+    }
+    for (const role of ['cassiere', 'magazziniere']) {
+        const cand = (await st()).candidates.find((c) => c.role === role);
+        expect((await run({ type: 'hire', candidateId: cand.id })).ok, `hire ${role} failed`);
+    }
+    await p4.evaluate(() => window.advanceTime(120000)); // half a day at 1x
+    const s1 = await st();
+    const shelves = s1.objects.filter((o) => o.type === 'scaffale');
+    expect(s1.servedToday > 20, `too few served: ${s1.servedToday}`);
+    expect(shelves.every((o) => o.stock > 0), `empty shelf: ${JSON.stringify(shelves)}`);
+    expect(cats.some((c) => s1.warehouse[c] < 40), `warehouse untouched: ${JSON.stringify(s1.warehouse)}`);
+    await p4.close();
+});
+
 await page.waitForTimeout(10000); // let the game run a while
 await check('no console errors', async () => {
     expect(errors.length === 0, errors.join(' | '));
