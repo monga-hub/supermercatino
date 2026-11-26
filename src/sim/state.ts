@@ -20,7 +20,7 @@ export type ShopObject = { id: number; type: ObjectType; x: number; y: number; c
 export type Role = keyof typeof ROLES;
 export type Trait = keyof typeof TRAITS;
 export type Candidate = { id: number; role: Role; name: string; trait: Trait; wage: number };
-export type StaffState = 'arriving' | 'idle' | 'at_till' | 'fetching' | 'delivering' | 'cleaning' | 'cart';
+export type StaffState = 'arriving' | 'idle' | 'at_till' | 'fetching' | 'delivering' | 'cleaning' | 'cart' | 'resting';
 export type Staff = Candidate & {
     state: StaffState;
     x: number;
@@ -34,6 +34,8 @@ export type Staff = Candidate & {
     clean?: { spillId: number; timer: number };
     /** Stocker: abandoned cart being walked to (milestone 14). */
     cart?: number;
+    /** 0..ENERGY_MAX (milestone 18); low → break at the lockers, or slow. */
+    energy: number;
 };
 export type Cart = { id: number; x: number; y: number };
 

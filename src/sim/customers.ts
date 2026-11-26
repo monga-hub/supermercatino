@@ -9,7 +9,7 @@ import {
 } from './config.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
-import { cashierAt } from './staff.ts';
+import { cashierAt, pace, tired, wantsBreak } from './staff.ts';
 import { spawnEveryMin } from './day.ts';
 import { maybeSpill, spillNear } from './dirt.ts';
 import type { GameState, Customer, CustomerKind, Category, ShopObject } from './state.ts';
@@ -21,7 +21,7 @@ const GAME_SEC_PER_STEP = GAME_MIN_PER_SEC * 60 * STEP_S;
 export function walkableFor(s: GameState): Walkable {
     const open = new Set<string>();
     for (const r of s.rooms) {
-        if (r.type === 'magazzino') continue;
+        if (r.type === 'magazzino' || r.type === 'spogliatoio') continue; // staff only
         for (let x = r.x; x < r.x + r.w; x++) for (let y = r.y; y < r.y + r.h; y++) open.add(`${x},${y}`);
     }
     for (const o of s.objects) if (o.type !== 'porta') open.delete(`${o.x},${o.y}`);
@@ -231,13 +231,14 @@ function serveTills(s: GameState) {
     for (const till of s.objects.filter((o) => SERVED_BY[o.type])) {
         const cashier = cashierAt(s, till);
         if (!cashier) continue;
+        if (wantsBreak(s, cashier)) continue; // closing for a break: no new customer
         const here = s.customers.filter((c) => c.goal?.kind === 'till' && c.goal.id === till.id);
         if (here.some((c) => c.state === 'paying' || c.state === 'ready')) continue;
         const front = here.filter((c) => c.state === 'queueing').sort((a, b) => a.queuedAt - b.queuedAt)[0];
         if (front && !front.path.length) {
             delete front.trick; // got away with jumping the queue
             front.state = 'paying';
-            front.timer = (till.type === 'cassa' ? PAY_SEC : SLICE_SEC) / TRAITS[cashier.trait].speed;
+            front.timer = (till.type === 'cassa' ? PAY_SEC : SLICE_SEC) / pace(cashier);
         }
     }
 }
@@ -282,7 +283,7 @@ export function checkout(s: GameState, c: Customer, tip: number, w = walkableFor
     s.reputation = Math.min(100, s.reputation + REP_SERVED + (happyBear ? BEAR_BONUS_REP : 0));
     const till = s.objects.find((o) => c.goal?.kind === 'till' && o.id === c.goal.id);
     const cashier = till && cashierAt(s, till);
-    if (cashier) c.patience = Math.min(PATIENCE_START, c.patience + TRAITS[cashier.trait].patienceBonus);
+    if (cashier && !tired(cashier)) c.patience = Math.min(PATIENCE_START, c.patience + TRAITS[cashier.trait].patienceBonus);
     s.servedToday++;
     leave(s, c, w, false);
 }

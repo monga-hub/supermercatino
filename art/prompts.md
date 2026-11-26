@@ -69,3 +69,7 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 
 - `forno.jpg` 2×2 — chiesto nella chat delle icone ("NOT round icons: game furniture sprites" + stile base, ogni pezzo largo una cella): bancone del pane con forno a legna in mattoni acceso e cesta piena di pagnotte, baguette e rosette; lo stesso spento e vuoto; frigo bianco anni '80 con porta a vetri pieno di latte, yogurt e formaggi; lo stesso vuoto e spento.
 
+## Spogliatoio (milestone 18)
+
+- `spogliatoio.jpg` 3×1 — chiesto nella chat delle icone: armadietti metallici verde pallido anni '80 con panca di legno, grembiule e thermos (stile arredi del forno); icona tonda con tazzina di espresso fumante (pausa caffè); icona tonda faccina che sbadiglia con goccia di sudore e zzz (stanco). Gemini ha allargato gli armadietti oltre la prima colonna: ricomposto con PIL in 3 colonne da 800 px.
+

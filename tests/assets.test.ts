@@ -8,7 +8,7 @@ const kit = JSON.parse(readFileSync(new URL('../public/assets/kit.json', import.
 const has = (frames: string[]) => { for (const f of frames) assert.ok(kit.frames[f], `missing frame ${f}`); };
 
 test('every drawable has a frame: furniture', () => {
-    has([...WALL_FRAMES, ...ICON_FRAMES, ...SPILL_FRAMES, SPRITES.cestino, SPRITES.carrello, SPRITES.bancone, SPRITES.banconeVuoto, SPRITES.forno, SPRITES.fornoVuoto, SPRITES.frigo, SPRITES.frigoVuoto, SPRITES.cassa, SPRITES.scaffale, ...CATEGORIES.map((c) => SPRITES.shelf(c))]);
+    has([...WALL_FRAMES, ...ICON_FRAMES, ...SPILL_FRAMES, SPRITES.cestino, SPRITES.carrello, SPRITES.bancone, SPRITES.banconeVuoto, SPRITES.forno, SPRITES.fornoVuoto, SPRITES.frigo, SPRITES.frigoVuoto, SPRITES.armadietti, SPRITES.cassa, SPRITES.scaffale, ...CATEGORIES.map((c) => SPRITES.shelf(c))]);
 });
 
 test('every drawable has a frame: people', () => {

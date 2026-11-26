@@ -9,6 +9,7 @@ export const SPRITES = {
     carrello: 'carrello',
     bancone: 'bancone',
     banconeVuoto: 'bancone_vuoto',
+    armadietti: 'armadietti',
     forno: 'forno',
     fornoVuoto: 'forno_vuoto',
     frigo: 'frigo',
@@ -33,7 +34,7 @@ export const SPILL_FRAMES = ['macchia_0', 'macchia_1', 'macchia_2'];
 export const WALL_FRAMES = ['muro', 'muro_poster', 'porta'].flatMap((n) => [`${n}_l`, `${n}_r`]);
 
 /** Tap icon badges (Game.drawIcons). */
-export const ICON_FRAMES = ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_pulisci', 'icona_carrello', 'icona_beccato'];
+export const ICON_FRAMES = ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_pulisci', 'icona_carrello', 'icona_beccato', 'icona_pausa', 'icona_stanco'];
 
 /** kit.png frames are stored at 2x (tools/kit.py RES). */
 export const KIT_SCALE = 0.5;

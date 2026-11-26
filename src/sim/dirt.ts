@@ -1,5 +1,6 @@
 // Dirt (milestone 12): customers spill yogurt, spills annoy whoever is near, the cleaner mops them. Pure, deterministic.
-import { STEP_MS, SPILL_CHANCE, BIN_RADIUS, SPILL_MAX, CUSTOMER_TYPES, STAFF_SPEED, TRAITS, CLEAN_SEC } from './config.ts';
+import { STEP_MS, SPILL_CHANCE, BIN_RADIUS, SPILL_MAX, CUSTOMER_TYPES, STAFF_SPEED, CLEAN_SEC } from './config.ts';
+import { pace } from './staff.ts';
 import { rand } from './rng.ts';
 import { findPath, walk, type Walkable } from './path.ts';
 import type { GameState, Customer, Staff } from './state.ts';
@@ -44,13 +45,13 @@ export function updateCleaner(s: GameState, st: Staff, w: Walkable) {
             if (!path) continue;
             spill = p;
             st.path = path;
-            st.clean = { spillId: id, timer: CLEAN_SEC / TRAITS[st.trait].speed };
+            st.clean = { spillId: id, timer: CLEAN_SEC / pace(st) };
             s.cleanQueue = s.cleanQueue.filter((q) => q !== id);
             break;
         }
         if (!spill) return;
     }
-    if (st.path.length) return walk(st, STAFF_SPEED * TRAITS[st.trait].speed);
+    if (st.path.length) return walk(st, STAFF_SPEED * pace(st));
     st.state = 'cleaning';
     st.clean!.timer -= STEP_MS / 1000;
     if (st.clean!.timer > 0) return;

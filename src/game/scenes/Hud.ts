@@ -15,7 +15,7 @@ const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 
 type Btn = { t: GameObjects.Text; active: () => boolean; bg: string; fg?: string };
 
-const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'in attesa', cleaning: 'pulisce', cart: 'sposta un carrello', at_till: 'al suo posto', fetching: 'va in magazzino', delivering: 'porta la merce' };
+const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'in attesa', cleaning: 'pulisce', cart: 'sposta un carrello', resting: 'in pausa', at_till: 'al suo posto', fetching: 'va in magazzino', delivering: 'porta la merce' };
 
 // Overlay scene: own camera, so it doesn't zoom/pan with the shop.
 export class Hud extends Scene {
@@ -95,7 +95,7 @@ export class Hud extends Scene {
             this.button(OBJECTS.scaffale.label, () => this.setTool(isObj('scaffale')() ? null : { kind: 'object', object: 'scaffale', category: CATEGORIES[0] }), isObj('scaffale')),
             this.button(OBJECTS.cassa.label, toggle({ kind: 'object', object: 'cassa' }), isObj('cassa')),
             this.button(OBJECTS.cestino.label, toggle({ kind: 'object', object: 'cestino' }), isObj('cestino')),
-            ...(['bancone', 'forno', 'frigo'] as const).map((object) => this.button(OBJECTS[object].label, toggle({ kind: 'object', object }), isObj(object))),
+            ...(['bancone', 'forno', 'frigo', 'armadietti'] as const).map((object) => this.button(OBJECTS[object].label, toggle({ kind: 'object', object }), isObj(object))),
             this.button('Ruota', toggle({ kind: 'rotate' }), () => this.tool?.kind === 'rotate', '#6b5a8e'),
             this.button('Demolisci', toggle({ kind: 'demolish' }), () => this.tool?.kind === 'demolish', '#4a4a4a'),
         ];
@@ -246,7 +246,7 @@ export class Hud extends Scene {
             y += 30;
         }
         for (const st of s.staff)
-            row(`${st.name} · €${st.wage}/giorno`, `${ROLES[st.role].label} · ${STAFF_STATE[st.state]}`, 'Licenzia', { type: 'fire', staffId: st.id });
+            row(`${st.name} · €${st.wage}/giorno`, `${ROLES[st.role].label} · ${STAFF_STATE[st.state]} · energia ${Math.round(st.energy)}%`, 'Licenzia', { type: 'fire', staffId: st.id });
         }
         const maxScroll = Math.max(0, y - y0 - viewH + 8);
         const more = this.add.text(x0 + w / 2, y0 + viewH - 4, '▼ trascina per vedere il resto', { ...small, backgroundColor: '#2b1d16' }).setOrigin(0.5, 1);

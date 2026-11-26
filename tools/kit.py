@@ -29,6 +29,7 @@ SHEETS = [
     ('banconiere.jpg', 4, 2, ('h', 48), WALK('banconiere') + ['banconiere_idle', 'banconiere_slice_0', 'banconiere_slice_1', 'banconiere_give', None]),
     ('imprevisti.jpg', 3, 1, ('w', 0.66), [('carrello', 0.6), 'icona_carrello', 'icona_ispezione']),
     ('forno.jpg', 2, 2, ('w', 1.0), ['forno', 'forno_vuoto', ('frigo', 0.7), ('frigo_vuoto', 0.7)]),
+    ('spogliatoio.jpg', 3, 1, ('w', 0.66), [('armadietti', 1.0), 'icona_pausa', 'icona_stanco']),
     ('beccato.jpg', 1, 1, ('w', 0.66), ['icona_beccato']),
     ('sporco.jpg', 3, 2, ('w', 0.8), ['macchia_0', 'macchia_1', 'macchia_2', ('cestino', 0.3), ('icona_pulisci', 0.66), ('cartello_bagnato', 0.4)]),
 ]

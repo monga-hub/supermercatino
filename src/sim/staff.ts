@@ -1,5 +1,6 @@
 // Staff: candidates, hiring, and per-role behaviour. Pure, deterministic.
-import { SERVED_BY, ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW } from './config.ts';
+import { SERVED_BY, ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW,
+    ENERGY_MAX, ENERGY_DRAIN_PER_H, REST_PER_H, BREAK_BELOW, TIRED_SPEED, GAME_MIN_PER_SEC, STEP_MS } from './config.ts';
 import { rand, pick } from './rng.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import type { GameState, Role, Trait, Staff, ShopObject, Cart } from './state.ts';
@@ -22,7 +23,7 @@ export function refillCandidates(s: GameState) {
 export function hire(s: GameState, candidateId: number) {
     const c = s.candidates.splice(s.candidates.findIndex((x) => x.id === candidateId), 1)[0];
     const door = s.objects.find((o) => o.type === 'porta');
-    s.staff.push({ ...c, state: 'arriving', x: door?.x ?? 0, y: door?.y ?? 0, path: [], tillId: null, job: null });
+    s.staff.push({ ...c, state: 'arriving', x: door?.x ?? 0, y: door?.y ?? 0, path: [], tillId: null, job: null, energy: ENERGY_MAX });
     refillCandidates(s);
 }
 
@@ -36,6 +37,40 @@ function walkableFor(s: GameState): Walkable {
     for (const r of s.rooms) for (let x = r.x; x < r.x + r.w; x++) for (let y = r.y; y < r.y + r.h; y++) open.add(`${x},${y}`);
     for (const o of s.objects) if (o.type !== 'porta') open.delete(`${o.x},${o.y}`);
     return (x, y) => open.has(`${x},${y}`);
+}
+
+/** Tired: below the break threshold (milestone 18). Work pace: TIRED_SPEED when tired, else the trait's speed. */
+export const tired = (st: Staff) => st.energy < BREAK_BELOW;
+export const pace = (st: Staff) => (tired(st) ? TIRED_SPEED : TRAITS[st.trait].speed);
+
+const STEP_H = (GAME_MIN_PER_SEC * STEP_MS) / 1000 / 60;
+
+/** Tired, there are lockers, and no colleague with the same role is on a break (one at a time). */
+export const wantsBreak = (s: GameState, st: Staff) =>
+    tired(st) && s.objects.some((o) => o.type === 'armadietti') && !s.staff.some((o) => o.role === st.role && o.state === 'resting');
+
+/** Not in the middle of something: nobody at the till, no goods in hand, no spill or cart on the way. */
+const free = (s: GameState, st: Staff) =>
+    !st.job && st.cart === undefined && !st.clean &&
+    !s.customers.some((c) => c.goal?.kind === 'till' && c.goal.id === st.tillId && (c.state === 'paying' || c.state === 'ready'));
+
+/** Head to the nearest lockers for a break; false if there are none (or none reachable). */
+function goRest(s: GameState, st: Staff, w: Walkable) {
+    let best: Cell[] | null = null;
+    for (const o of s.objects) {
+        if (o.type !== 'armadietti') continue;
+        const p = pathToObject(w, { x: Math.round(st.x), y: Math.round(st.y) }, o);
+        if (p && (!best || p.length < best.length)) best = p;
+    }
+    if (!best) return false;
+    Object.assign(st, { state: 'resting', path: best, tillId: null });
+    return true;
+}
+
+function rest(st: Staff) {
+    if (st.path.length) return walk(st, STAFF_SPEED);
+    st.energy = Math.min(ENERGY_MAX, st.energy + REST_PER_H * STEP_H);
+    if (st.energy >= ENERGY_MAX) st.state = 'idle';
 }
 
 /** The cashier seated at this till (or the deli man at this counter), if any. */
@@ -101,7 +136,7 @@ function goForCart(s: GameState, st: Staff, w: Walkable, cart: Cart) {
 function updateStocker(s: GameState, st: Staff, w: Walkable) {
     if (st.cart !== undefined) {
         const cart = s.carts.find((c) => c.id === st.cart);
-        if (cart && st.path.length) return walk(st, STAFF_SPEED * TRAITS[st.trait].speed);
+        if (cart && st.path.length) return walk(st, STAFF_SPEED * pace(st));
         if (cart) s.carts = s.carts.filter((c) => c !== cart); // taken away
         delete st.cart;
         Object.assign(st, { path: [], state: "idle" });
@@ -127,7 +162,7 @@ function updateStocker(s: GameState, st: Staff, w: Walkable) {
         st.path = path;
         st.state = 'fetching';
     }
-    if (st.path.length) return walk(st, STAFF_SPEED * TRAITS[st.trait].speed);
+    if (st.path.length) return walk(st, STAFF_SPEED * pace(st));
     const job = st.job;
     const shelf = s.objects.find((o) => o.id === job.shelfId);
     if (st.state === 'fetching') {
@@ -176,6 +211,12 @@ export function updateStaff(s: GameState) {
     if (!s.staff.length) return;
     const w = walkableFor(s);
     for (const st of s.staff) {
+        if (st.state === 'resting') {
+            rest(st);
+            continue;
+        }
+        st.energy = Math.max(0, st.energy - ENERGY_DRAIN_PER_H * STEP_H);
+        if (wantsBreak(s, st) && free(s, st) && goRest(s, st, w)) continue;
         if (st.role === 'cassiere' || st.role === 'banconiere') updateCashier(s, st, w);
         else if (st.role === 'pulizie') updateCleaner(s, st, w);
         else updateStocker(s, st, w);

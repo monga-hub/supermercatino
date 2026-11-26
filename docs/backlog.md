@@ -61,6 +61,10 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: user 2026-11-26
   - Notes: → milestone 19-guardia-e-capo-reparto.md
 
+- [ ] Barra strumenti raggruppata — con 16 tasti (6 stanze + 8 oggetti + Ruota/Demolisci) su telefono occupa 3–4 righe; raggruppare in "Stanze" / "Arredi" a tendina.
+  - Source: milestone 18 (2026-11-26)
+  - Rough size: S · Rough value: M
+
 - [x] Salvataggio locale — stato sim serializzato in localStorage. → milestone 11-salvataggio-e-menu.md
   - Source: gameplan v1
   - Rough size: S · Rough value: M

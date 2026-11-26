@@ -1,6 +1,6 @@
 // Opening hours, day end, reputation and level outcome (milestone 06). Pure, deterministic.
 import {
-    DAY_OPEN_MIN, DAILY_RENT, SPAWN_EVERY_MIN_AT_0, SPAWN_EVERY_MIN_AT_100, BANKRUPT_BELOW, BAD_DAYS,
+    ENERGY_MAX,     DAY_OPEN_MIN, DAILY_RENT, SPAWN_EVERY_MIN_AT_0, SPAWN_EVERY_MIN_AT_100, BANKRUPT_BELOW, BAD_DAYS,
     REP_MIN, LEVEL, SPILL_REP,
 } from './config.ts';
 import { checkout } from './customers.ts';
@@ -42,5 +42,9 @@ export function nextDay(s: GameState) {
     s.carts = []; // abandoned carts are put back overnight
     s.cartQueue = [];
     s.scent = 0;
+    for (const st of s.staff) {
+        st.energy = ENERGY_MAX; // a night's sleep
+        if (st.state === 'resting') Object.assign(st, { state: 'idle', path: [] });
+    }
     s.paused = false;
 }

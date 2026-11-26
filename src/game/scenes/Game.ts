@@ -3,6 +3,7 @@ import { createState, tick, advance, type GameState, type RoomType, type ObjectT
 import { apply, check, type Command } from '../../sim/build.ts';
 import { STEP_MS, TAP_ICON_BELOW, BEAR_BONUS_MONEY, BEAR_BONUS_REP, INSPECTION_DAY } from '../../sim/config.ts';
 import { readyAt, tricking } from '../../sim/customers.ts';
+import { tired } from '../../sim/staff.ts';
 import { saveGame, loadGame, SAVE_KEY } from '../../sim/save.ts';
 import { gridToIso, cellAt, TILE_H, TILE_W } from '../../render/iso.ts';
 import { drawFloor, drawThings, drawObject, tile, type Put } from '../../render/draw.ts';
@@ -13,7 +14,9 @@ import { play } from '../../audio/synth.ts';
 
 const ZOOM_MIN = 0.4;
 /** Tap icons float just above the shelf (80 px) / till (51 px) sprite, low over a spill (by key prefix). */
-const ICON_LIFT: Record<string, number> = { s: 86, t: 58, p: 24, c: 50, f: 66 };
+const ICON_LIFT: Record<string, number> = { s: 86, t: 58, p: 24, c: 50, f: 66, w: 62, v: 44 };
+/** Smaller status icons (not tappable): spills, staff on a break or tired. */
+const ICON_SCALE: Record<string, number> = { p: 0.75, w: 0.6, v: 0.6 };
 const ZOOM_MAX = 2.5;
 const TAP_SLOP = 10; // px a pointer may move and still count as a tap
 const OK = 0x4caf50;
@@ -163,6 +166,13 @@ export class Game extends Scene {
             const busy = s.cartQueue.includes(c.id) || s.staff.some((st) => st.cart === c.id);
             if (!busy) want.push({ key: `c${c.id}`, x: c.x, y: c.y, frame: 'icona_carrello', cmd: { type: 'removeCart', cartId: c.id } });
         }
+        for (const st of s.staff) {
+            if (st.state !== 'resting' && !tired(st)) continue;
+            const frame = st.state === 'resting' ? 'icona_pausa' : 'icona_stanco';
+            // seated at the till: drawn right of the cell centre and lower (draw.ts SEAT_PX)
+            if (st.state === 'at_till') want.push({ key: `v${st.id}`, x: st.x + 0.13, y: st.y - 0.13, frame, cmd: null });
+            else want.push({ key: `w${st.id}`, x: st.x, y: st.y, frame, cmd: null });
+        }
         for (const p of s.spills) {
             const busy = s.cleanQueue.includes(p.id) || s.staff.some((st) => st.clean?.spillId === p.id);
             if (!busy) want.push({ key: `p${p.id}`, x: p.x, y: p.y, frame: 'icona_pulisci', cmd: { type: 'clean', spillId: p.id } });
@@ -181,7 +191,7 @@ export class Game extends Scene {
             const p = gridToIso(w.x, w.y);
             const bob = w.cmd ? Math.sin(time / 180) * 3 : 0;
             const lift = ICON_LIFT[w.key[0]];
-            t.setFrame(w.frame).setOrigin(0.5, 1).setPosition(p.x, p.y + TILE_H / 2 - lift + bob).setScale(scale * KIT_SCALE * (w.key[0] === 'p' ? 0.75 : 1)).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
+            t.setFrame(w.frame).setOrigin(0.5, 1).setPosition(p.x, p.y + TILE_H / 2 - lift + bob).setScale(scale * KIT_SCALE * (ICON_SCALE[w.key[0]] ?? 1)).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
         }
     }
 

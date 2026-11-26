@@ -32,6 +32,7 @@ export const ROOMS = {
     area_casse: { label: 'Area casse', costPerCell: 20 },
     banco_salumi: { label: 'Banco salumi', costPerCell: 25 },
     panetteria: { label: 'Panetteria', costPerCell: 25 },
+    spogliatoio: { label: 'Spogliatoio', costPerCell: 15 },
 } as const;
 
 /** Objects: cost (€) and the room type they must stand in. */
@@ -43,6 +44,7 @@ export const OBJECTS = {
     bancone: { label: 'Bancone', cost: 300, room: 'banco_salumi' },
     forno: { label: 'Forno', cost: 250, room: 'panetteria' },
     frigo: { label: 'Frigo', cost: 250, room: 'sala_vendita' },
+    armadietti: { label: 'Armadietti', cost: 150, room: 'spogliatoio' },
 } as const;
 
 // --- Customers (milestone 03). "per second" = real second at 1x.
@@ -165,7 +167,7 @@ export const BANKRUPT_BELOW = 0;
 export const BAD_DAYS = 2;
 
 /** Level 1: days available and goals to reach at a closing (money, reputation %, customers served in total). */
-export const LEVEL = { days: 5, goals: { money: 3500, reputation: 70, served: 350 } } as const;
+export const LEVEL = { days: 5, goals: { money: 2800, reputation: 70, served: 350 } } as const;
 
 // --- Dirt (milestone 12)
 
@@ -199,6 +201,16 @@ export const BAKE_BATCH = 6;
 /** After a batch, fresh bread smell: arrivals SCENT_BOOST times as often for SCENT_MIN game minutes. */
 export const SCENT_MIN = 60;
 export const SCENT_BOOST = 1.5;
+
+// --- Staff energy (milestone 18)
+
+/** Energy 0..ENERGY_MAX: drains ENERGY_DRAIN_PER_H per game hour at work, refills REST_PER_H at the lockers. */
+export const ENERGY_MAX = 100;
+export const ENERGY_DRAIN_PER_H = 8;
+export const REST_PER_H = 400;
+/** Below this, staff take a break as soon as they are free; with no staff room they work at TIRED_SPEED, no trait bonus. */
+export const BREAK_BELOW = 30;
+export const TIRED_SPEED = 0.5;
 
 // --- Events (milestone 14)
 
