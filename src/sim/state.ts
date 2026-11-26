@@ -57,6 +57,8 @@ export type Customer = {
     queuedAt: number;
     /** Seconds left at the till while paying, then until the automatic checkout when ready. */
     timer: number;
+    /** Furbetto only (milestone 15): what he will try at the till; cleared once caught or served. */
+    trick?: 'cut' | 'run';
 };
 
 export type GameState = {
@@ -91,6 +93,8 @@ export type GameState = {
     /** Abandoned carts (block customers) and cart ids tapped for removal (milestone 14). */
     carts: Cart[];
     cartQueue: number[];
+    /** Furbetti caught with a tap / run off with the goods (the HUD announces each). */
+    furbetti: { caught: number; escaped: number };
     /** Outcome of the level's health inspection, once it happened. */
     inspection: { fine: number; rep: number } | null;
     /** 0–100: drives arrivals. */
@@ -141,6 +145,7 @@ export function createState(): GameState {
         carts: [],
         cartQueue: [],
         inspection: null,
+        furbetti: { caught: 0, escaped: 0 },
         reputation: REP_START,
         servedTotal: 0,
         happyBears: 0,

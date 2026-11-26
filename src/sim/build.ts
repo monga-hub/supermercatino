@@ -1,6 +1,6 @@
 // Build commands. Commands are plain data so UI, tests and agents share one entry point.
 import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_CAPACITY, ORDER_UNITS, UNIT_COST, TIP } from './config.ts';
-import { readyAt, checkout, rerouteCustomers, walkableFor } from './customers.ts';
+import { readyAt, checkout, rerouteCustomers, walkableFor, tricking, catchFurbetto } from './customers.ts';
 import { nextDay } from './day.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
 import { hire, fire, rerouteStaff } from './staff.ts';
@@ -17,6 +17,7 @@ export type Command =
     | { type: 'collect'; tillId: number }
     | { type: 'clean'; spillId: number }
     | { type: 'removeCart'; cartId: number }
+    | { type: 'catch'; customerId: number }
     | { type: 'continue' };
 
 export type Result = { ok: true; cost: number } | { ok: false; reason: string };
@@ -82,6 +83,10 @@ export function check(s: GameState, c: Command): Result {
         if (s.cartQueue.includes(c.cartId) || s.staff.some((st) => st.cart === c.cartId)) return fail('Già in arrivo');
         return s.staff.some((st) => st.role === 'magazziniere') ? { ok: true, cost: 0 } : fail('Serve un magazziniere');
     }
+    if (c.type === 'catch') {
+        const f = s.customers.find((x) => x.id === c.customerId);
+        return f && tricking(f) ? { ok: true, cost: 0 } : fail('Niente da beccare');
+    }
     if (c.type === 'continue') return s.summary && !s.outcome ? { ok: true, cost: 0 } : fail('Niente da continuare');
     if (c.type === 'collect') return readyAt(s, c.tillId) ? { ok: true, cost: 0 } : fail('Nessun conto da incassare');
     if (c.type === 'order') {
@@ -132,6 +137,8 @@ export function apply(s: GameState, c: Command): Result {
         nextDay(s);
     } else if (c.type === 'clean') {
         s.cleanQueue.push(c.spillId);
+    } else if (c.type === 'catch') {
+        catchFurbetto(s, s.customers.find((x) => x.id === c.customerId)!);
     } else if (c.type === 'removeCart') {
         s.cartQueue.push(c.cartId);
     } else if (c.type === 'order') {

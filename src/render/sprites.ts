@@ -29,7 +29,7 @@ export const SPILL_FRAMES = ['macchia_0', 'macchia_1', 'macchia_2'];
 export const WALL_FRAMES = ['muro', 'muro_poster', 'porta'].flatMap((n) => [`${n}_l`, `${n}_r`]);
 
 /** Tap icon badges (Game.drawIcons). */
-export const ICON_FRAMES = ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_pulisci', 'icona_carrello'];
+export const ICON_FRAMES = ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_pulisci', 'icona_carrello', 'icona_beccato'];
 
 /** kit.png frames are stored at 2x (tools/kit.py RES). */
 export const KIT_SCALE = 0.5;
@@ -46,7 +46,8 @@ export function personFrame(s: GameState, p: Customer | Staff): string {
     if (!('role' in p)) {
         if (p.state === 'queueing' && !p.path.length) return `${p.kind}_idle`;
         if (p.state === 'paying' || p.state === 'ready') return `${p.kind}_pay`;
-        return `${p.kind}_${p.state === 'leaving_angry' ? 'angry' : 'walk'}_${step(p)}`;
+        const away = p.state === 'leaving_angry' || (p.trick === 'run' && p.state === 'leaving'); // the furbetto's row 2: running off
+        return `${p.kind}_${away ? 'angry' : 'walk'}_${step(p)}`;
     }
     if (p.role === 'pulizie') return p.state === 'cleaning' ? `pulizie_mop_${CYCLE[Math.floor(s.clockSec / SCAN_SEC) % CYCLE.length]}` : `pulizie_walk_${step(p)}`;
     if (p.role === 'magazziniere') return `magazziniere_${p.job?.units ? 'carry' : 'walk'}_${step(p)}`;

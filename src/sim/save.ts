@@ -12,7 +12,7 @@ export function loadGame(text: string | null): GameState | null {
     try {
         const d = JSON.parse(text ?? '');
         const s = d?.v === VERSION && d.s;
-        if (s && typeof s === 'object' && s.rooms) Object.assign(s, { spills: s.spills ?? [], cleanQueue: s.cleanQueue ?? [], carts: s.carts ?? [], cartQueue: s.cartQueue ?? [], inspection: s.inspection ?? null }); // older saves: fields added in 12, 14
+        if (s && typeof s === 'object' && s.rooms) Object.assign(s, { spills: s.spills ?? [], cleanQueue: s.cleanQueue ?? [], carts: s.carts ?? [], cartQueue: s.cartQueue ?? [], inspection: s.inspection ?? null, furbetti: s.furbetti ?? { caught: 0, escaped: 0 } }); // older saves: fields added in 12, 14, 15
         return s && typeof s === 'object' && Object.keys(createState()).every((k) => k in s) ? s : null;
     } catch {
         return null;

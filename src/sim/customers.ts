@@ -5,6 +5,7 @@ import {
     SPILL_DRAIN, PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS, AUTO_COLLECT_SEC,
     DAY_CLOSE_MIN, LAST_ARRIVAL_MIN, REP_SERVED, REP_LOST, SERVED_BY, SLICE_SEC,
     CART_CHANCE, CART_MAX, INSPECTION_DAY, INSPECTION_HOUR, INSPECTION_FINE, INSPECTION_BONUS,
+    PATIENCE_CUT, FURB_REP_GAIN, FURB_REP_LOSS,
 } from './config.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
@@ -70,6 +71,7 @@ export function spawnCustomer(s: GameState, list?: Category[], kind?: CustomerKi
         id: s.nextId++, kind, state: 'shopping', x: d.x, y: d.y, path: [], goal: null,
         list, next: 0, basket: [], patience: PATIENCE_START, queuedAt: 0, timer: 0,
     };
+    if (kind === 'furbetto') c.trick = rand(s) < 0.5 ? 'cut' : 'run';
     s.customers.push(c);
     return c;
 }
@@ -139,9 +141,20 @@ function arrive(s: GameState, c: Customer, w: Walkable) {
         return nextGoal(s, c, w);
     }
     if (g.kind === 'till') {
+        const atTill = s.objects.find((o) => o.id === g.id)?.type === 'cassa';
+        if (atTill && c.trick === 'run') return leave(s, c, w, false); // off with the goods
         c.state = 'queueing';
         c.queuedAt = s.queueSeq++;
+        if (atTill && c.trick === 'cut') {
+            const line = s.customers.filter((o) => o !== c && o.state === 'queueing' && o.goal?.kind === 'till' && o.goal.id === g.id);
+            for (const o of line) o.patience -= PATIENCE_CUT;
+            c.queuedAt = Math.min(c.queuedAt, ...line.map((o) => o.queuedAt)) - 1; // straight to the front
+        }
         return;
+    }
+    if (c.trick === 'run') {
+        s.reputation = Math.max(0, s.reputation - FURB_REP_LOSS);
+        s.furbetti.escaped++;
     }
     c.x = Number.NaN; // reached the door: gone
 }
@@ -221,6 +234,7 @@ function serveTills(s: GameState) {
         if (here.some((c) => c.state === 'paying' || c.state === 'ready')) continue;
         const front = here.filter((c) => c.state === 'queueing').sort((a, b) => a.queuedAt - b.queuedAt)[0];
         if (front && !front.path.length) {
+            delete front.trick; // got away with jumping the queue
             front.state = 'paying';
             front.timer = (till.type === 'bancone' ? SLICE_SEC : PAY_SEC) / TRAITS[cashier.trait].speed;
         }
@@ -238,6 +252,17 @@ function sliced(s: GameState, c: Customer, w: Walkable) {
     Object.assign(c, { state: 'shopping', goal: null, next: c.next + 1 });
     nextGoal(s, c, w);
     return true;
+}
+
+/** A furbetto caught in the act: jumping the queue, or running off with the goods. */
+export const tricking = (c: Customer) => (c.trick === 'cut' && c.state === 'queueing') || (c.trick === 'run' && c.state === 'leaving');
+
+/** Tapped: the furbetto pays up (and leaves), the shop gains reputation. */
+export function catchFurbetto(s: GameState, c: Customer) {
+    delete c.trick;
+    checkout(s, c, 0);
+    s.reputation = Math.min(100, s.reputation + FURB_REP_GAIN);
+    s.furbetti.caught++;
 }
 
 /** The customer whose bill is ready at this till, waiting for the 💰 tap. */

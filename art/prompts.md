@@ -59,3 +59,9 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 
 - `ispettore.jpg` 3×3 (testa comune dei personaggi) — ispettore sanitario magro e severo, capelli neri impomatati, baffetti, occhiali tondi, impermeabile beige, cartellina e penna. Righe: camminata rigida ×3; camminata scrivendo ×3; fermo che scruta, spunta la cartellina, annusa disgustato.
 - `imprevisti.jpg` 3×1 — chiesto nella chat delle icone ("same style"): icona tonda col carrello, icona tonda con cartellina e timbro, carrello rosso anni '80 con sacchetto di carta in iso. Gemini ha fatto un layout irregolare: ritagliato a mano in un 3×1 (carrello, icona carrello, icona ispezione).
+
+## Il Furbetto (milestone 15)
+
+- `furbetto.jpg` 3×3 come `cliente.jpg`: ragazzo anni '80 col giubbotto di pelle marrone e jeans; righe camminata, si infila (furtivo), scappa con la merce (angry).
+- `beccato.jpg` 1×1 — chiesto nella chat delle icone ("same style"): icona tonda con cappello da vigile e fischietto.
+

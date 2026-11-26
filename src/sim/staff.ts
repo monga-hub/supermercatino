@@ -103,7 +103,8 @@ function updateStocker(s: GameState, st: Staff, w: Walkable) {
         const cart = s.carts.find((c) => c.id === st.cart);
         if (cart && st.path.length) return walk(st, STAFF_SPEED * TRAITS[st.trait].speed);
         if (cart) s.carts = s.carts.filter((c) => c !== cart); // taken away
-        Object.assign(st, { cart: undefined, path: [], state: 'idle' });
+        delete st.cart;
+        Object.assign(st, { path: [], state: "idle" });
         return;
     }
     if (!st.job) {
@@ -162,8 +163,8 @@ export function rerouteStaff(s: GameState) {
         // ponytail: snap to the nearest cell and drop the errand (goods go back to the warehouse); re-plan from scratch
         Object.assign(st, { x: Math.round(st.x), y: Math.round(st.y), path: [], state: 'idle' });
         if (st.role === 'cassiere' || st.role === 'banconiere') st.tillId = null;
-        else if (st.role === 'pulizie') st.clean = undefined;
-        else if (st.cart !== undefined) st.cart = undefined;
+        else if (st.role === 'pulizie') delete st.clean;
+        else if (st.cart !== undefined) delete st.cart;
         else if (st.job) {
             s.warehouse[st.job.category] += st.job.units;
             st.job = null;

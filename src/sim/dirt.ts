@@ -31,7 +31,7 @@ export const spillNear = (s: GameState, x: number, y: number) => s.spills.some((
 export function updateCleaner(s: GameState, st: Staff, w: Walkable) {
     let spill = s.spills.find((p) => p.id === st.clean?.spillId);
     if (!spill) {
-        st.clean = undefined;
+        delete st.clean;
         st.state = 'idle';
         s.cleanQueue = s.cleanQueue.filter((id) => s.spills.some((p) => p.id === id));
         const taken = new Set(s.staff.map((o) => o.clean?.spillId));
@@ -55,6 +55,6 @@ export function updateCleaner(s: GameState, st: Staff, w: Walkable) {
     st.clean!.timer -= STEP_MS / 1000;
     if (st.clean!.timer > 0) return;
     s.spills = s.spills.filter((p) => p !== spill);
-    st.clean = undefined;
+    delete st.clean;
     st.state = 'idle';
 }

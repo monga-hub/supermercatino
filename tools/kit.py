@@ -20,7 +20,7 @@ SHEETS = [
                                                     f'{kind}_idle', f'{kind}_pay', f'{kind}_pick'])
       for sheet, kind, h in [('cliente', 'signora', 44), ('mamma', 'mamma', 44), ('vecchietta', 'vecchietta', 38),
                              ('giovane', 'giovane', 46), ('ponzone', 'ponzone', 46), ('orso', 'orso', 58),
-                             ('ispettore', 'ispettore', 48)]],
+                             ('ispettore', 'ispettore', 48), ('furbetto', 'furbetto', 46)]],
     ('cassiere.jpg', 3, 2, ('h', 46), WALK('cassiere') + ['cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1']),
     ('icone.jpg', 3, 2, ('w', 0.66), ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_felice', 'icona_arrabbiato', 'icona_cestino']),
     ('magazziniere.jpg', 3, 2, ('h', 46), WALK('magazziniere') + ['magazziniere_carry_0', 'magazziniere_carry_1', 'magazziniere_carry_2']),
@@ -28,6 +28,7 @@ SHEETS = [
     ('bancone.jpg', 3, 1, ('w', 1.0), ['bancone', 'bancone_vuoto', ('pacchetto_salumi', 0.35)]),
     ('banconiere.jpg', 4, 2, ('h', 48), WALK('banconiere') + ['banconiere_idle', 'banconiere_slice_0', 'banconiere_slice_1', 'banconiere_give', None]),
     ('imprevisti.jpg', 3, 1, ('w', 0.66), [('carrello', 0.6), 'icona_carrello', 'icona_ispezione']),
+    ('beccato.jpg', 1, 1, ('w', 0.66), ['icona_beccato']),
     ('sporco.jpg', 3, 2, ('w', 0.8), ['macchia_0', 'macchia_1', 'macchia_2', ('cestino', 0.3), ('icona_pulisci', 0.66), ('cartello_bagnato', 0.4)]),
 ]
 

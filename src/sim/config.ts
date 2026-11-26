@@ -62,6 +62,7 @@ export const CUSTOMER_TYPES = {
     giovane: { label: 'Giovane', weight: 15, speed: 1.4, drain: 1.3, list: [1, 2], pay: 1 },
     ponzone: { label: 'Signor Ponzone', weight: 7, speed: 0.9, drain: 1.5, list: [2, 3], pay: 1.5 },
     orso: { label: 'Orso', weight: 2, speed: 0.8, drain: 1, list: [3, 5], pay: 1 },
+    furbetto: { label: 'Furbetto', weight: 6, speed: 1.2, drain: 1, list: [1, 2], pay: 1 }, // milestone 15: jumps the queue or runs off
     ispettore: { label: 'Ispettore sanitario', weight: 0, speed: 0.9, drain: 0, list: [3, 3], pay: 1 }, // milestone 14: never random
 } as const;
 
@@ -196,3 +197,11 @@ export const INSPECTION_HOUR = 10;
 /** Fine (€) per spill on the floor when the inspector leaves; reputation bonus for a spotless shop. */
 export const INSPECTION_FINE = 25;
 export const INSPECTION_BONUS = 5;
+
+// --- Il Furbetto (milestone 15)
+
+/** Patience lost by each customer the furbetto jumps ahead of. */
+export const PATIENCE_CUT = 15;
+/** Reputation gained when you catch a furbetto, lost when one runs off with the goods. */
+export const FURB_REP_GAIN = 3;
+export const FURB_REP_LOSS = 5;

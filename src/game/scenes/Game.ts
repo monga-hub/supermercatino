@@ -2,7 +2,7 @@ import { Scene, type GameObjects, type Input } from 'phaser';
 import { createState, tick, advance, type GameState, type RoomType, type ObjectType, type Category } from '../../sim/state.ts';
 import { apply, check, type Command } from '../../sim/build.ts';
 import { STEP_MS, TAP_ICON_BELOW, BEAR_BONUS_MONEY, BEAR_BONUS_REP, INSPECTION_DAY } from '../../sim/config.ts';
-import { readyAt } from '../../sim/customers.ts';
+import { readyAt, tricking } from '../../sim/customers.ts';
 import { saveGame, loadGame, SAVE_KEY } from '../../sim/save.ts';
 import { gridToIso, cellAt, TILE_H, TILE_W } from '../../render/iso.ts';
 import { drawFloor, drawThings, drawObject, tile, type Put } from '../../render/draw.ts';
@@ -11,7 +11,7 @@ import type { Hud } from './Hud.ts';
 
 const ZOOM_MIN = 0.4;
 /** Tap icons float just above the shelf (80 px) / till (51 px) sprite, low over a spill (by key prefix). */
-const ICON_LIFT: Record<string, number> = { s: 86, t: 58, p: 24, c: 50 };
+const ICON_LIFT: Record<string, number> = { s: 86, t: 58, p: 24, c: 50, f: 66 };
 const ZOOM_MAX = 2.5;
 const TAP_SLOP = 10; // px a pointer may move and still count as a tap
 const OK = 0x4caf50;
@@ -126,14 +126,16 @@ export class Game extends Scene {
     }
 
     /** Day and inspection seen last frame, to announce changes once (milestone 14). */
-    seen = { day: 0, inspection: false };
+    seen = { day: 0, inspection: false, caught: 0, escaped: 0 };
     events_() {
         const s = this.sim;
         if (s.day !== this.seen.day && s.day === INSPECTION_DAY && !s.inspection) this.game.events.emit('toast', 'Oggi passa l\'ispettore sanitario: tieni pulito!');
         const i = s.inspection;
         if (i && !this.seen.inspection)
             this.game.events.emit('toast', i.fine ? `Ispezione: multa di €${i.fine} per lo sporco!` : `Ispezione superata! +${i.rep} reputazione`);
-        this.seen = { day: s.day, inspection: !!i };
+        if (s.furbetti.caught > this.seen.caught) this.game.events.emit('toast', 'Beccato! Il furbetto paga tutto');
+        if (s.furbetti.escaped > this.seen.escaped) this.game.events.emit('toast', 'Il furbetto è scappato senza pagare!');
+        this.seen = { day: s.day, inspection: !!i, ...s.furbetti };
     }
 
     /** Painted badges: restock over shelves running low (delivery once on their way), money over tills with a bill ready. */
@@ -147,6 +149,8 @@ export class Game extends Scene {
             }
             if (o.type === 'cassa' && readyAt(s, o.id)) want.push({ key: `t${o.id}`, x: o.x, y: o.y, frame: 'icona_soldi', cmd: { type: 'collect', tillId: o.id } });
         }
+        for (const c of s.customers)
+            if (tricking(c)) want.push({ key: `f${c.id}`, x: c.x, y: c.y, frame: 'icona_beccato', cmd: { type: 'catch', customerId: c.id } });
         for (const c of s.carts) {
             const busy = s.cartQueue.includes(c.id) || s.staff.some((st) => st.cart === c.id);
             if (!busy) want.push({ key: `c${c.id}`, x: c.x, y: c.y, frame: 'icona_carrello', cmd: { type: 'removeCart', cartId: c.id } });
@@ -209,7 +213,7 @@ export class Game extends Scene {
     useState(s: GameState) {
         this.sim = s;
         this.bears = s.happyBears;
-        this.seen = { day: s.day, inspection: !!s.inspection };
+        this.seen = { day: s.day, inspection: !!s.inspection, ...s.furbetti };
         this.registry.set('sim', this.sim);
         this.registry.set('tool', null);
         for (const t of this.icons.values()) t.destroy();

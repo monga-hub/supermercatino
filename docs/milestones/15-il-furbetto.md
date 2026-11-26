@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+implemented (in attesa di playtest)
 
 ## Objective
 
@@ -25,10 +25,10 @@ L'ultimo tipo di cliente del gameplan: il Furbetto, che salta la fila o esce sen
 
 ## Acceptance criteria
 
-- [ ] Il furbetto salta la fila e chi è scavalcato perde pazienza — test: `tests/furbetto.test.ts`
-- [ ] Toccato paga e la reputazione sale; se scappa niente incasso e reputazione giù — test: `tests/furbetto.test.ts`
-- [ ] Frame del furbetto e dell'icona nel kit — test: `tests/assets.test.ts`
-- [ ] Bilanciamento: il livello si vince ancora entro 5 giorni — `output/balance.ts`
+- [x] Il furbetto salta la fila e chi è scavalcato perde pazienza — test: `tests/furbetto.test.ts`
+- [x] Toccato paga e la reputazione sale; se scappa niente incasso e reputazione giù — test: `tests/furbetto.test.ts`
+- [x] Frame del furbetto e dell'icona nel kit — test: `tests/assets.test.ts`
+- [x] Bilanciamento: il livello si vince ancora entro 5 giorni — `output/balance.ts`
 - [ ] Il furbetto si riconosce e beccarlo dà soddisfazione — verified by user playtest
 
 ## Exit condition
@@ -41,3 +41,8 @@ L'utente vede un cliente che si infila davanti alla fila, lo tocca e lo vede pag
 - Regressione: `npm test && npm run test:browser && npx tsc --noEmit`.
 
 ## Notes
+
+- Metà dei furbetti salta la fila (`trick: 'cut'`, chi è in fila perde `PATIENCE_CUT`), metà scappa senza pagare (`'run'`). Peso 6 su 100 circa.
+- Il tocco funziona solo mentre fa il furbo (`tricking`): in fila per chi salta, in uscita per chi scappa. Beccato: paga tutto, +`FURB_REP_GAIN`. Scappato: −`FURB_REP_LOSS`.
+- Icona: `icona_beccato` (cappello da vigile e fischietto), foglio `beccato.jpg` fatto nella chat delle icone. Il furbetto in fuga usa i frame "angry" del suo foglio.
+- Bilanciamento (`output/balance.ts` tocca i furbetti): con i tocchi vince al giorno 4–5; senza tocchi perde (9 furbetti scappati al giorno 4).
