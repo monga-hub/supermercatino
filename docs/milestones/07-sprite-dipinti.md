@@ -2,7 +2,7 @@
 
 ## Status
 
-planned — in attesa di accesso a Gemini per generare i fogli
+in progress — arredi fatti e online (3a69e3b); personaggi in attesa: generazione immagini Gemini sovraccarica (2026-11-26), riprovare
 
 ## Objective
 
@@ -11,10 +11,11 @@ Sostituire i blocchi colorati con sprite isometrici **dipinti** (non pixel art) 
 ## Scope
 
 - Foglio di stile: un prompt base unico (palette calda anni '80-'90, vista iso 2:1, luce da sinistra, sfondo bianco piatto per lo scontorno) + un prompt per foglio. Salvato in `art/prompts.md`.
-- Fogli generati con Gemini in `art/sheets/` (sorgenti, versionati): pavimenti (linoleum sala, cemento magazzino, area casse, lotto), oggetti (porta, scaffale vuoto + merce per le 6 categorie, cassa, scatoloni), personaggi (cliente, cliente arrabbiato, cassiere seduto/in piedi, magazziniere, magazziniere con scatolone).
+- Fogli generati con Gemini in `art/sheets/` (sorgenti, versionati): oggetti (porta, scaffale vuoto + merce per le 6 categorie, cassa, scatoloni), personaggi (cliente, cliente arrabbiato, cassiere seduto/in piedi, magazziniere, magazziniere con scatolone).
 - Script `tools/kit.py` (Python + Pillow, sullo stile di `spesa-nonna/tools/kit.py`): scontorna lo sfondo, scala ogni pezzo sulla casella 64×32, impacchetta `public/assets/kit.png` + `kit.json` (frame + punto d'appoggio).
 - `src/render/draw.ts`: sprite al posto di `box()`, stesso ordinamento in profondità; i placeholder restano come riserva se manca un frame.
 - Le icone 📦/⏳/💰 restano emoji (eventuale sostituzione dopo).
+- Pavimenti e scatoloni del magazzino restano procedurali (si leggono bene; deciso in implementazione).
 
 ## Out of scope
 
@@ -28,8 +29,9 @@ Sostituire i blocchi colorati con sprite isometrici **dipinti** (non pixel art) 
 
 ## Acceptance criteria
 
-- [ ] Ogni tipo di oggetto, pavimento e personaggio usato dalla sim ha un frame in `kit.json` — test: `tests/assets.test.ts::every drawable has a frame`
-- [ ] Il gioco carica l'atlas senza errori in console e disegna gli sprite — test: `scripts/browser-test.mjs::no console errors` + screenshot
+- [x] Ogni tipo di oggetto ha un frame in `kit.json` — test: `tests/assets.test.ts::every drawable has a frame: furniture`
+- [ ] Ogni personaggio ha un frame — test: `tests/assets.test.ts::every drawable has a frame: people` (todo finché manca `art/sheets/personaggi.jpg`)
+- [x] Il gioco carica l'atlas senza errori in console e disegna gli sprite — test: `scripts/browser-test.mjs::no console errors` + screenshot
 - [ ] Merce sullo scaffale visibile e distinguibile per categoria; scaffale vuoto riconoscibile — screenshot + verified by user playtest
 - [ ] Sprite coerenti e leggibili su telefono (zoom minimo e normale) — verified by user playtest
 

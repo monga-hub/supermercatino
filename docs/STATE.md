@@ -4,7 +4,7 @@
 
 ## Last updated
 
-2026-11-26 by Claude / make-game milestone 04
+2026-11-26 by Claude / make-game milestone 07
 
 ## Current phase
 
@@ -12,19 +12,19 @@ development (scaffold completato)
 
 ## Current milestone
 
-[07 — Sprite dipinti](milestones/07-sprite-dipinti.md) (planned, in attesa di accesso a Gemini). Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md). 01–06 e 05b chiusi.
+[07 — Sprite dipinti](milestones/07-sprite-dipinti.md) (in corso: arredi fatti, personaggi da generare). Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md). 01–06 e 05b chiusi.
 
 ## Last action
 
-Milestone 06: chiusura vera (stop arrivi nell'ultima ora, negozio svuotato), affitto e stipendi, riepilogo di fine giornata che mette in pausa (comando `continue`), reputazione che guida gli arrivi, livello 1 da 5 giornate con obiettivi, vittoria/sconfitta e Ricomincia. HUD con giorno N/5, reputazione e obiettivi. Test: `npm test` 35/35, `npm run test:browser` 10/10. Prima: 05 e 05b chiusi dopo playtest.
+Milestone 07, parte arredi: foglio Gemini `art/sheets/arredi.jpg` (scaffale vuoto + 6 categorie, cassa, porta), `tools/kit.py` (scontorno + atlas `public/assets/kit.png/json`), `draw.ts` disegna gli sprite con i blocchi come riserva. Online (3a69e3b), browser test live 10/10. `npm test` 36 pass + 1 todo (personaggi).
 
 ## Next step
 
-Ottenere accesso a Gemini per generare i fogli del 07 (chiave API in `.env.local` non versionato, oppure Gemini web via Claude in Chrome). Nel frattempo si può fare l'08.
+Generare il foglio personaggi nella chat Gemini "Retro Italian Supermarket Sprite Sheet" (prompt in `art/prompts.md`, modalità Auto), scaricarlo in `art/sheets/personaggi.jpg`, `python3 tools/kit.py`, controllare screenshot, push. Oppure passare all'08 e tornare dopo.
 
 ## Blockers
 
-none
+Generazione immagini Gemini sovraccarica il 2026-11-26 (4 tentativi falliti).
 
 ## Notes for next session
 
