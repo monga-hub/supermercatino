@@ -2,7 +2,7 @@
 
 ## Status
 
-in-progress — automated AC green; waiting for user playtest
+done (2026-11-26) — utente ha dato l'ok passando al punto successivo
 
 ## Objective
 
@@ -30,7 +30,7 @@ Chiudere il primo loop giocabile: costruisco → i clienti entrano, comprano, fa
 ## Dependencies
 
 - **Depends on:** milestone 01, milestone 02
-- **Blocks:** milestone staff/rifornimento (da pianificare)
+- **Blocks:** milestone 04, milestone 05
 
 ## Acceptance criteria
 
@@ -41,7 +41,7 @@ Chiudere il primo loop giocabile: costruisco → i clienti entrano, comprano, fa
 - [x] La fila serve un cliente alla volta in ordine di arrivo — test: `tests/customers.test.ts::queue is FIFO`
 - [x] Stessa seed + stessi comandi → stesso stato dopo N tick (determinismo) — test: `tests/customers.test.ts::deterministic with seed`
 - [x] Nel browser, dopo `advanceTime` di un'ora di gioco su un negozio costruito via comandi, `render_game_to_text()` mostra clienti serviti > 0 e soldi aumentati — test: `scripts/browser-test.mjs::customers buy and pay`
-- [ ] Movimento dei clienti leggibile, barra pazienza visibile da zoom medio — verified by user playtest
+- [x] Movimento dei clienti leggibile, barra pazienza visibile da zoom medio — verified by user playtest
 
 ## Exit condition
 

@@ -40,7 +40,7 @@ Un livello = un negozio vuoto con obiettivi. Tempo reale con pausa e 3 velocità
 
 ## Art style
 
-- **Isometrica 2D**, sprite **dipinti/illustrati** (non pixel art), generati con AI. Milestone 01–03 usano placeholder geometrici (rombi e blocchi colorati in palette); gli sprite AI arrivano in un milestone dedicato dopo il 03 (decisione utente 2026-11-26, vedi `docs/backlog.md`).
+- **Isometrica 2D**, sprite **dipinti/illustrati** (non pixel art), generati con AI. Fino al milestone 06 si usano placeholder geometrici (rombi e blocchi colorati in palette); gli sprite AI arrivano in un milestone dedicato dopo il 06, quando il loop del livello è completo (decisioni utente 2026-11-26, vedi `docs/backlog.md`).
 - **Palette calda e saturata anni '80-'90**: neon dei banchi frigo, linoleum a scacchi, cartelli "OFFERTA" rosso/giallo, legno del banco salumi.
 - Personaggi leggibili da lontano, silhouette caricaturali.
 - Coerenza: unico foglio di stile/prompt per tutti gli sprite (stessa luce, stesso angolo iso, stesso contorno). Riferimento interno: esperimenti di `spesa-nonna` (moodboard, `super1-supercasa.jpg`).

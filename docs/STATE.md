@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[03 — Primo cliente paga](milestones/03-primo-cliente-paga.md) (in-progress, AC automatiche verdi). 01 e 02 done.
+[04 — Assumi il cassiere](milestones/04-assumi-il-cassiere.md) (in-progress). Poi 05 Rifornisci gli scaffali, 06 Fine giornata e obiettivi; sprite AI dopo il 06.
 
 ## Last action
 
-Milestone 02 chiuso dopo playtest da telefono. Milestone 03 implementato: A* (`src/sim/path.ts`), clienti come macchina a stati con lista spesa, stock scaffali (10), fila FIFO, cassa automatica, pagamento, pazienza e uscita arrabbiata (`src/sim/customers.ts`); clienti disegnati con barra pazienza, contatore Serviti/Persi nell'HUD. Test: `npm test` 17/17, `npm run test:browser` 6/6. Commit + push automatici (preferenza utente: prova solo da telefono via GitHub Pages).
+Milestone 03 chiuso (utente passato al punto successivo). Milestone planning: scritti 04, 05, 06; backlog aggiornato (staff, rifornimento, economia, reputazione, obiettivi promossi); sprite AI spostati dopo il 06 (gameplan aggiornato).
 
 ## Next step
 
-Playtest utente del 03 dal telefono: costruire negozio minimo, far scorrere il tempo, svuotare uno scaffale. Se ok: 03 → done, poi milestone planning (backlog: staff + rifornimento, reputazione, tipi cliente, sprite AI).
+Milestone 04: test rossi in `tests/staff.test.ts`, poi sistema candidati/staff e cassiere.
 
 ## Blockers
 

@@ -17,20 +17,22 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 
 ## Gameplay & features
 
-- [ ] Staff e assunzioni — lista candidati (stipendio vs abilità/tratto), 4 ruoli (Cassiere, Magazziniere, Addetto pulizie, Banconiere); il cassiere sostituisce la cassa automatica del milestone 03.
+- [x] Staff e assunzioni — lista candidati (stipendio vs abilità/tratto), 4 ruoli (Cassiere, Magazziniere, Addetto pulizie, Banconiere); il cassiere sostituisce la cassa automatica del milestone 03.
   - Source: gameplan v1, milestone planning 2026-11-26
   - Rough size: L · Rough value: L
-  - Notes: candidato naturale per il milestone 04; probabilmente da spezzare (cassiere+magazziniere prima, pulizie+banconiere dopo).
-- [ ] Rifornimento — ordini merce per categoria, consegna in magazzino, il magazziniere la porta agli scaffali; sostituisce lo stock fisso del 03.
+  - Notes: spezzato: cassiere → milestone 04-assumi-il-cassiere.md, magazziniere → milestone 05-rifornisci-gli-scaffali.md; pulizie e banconiere restano da pianificare.
+- [x] Rifornimento — ordini merce per categoria, consegna in magazzino, il magazziniere la porta agli scaffali; sostituisce lo stock fisso del 03.
   - Source: gameplan v1, milestone planning 2026-11-26
   - Rough size: M · Rough value: L
-  - Notes: dipende da staff (magazziniere).
-- [ ] Economia giornaliera — affitto, stipendi, costo merce; riepilogo a fine giornata.
+  - Notes: dipende da staff (magazziniere). → milestone 05-rifornisci-gli-scaffali.md
+- [x] Economia giornaliera — affitto, stipendi, costo merce; riepilogo a fine giornata.
   - Source: gameplan v1
   - Rough size: M · Rough value: L
-- [ ] Reputazione → afflusso — 0–100%, sale con clienti soddisfatti, scende con arrabbiati, determina il tasso di arrivo.
+  - Notes: → milestone 06-fine-giornata-e-obiettivi.md
+- [x] Reputazione → afflusso — 0–100%, sale con clienti soddisfatti, scende con arrabbiati, determina il tasso di arrivo.
   - Source: gameplan v1
   - Rough size: S · Rough value: L
+  - Notes: → milestone 06-fine-giornata-e-obiettivi.md
 - [ ] Tipi cliente — Nonna con la lista, Studente fuori sede, Mamma di fretta, Furbetto (salta fila/taccheggia).
   - Source: gameplan v1
   - Rough size: M · Rough value: L
@@ -42,9 +44,10 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: gameplan v1
   - Rough size: M · Rough value: M
   - Notes: dipende da addetto pulizie.
-- [ ] Obiettivi livello, vittoria e sconfitta — soglie cassa/reputazione/clienti entro N giornate; bancarotta o reputazione minima.
+- [x] Obiettivi livello, vittoria e sconfitta — soglie cassa/reputazione/clienti entro N giornate; bancarotta o reputazione minima.
   - Source: gameplan v1
   - Rough size: M · Rough value: L
+  - Notes: → milestone 06-fine-giornata-e-obiettivi.md
 - [ ] Salvataggio locale — stato sim serializzato in localStorage.
   - Source: gameplan v1
   - Rough size: S · Rough value: M
@@ -60,7 +63,7 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Notes: oggi la fila è solo logica (`queuedAt`); serve scegliere celle di coda libere davanti alla cassa.
 
 - [ ] Sprite dipinti AI — sostituire i placeholder con sprite iso dipinti, foglio di stile/prompt unico.
-  - Source: milestone planning 2026-11-26 (utente: placeholder ora, sprite AI dopo il 03)
+  - Source: milestone planning 2026-11-26 (utente: placeholder ora, sprite AI dopo il 03; poi rimandato a dopo il 06, decisione utente 2026-11-26)
   - Rough size: L · Rough value: L
   - Notes: richiede di chiudere l'open question su strumento AI e formato atlas; riferimento moodboard `spesa-nonna`.
 - [ ] Audio — muzak in loop, annunci comici all'altoparlante, SFX (bip cassa, carrello, rovescio).
