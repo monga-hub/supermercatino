@@ -36,6 +36,8 @@ export type Staff = Candidate & {
     cart?: number;
     /** 0..ENERGY_MAX (milestone 18); low → break at the lockers, or slow. */
     energy: number;
+    /** Guard: seconds of whistle pose left; floor manager: seconds to his next tap (milestone 19). */
+    wait?: number;
 };
 export type Cart = { id: number; x: number; y: number };
 

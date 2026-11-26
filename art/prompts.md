@@ -73,3 +73,7 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 
 - `spogliatoio.jpg` 3×1 — chiesto nella chat delle icone: armadietti metallici verde pallido anni '80 con panca di legno, grembiule e thermos (stile arredi del forno); icona tonda con tazzina di espresso fumante (pausa caffè); icona tonda faccina che sbadiglia con goccia di sudore e zzz (stanco). Gemini ha allargato gli armadietti oltre la prima colonna: ricomposto con PIL in 3 colonne da 800 px.
 
+## Guardia e capo reparto (milestone 19) — chat nuova per foglio, testa comune dei personaggi
+
+- `guardia.jpg` 3×2 — guardia giurata anni '80 robusta, baffoni neri, divisa blu con berretto a visiera e distintivo argento, camicia azzurra, cravatta scura, fischietto al collo. Riga 1 camminata ×3; riga 2 ferma con le mani dietro la schiena, fischia indicando col braccio alzato, palmo alzato "alt".
+- `capo.jpg` 3×2 — capo reparto magro e pignolo sui quarant'anni, capelli grigi all'indietro, occhialoni squadrati, camicia bianca a maniche corte con la penna nel taschino, cravatta marrone larga, pantaloni beige, mocassini, cartellina. Riga 1 camminata svelta con la cartellina sotto il braccio ×3; riga 2 fermo con la cartellina, scrive, indica con la penna.

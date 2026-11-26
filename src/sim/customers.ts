@@ -260,10 +260,10 @@ function sliced(s: GameState, c: Customer, w: Walkable) {
 export const tricking = (c: Customer) => (c.trick === 'cut' && c.state === 'queueing') || (c.trick === 'run' && c.state === 'leaving');
 
 /** Tapped: the furbetto pays up (and leaves), the shop gains reputation. */
-export function catchFurbetto(s: GameState, c: Customer) {
+export function catchFurbetto(s: GameState, c: Customer, rep: number = FURB_REP_GAIN) {
     delete c.trick;
     checkout(s, c, 0);
-    s.reputation = Math.min(100, s.reputation + FURB_REP_GAIN);
+    s.reputation = Math.min(100, s.reputation + rep);
     s.furbetti.caught++;
 }
 

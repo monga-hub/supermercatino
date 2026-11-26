@@ -1,6 +1,6 @@
 // Frame names in public/assets/kit.json (built by tools/kit.py from art/sheets/), and which one a character shows.
 import type { Category, Customer, GameState, Staff } from '../sim/state.ts';
-import { CUSTOMER_TYPES, GIVE_SEC } from '../sim/config.ts';
+import { CUSTOMER_TYPES, GIVE_SEC, BOSS_EVERY_SEC } from '../sim/config.ts';
 
 export const SPRITES = {
     cassa: 'cassa',
@@ -25,6 +25,8 @@ export const PEOPLE_FRAMES = [
     ...walk('magazziniere_walk'), ...walk('magazziniere_carry'),
     ...walk('pulizie_walk'), ...walk('pulizie_mop'),
     ...walk('banconiere_walk'), 'banconiere_idle', 'banconiere_slice_0', 'banconiere_slice_1', 'banconiere_give',
+    ...walk('guardia_walk'), 'guardia_idle', 'guardia_fischio', 'guardia_ferma',
+    ...walk('capo_walk'), 'capo_idle', 'capo_scrive', 'capo_indica',
 ];
 
 /** Yogurt spills on the floor, picked by spill id (milestone 12). */
@@ -56,6 +58,12 @@ export function personFrame(s: GameState, p: Customer | Staff): string {
     }
     if (p.role === 'pulizie') return p.state === 'cleaning' ? `pulizie_mop_${CYCLE[Math.floor(s.clockSec / SCAN_SEC) % CYCLE.length]}` : `pulizie_walk_${step(p)}`;
     if (p.role === 'magazziniere') return `magazziniere_${p.job?.units ? 'carry' : 'walk'}_${step(p)}`;
+    if (p.role === 'guardia' || p.role === 'capo') {
+        if (p.path.length || p.state === 'arriving') return `${p.role}_walk_${step(p)}`;
+        const w = p.wait ?? 0;
+        if (p.role === 'guardia') return w > 0.75 ? 'guardia_ferma' : w > 0 ? 'guardia_fischio' : 'guardia_idle';
+        return w > BOSS_EVERY_SEC - 0.6 ? 'capo_indica' : Math.floor(s.clockSec / (SCAN_SEC * 4)) % 2 ? 'capo_scrive' : 'capo_idle';
+    }
     const deli = p.role === 'banconiere';
     if (p.state !== 'at_till') return `${p.role}_walk_${step(p)}`;
     const busy = s.customers.find((c) => c.state === 'paying' && c.goal?.kind === 'till' && c.goal.id === p.tillId);

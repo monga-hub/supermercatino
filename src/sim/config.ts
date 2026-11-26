@@ -97,7 +97,8 @@ export const RNG_SEED = 12345;
 
 /** Staff roles. */
 export const ROLES = {
-    cassiere: { label: 'Cassiere' }, magazziniere: { label: 'Magazziniere' }, pulizie: { label: 'Addetto pulizie' }, banconiere: { label: 'Banconiere' },
+    cassiere: { label: 'Cassiere', extra: 0 }, magazziniere: { label: 'Magazziniere', extra: 0 }, pulizie: { label: 'Addetto pulizie', extra: 0 }, banconiere: { label: 'Banconiere', extra: 0 },
+    guardia: { label: 'Guardia', extra: -15 }, capo: { label: 'Capo reparto', extra: 20 }, // extra: € per day on top of the trait's wage (milestone 19)
 } as const;
 
 /** Who serves at each serving point: tills and the deli counter share the queue logic (milestone 13). */
@@ -167,7 +168,7 @@ export const BANKRUPT_BELOW = 0;
 export const BAD_DAYS = 2;
 
 /** Level 1: days available and goals to reach at a closing (money, reputation %, customers served in total). */
-export const LEVEL = { days: 5, goals: { money: 2800, reputation: 70, served: 350 } } as const;
+export const LEVEL = { days: 5, goals: { money: 1500, reputation: 60, served: 270 } } as const;
 
 // --- Dirt (milestone 12)
 
@@ -231,3 +232,10 @@ export const PATIENCE_CUT = 15;
 /** Reputation gained when you catch a furbetto, lost when one runs off with the goods. */
 export const FURB_REP_GAIN = 3;
 export const FURB_REP_LOSS = 5;
+
+// --- Automation (milestone 19)
+
+/** The guard at his post by a till catches furbetti within this many cells (+1 reputation; the tap gives FURB_REP_GAIN). */
+export const GUARD_RADIUS = 3;
+/** The floor manager makes one tap every N real seconds (divided by his pace); the player can tap faster. */
+export const BOSS_EVERY_SEC = 1.5;

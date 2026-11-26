@@ -1,6 +1,7 @@
 // Save/load of the whole sim state (milestone 11). The state is plain JSON (ADR-0001). Pure.
 import { createState, type GameState } from './state.ts';
 import { ENERGY_MAX } from './config.ts';
+import { refillCandidates } from './staff.ts';
 
 export const SAVE_KEY = 'supermercatino-save';
 /** Bump when the meaning of a field changes; a new or removed field is caught by the key check below. */
@@ -15,6 +16,7 @@ export function loadGame(text: string | null): GameState | null {
         const s = d?.v === VERSION && d.s;
         if (s && typeof s === 'object' && s.rooms) Object.assign(s, { spills: s.spills ?? [], cleanQueue: s.cleanQueue ?? [], carts: s.carts ?? [], cartQueue: s.cartQueue ?? [], inspection: s.inspection ?? null, furbetti: s.furbetti ?? { caught: 0, escaped: 0 }, scent: s.scent ?? 0 }); // older saves: fields added in 12, 14, 15, 17
         if (s?.staff) for (const st of s.staff) st.energy ??= ENERGY_MAX; // older saves: energy added in 18
+        if (s?.candidates) refillCandidates(s); // older saves: roles added in 19
         return s && typeof s === 'object' && Object.keys(createState()).every((k) => k in s) ? s : null;
     } catch {
         return null;

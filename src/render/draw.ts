@@ -113,7 +113,7 @@ export function drawCustomer(g: G, over: G, s: GameState, c: Customer, put: Put 
     g.fillRect(p.x - 12, top, 24 * v, 4);
 }
 
-export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazziniere: 0x2e7d5b, pulizie: 0x3b82c4, banconiere: 0xf4efe6 };
+export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazziniere: 0x2e7d5b, pulizie: 0x3b82c4, banconiere: 0xf4efe6, guardia: 0x1f3a6b, capo: 0x6b6b6b };
 
 /** A seated cashier is drawn half a cell behind the till, so the till doesn't hide them. */
 const SEAT_OFFSET = 0.45;

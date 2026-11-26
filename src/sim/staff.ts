@@ -1,17 +1,20 @@
 // Staff: candidates, hiring, and per-role behaviour. Pure, deterministic.
 import { SERVED_BY, ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW,
-    ENERGY_MAX, ENERGY_DRAIN_PER_H, REST_PER_H, BREAK_BELOW, TIRED_SPEED, GAME_MIN_PER_SEC, STEP_MS } from './config.ts';
+    ENERGY_MAX, ENERGY_DRAIN_PER_H, REST_PER_H, BREAK_BELOW, TIRED_SPEED, GAME_MIN_PER_SEC, STEP_MS,
+    TAP_ICON_BELOW, GUARD_RADIUS, BOSS_EVERY_SEC } from './config.ts';
 import { rand, pick } from './rng.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import type { GameState, Role, Trait, Staff, ShopObject, Cart } from './state.ts';
 import { updateCleaner } from './dirt.ts';
+import { tricking, catchFurbetto, readyAt } from './customers.ts';
+import { check, apply, type Command } from './build.ts';
 
 /** Top up the candidate list to CANDIDATES_PER_ROLE per role. */
 export function refillCandidates(s: GameState) {
     for (const role of Object.keys(ROLES) as Role[]) {
         while (s.candidates.filter((c) => c.role === role).length < CANDIDATES_PER_ROLE) {
             const trait = pick(s, Object.keys(TRAITS) as Trait[]);
-            const wage = TRAITS[trait].wage + Math.round((rand(s) * 2 - 1) * WAGE_SPREAD);
+            const wage = TRAITS[trait].wage + ROLES[role].extra + Math.round((rand(s) * 2 - 1) * WAGE_SPREAD);
             const used = new Set([...s.candidates, ...s.staff].map((c) => c.name));
             const free = STAFF_NAMES.filter((n) => !used.has(n));
             s.candidates.push({ id: s.nextId++, role, name: pick(s, free.length ? free : STAFF_NAMES), trait, wage });
@@ -207,6 +210,55 @@ export function rerouteStaff(s: GameState) {
     }
 }
 
+/** Guard and floor manager stand next to the nearest till; true once there. */
+function atPost(s: GameState, st: Staff, w: Walkable) {
+    if (st.path.length) return void walk(st, STAFF_SPEED * pace(st));
+    const tills = s.objects.filter((o) => o.type === 'cassa');
+    if (tills.some((o) => Math.abs(o.x - st.x) <= 1 && Math.abs(o.y - st.y) <= 1)) return (st.state = 'idle'), true;
+    let best: Cell[] | null = null;
+    for (const o of tills) {
+        const p = pathToObject(w, { x: Math.round(st.x), y: Math.round(st.y) }, o);
+        if (p && (!best || p.length < best.length)) best = p;
+    }
+    Object.assign(st, { path: best ?? [], state: best?.length ? 'arriving' : 'idle' });
+    return false;
+}
+
+const STEP_S = STEP_MS / 1000;
+
+/** Milestone 19: at his post the guard catches any furbetto in range (he pays; less reputation than a tap). */
+function updateGuard(s: GameState, st: Staff, w: Walkable) {
+    st.wait = Math.max(0, (st.wait ?? 0) - STEP_S);
+    if (!atPost(s, st, w)) return;
+    for (const c of s.customers)
+        if (tricking(c) && Math.abs(c.x - st.x) <= GUARD_RADIUS && Math.abs(c.y - st.y) <= GUARD_RADIUS) {
+            catchFurbetto(s, c, 1);
+            st.wait = 1.5; // whistle pose
+        }
+}
+
+/** The tap a player would make next: bill ready, spill, almost empty shelf (emptiest first), abandoned cart. */
+export function bossTap(s: GameState): Command | null {
+    const ok = (c: Command) => check(s, c).ok;
+    const shelves = s.objects.filter((o) => o.category && o.stock! < TAP_ICON_BELOW).sort((a, b) => a.stock! - b.stock!);
+    return [
+        ...s.objects.filter((o) => readyAt(s, o.id)).map((o): Command => ({ type: 'collect', tillId: o.id })),
+        ...s.spills.map((p): Command => ({ type: 'clean', spillId: p.id })),
+        ...shelves.map((o): Command => ({ type: 'restock', shelfId: o.id })),
+        ...s.carts.map((c): Command => ({ type: 'removeCart', cartId: c.id })),
+    ].find(ok) ?? null;
+}
+
+/** Milestone 19: the floor manager makes one tap every BOSS_EVERY_SEC (slower when tired). */
+function updateBoss(s: GameState, st: Staff, w: Walkable) {
+    if (!atPost(s, st, w)) return;
+    st.wait = (st.wait ?? 0) - STEP_S;
+    if (st.wait > 0) return;
+    const c = bossTap(s);
+    if (c) apply(s, c);
+    st.wait = c ? BOSS_EVERY_SEC / pace(st) : 0;
+}
+
 export function updateStaff(s: GameState) {
     if (!s.staff.length) return;
     const w = walkableFor(s);
@@ -219,6 +271,8 @@ export function updateStaff(s: GameState) {
         if (wantsBreak(s, st) && free(s, st) && goRest(s, st, w)) continue;
         if (st.role === 'cassiere' || st.role === 'banconiere') updateCashier(s, st, w);
         else if (st.role === 'pulizie') updateCleaner(s, st, w);
+        else if (st.role === 'guardia') updateGuard(s, st, w);
+        else if (st.role === 'capo') updateBoss(s, st, w);
         else updateStocker(s, st, w);
     }
 }
