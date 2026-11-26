@@ -19,6 +19,7 @@ SHEETS = [
     ('cliente.jpg', 3, 3, ('h', 44), WALK('cliente') + ['cliente_angry_0', 'cliente_angry_1', 'cliente_angry_2',
                                                         'cliente_idle', 'cliente_pay', 'cliente_pick']),
     ('cassiere.jpg', 3, 2, ('h', 46), WALK('cassiere') + ['cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1']),
+    ('icone.jpg', 3, 2, ('w', 0.66), ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_felice', 'icona_arrabbiato', 'icona_cestino']),
     ('magazziniere.jpg', 3, 2, ('h', 46), WALK('magazziniere') + ['magazziniere_carry_0', 'magazziniere_carry_1', 'magazziniere_carry_2']),
 ]
 

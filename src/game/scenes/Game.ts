@@ -38,7 +38,7 @@ export class Game extends Scene {
     pinch: { d: number; mx: number; my: number } | null = null;
     pinched = false; // a pinch happened during this touch: its pointerup must not build
     /** Tap icons over shelves and tills, pooled by key; each carries its command in data 'cmd'. */
-    icons = new Map<string, GameObjects.Text>();
+    icons = new Map<string, GameObjects.Image>();
     // ?manual: sim advances only through window.advanceTime (deterministic browser tests)
     manual = new URLSearchParams(location.search).has('manual');
 
@@ -96,28 +96,28 @@ export class Game extends Scene {
         this.drawIcons(_time);
     }
 
-    /** 📦 over shelves running low (⏳ once on their way), 💰 over tills with a bill ready. */
+    /** Painted badges: restock over shelves running low (delivery once on their way), money over tills with a bill ready. */
     drawIcons(time: number) {
         const s = this.sim;
-        const want: { key: string; x: number; y: number; label: string; cmd: Command | null }[] = [];
+        const want: { key: string; x: number; y: number; frame: string; cmd: Command | null }[] = [];
         for (const o of s.objects) {
             if (o.type === 'scaffale' && o.stock! < TAP_ICON_BELOW) {
                 const busy = s.restockQueue.includes(o.id) || s.staff.some((st) => st.job?.shelfId === o.id);
-                want.push({ key: `s${o.id}`, x: o.x, y: o.y, label: busy ? '⏳' : '📦', cmd: busy ? null : { type: 'restock', shelfId: o.id } });
+                want.push({ key: `s${o.id}`, x: o.x, y: o.y, frame: busy ? 'icona_arrivo' : 'icona_restock', cmd: busy ? null : { type: 'restock', shelfId: o.id } });
             }
-            if (o.type === 'cassa' && readyAt(s, o.id)) want.push({ key: `t${o.id}`, x: o.x, y: o.y, label: '💰', cmd: { type: 'collect', tillId: o.id } });
+            if (o.type === 'cassa' && readyAt(s, o.id)) want.push({ key: `t${o.id}`, x: o.x, y: o.y, frame: 'icona_soldi', cmd: { type: 'collect', tillId: o.id } });
         }
         for (const t of this.icons.values()) t.setVisible(false);
         const scale = 1 / Math.min(1, this.cameras.main.zoom); // keep icons finger-sized when zoomed out
         for (const w of want) {
             let t = this.icons.get(w.key);
             if (!t) {
-                t = this.add.text(0, 0, '', { fontSize: 26, backgroundColor: '#fff3d6', padding: { x: 5, y: 3 } }).setOrigin(0.5, 1).setDepth(9500);
+                t = this.add.image(0, 0, 'kit', 'icona_soldi').setOrigin(0.5, 1).setDepth(9500);
                 this.icons.set(w.key, t);
             }
             const p = gridToIso(w.x, w.y);
             const bob = w.cmd ? Math.sin(time / 180) * 3 : 0;
-            t.setText(w.label).setPosition(p.x, p.y + TILE_H / 2 - 40 + bob).setScale(scale).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
+            t.setFrame(w.frame).setOrigin(0.5, 1).setPosition(p.x, p.y + TILE_H / 2 - 40 + bob).setScale(scale * KIT_SCALE).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
         }
     }
 
@@ -127,7 +127,7 @@ export class Game extends Scene {
         for (const t of this.icons.values()) {
             if (!t.visible || !t.getData('cmd')) continue;
             const b = t.getBounds();
-            const pad = 10 * t.scaleX;
+            const pad = (10 * t.scaleX) / KIT_SCALE;
             const onIcon = p.worldX > b.x - pad && p.worldX < b.right + pad && p.worldY > b.y - pad && p.worldY < b.bottom + pad;
             if (onIcon || (!this.tool && t.getData('cell') === `${c.x},${c.y}`)) return t.getData('cmd');
         }

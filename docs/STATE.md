@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[07b — Animazioni personaggi](milestones/07b-animazioni-personaggi.md) (implementato, in attesa di playtest). 07 implementato. Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md); pareti nel backlog.
+[09 — Sembra un supermercato](milestones/09-sembra-un-supermercato.md) (implementato, in attesa di playtest). 07 e 07b implementati, in attesa di playtest. Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md).
 
 ## Last action
 
-Milestone 07b: fogli Gemini per personaggio (`art/sheets/cliente.jpg`, `cassiere.jpg`, `magazziniere.jpg`), `personFrame()` in `src/render/sprites.ts` sceglie la posa dallo stato (camminata agganciata alla posizione, coda, paga, arrabbiata, cassiera che batte, magazziniere con scatolone). `npm test` 41/41, browser 10/10.
+Milestone 09: strumento Ruota (scaffali e casse, due orientamenti), muri dipinti sui bordi in fondo dell'edificio con la porta sul bordo esterno della sua cella (`src/render/walls.ts`, texture `art/sheets/pareti.jpg` inclinate da `tools/kit.py`), icone di tocco dipinte (`art/sheets/icone.jpg`). `npm test` 45/45, browser 10/10.
 
 ## Next step
 
-Playtest dell'utente (07 + 07b) sul telefono, poi 08 o pareti.
+Playtest dell'utente (07, 07b, 09) sul telefono, poi 08.
 
 ## Blockers
 

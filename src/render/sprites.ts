@@ -18,6 +18,9 @@ export const PEOPLE_FRAMES = [
 /** Wall and door panels, one per back-edge orientation (tools/kit.py WALLS). */
 export const WALL_FRAMES = ['muro', 'muro_poster', 'porta'].flatMap((n) => [`${n}_l`, `${n}_r`]);
 
+/** Tap icon badges (Game.drawIcons). */
+export const ICON_FRAMES = ['icona_restock', 'icona_arrivo', 'icona_soldi'];
+
 /** kit.png frames are stored at 2x (tools/kit.py RES). */
 export const KIT_SCALE = 0.5;
 

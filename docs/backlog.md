@@ -73,15 +73,23 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: gameplan v1
   - Rough size: M · Rough value: M
 
-- [ ] Animazioni dei personaggi — un foglio Gemini per personaggio: camminata in 3 passi, azione principale (cliente prende dallo scaffale / cassiera batte lo scontrino / magazziniere scarica), arrabbiatura; diverso per ogni personaggio. Oggi sembrano "manichini che si muovono".
+- [x] Animazioni dei personaggi — un foglio Gemini per personaggio: camminata in 3 passi, azione principale (cliente prende dallo scaffale / cassiera batte lo scontrino / magazziniere scarica), arrabbiatura; diverso per ogni personaggio. Oggi sembrano "manichini che si muovono".
   - Source: utente 2026-11-26 (playtest 07)
   - Rough size: M · Rough value: L
-  - Notes: rischio: Gemini non tiene lo stesso personaggio identico tra i frame; provare a dare il foglio attuale come riferimento. kit.py va esteso a griglie N×M per personaggio + animazioni Phaser.
+  - Notes: rischio: Gemini non tiene lo stesso personaggio identico tra i frame; provare a dare il foglio attuale come riferimento. kit.py va esteso a griglie N×M per personaggio + animazioni Phaser. → milestone 07b-animazioni-personaggi.md
 
-- [ ] Pareti sui due lati posteriori — muri sui bordi in alto a sinistra e in alto a destra delle stanze (quelli rivolti verso il giocatore), stile Theme Hospital.
+- [x] Pareti sui due lati posteriori — muri sui bordi in alto a sinistra e in alto a destra delle stanze (quelli rivolti verso il giocatore), stile Theme Hospital.
   - Source: utente 2026-11-26 (playtest 07)
   - Rough size: M · Rough value: M
-  - Notes: sprite muro (2 orientamenti) da Gemini; i muri non devono coprire le stanze davanti; porta incassata nel muro.
+  - Notes: sprite muro (2 orientamenti) da Gemini; i muri non devono coprire le stanze davanti; porta incassata nel muro. → milestone 09-sembra-un-supermercato.md
+
+- [ ] Quattro orientamenti veri per scaffali e casse (oggi due, con lo specchio) — servono sprite visti da dietro.
+  - Source: milestone 09, 2026-11-26
+  - Rough size: M · Rough value: S
+
+- [ ] Muri interni tra stanze diverse (magazzino/sala) e icone faccina felice/arrabbiata e cestino già nel kit da usare nell'HUD.
+  - Source: milestone 09, 2026-11-26
+  - Rough size: S · Rough value: S
 
 ## Tech & refactors
 

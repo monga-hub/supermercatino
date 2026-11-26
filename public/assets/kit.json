@@ -552,10 +552,154 @@
     "h": 89
    }
   },
-  "magazziniere_walk_0": {
+  "icona_restock": {
    "frame": {
     "x": 750,
     "y": 162,
+    "w": 84,
+    "h": 83
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 1
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 84,
+    "h": 83
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 84,
+    "h": 83
+   }
+  },
+  "icona_arrivo": {
+   "frame": {
+    "x": 836,
+    "y": 162,
+    "w": 84,
+    "h": 83
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 1
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 84,
+    "h": 83
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 84,
+    "h": 83
+   }
+  },
+  "icona_soldi": {
+   "frame": {
+    "x": 922,
+    "y": 162,
+    "w": 84,
+    "h": 83
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 1
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 84,
+    "h": 83
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 84,
+    "h": 83
+   }
+  },
+  "icona_felice": {
+   "frame": {
+    "x": 0,
+    "y": 266,
+    "w": 84,
+    "h": 84
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 1
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 84,
+    "h": 84
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   }
+  },
+  "icona_arrabbiato": {
+   "frame": {
+    "x": 86,
+    "y": 266,
+    "w": 84,
+    "h": 84
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 1
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 84,
+    "h": 84
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   }
+  },
+  "icona_cestino": {
+   "frame": {
+    "x": 172,
+    "y": 266,
+    "w": 84,
+    "h": 84
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 1
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 84,
+    "h": 84
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 84,
+    "h": 84
+   }
+  },
+  "magazziniere_walk_0": {
+   "frame": {
+    "x": 258,
+    "y": 266,
     "w": 48,
     "h": 92
    },
@@ -578,8 +722,8 @@
   },
   "magazziniere_walk_1": {
    "frame": {
-    "x": 800,
-    "y": 162,
+    "x": 308,
+    "y": 266,
     "w": 48,
     "h": 91
    },
@@ -602,8 +746,8 @@
   },
   "magazziniere_walk_2": {
    "frame": {
-    "x": 850,
-    "y": 162,
+    "x": 358,
+    "y": 266,
     "w": 48,
     "h": 92
    },
@@ -626,8 +770,8 @@
   },
   "magazziniere_carry_0": {
    "frame": {
-    "x": 900,
-    "y": 162,
+    "x": 408,
+    "y": 266,
     "w": 43,
     "h": 92
    },
@@ -650,8 +794,8 @@
   },
   "magazziniere_carry_1": {
    "frame": {
-    "x": 945,
-    "y": 162,
+    "x": 453,
+    "y": 266,
     "w": 38,
     "h": 92
    },
@@ -674,8 +818,8 @@
   },
   "magazziniere_carry_2": {
    "frame": {
-    "x": 985,
-    "y": 162,
+    "x": 493,
+    "y": 266,
     "w": 39,
     "h": 92
    },
@@ -698,7 +842,7 @@
   },
   "muro_l": {
    "frame": {
-    "x": 0,
+    "x": 534,
     "y": 266,
     "w": 64,
     "h": 152
@@ -722,7 +866,7 @@
   },
   "muro_r": {
    "frame": {
-    "x": 66,
+    "x": 600,
     "y": 266,
     "w": 64,
     "h": 152
@@ -746,7 +890,7 @@
   },
   "muro_poster_l": {
    "frame": {
-    "x": 132,
+    "x": 666,
     "y": 266,
     "w": 64,
     "h": 152
@@ -770,7 +914,7 @@
   },
   "muro_poster_r": {
    "frame": {
-    "x": 198,
+    "x": 732,
     "y": 266,
     "w": 64,
     "h": 152
@@ -794,7 +938,7 @@
   },
   "porta_l": {
    "frame": {
-    "x": 264,
+    "x": 798,
     "y": 266,
     "w": 64,
     "h": 152
@@ -818,7 +962,7 @@
   },
   "porta_r": {
    "frame": {
-    "x": 330,
+    "x": 864,
     "y": 266,
     "w": 64,
     "h": 152

@@ -2,7 +2,7 @@
 
 ## Status
 
-in progress
+implemented — in attesa del playtest dell'utente
 
 ## Objective
 
@@ -29,9 +29,9 @@ mobili che si girano, pareti con la porta nel muro, icone di tocco dipinte al po
 ## Acceptance criteria
 
 - [x] `rotate` gira scaffali e casse, gratis; porta e celle vuote rifiutate — test: `tests/build.test.ts::rotate*`
-- [ ] Pareti sui bordi in fondo dell'edificio, non sui bordi interni né davanti; niente muro dove c'è la porta — test: `tests/walls.test.ts`
-- [ ] La porta sta sul bordo esterno della sua cella — test: `tests/walls.test.ts`
-- [ ] Ogni frame di muri, porta e icone esiste in `kit.json` — test: `tests/assets.test.ts`
+- [x] Pareti sui bordi in fondo dell'edificio, non sui bordi interni né davanti; niente muro dove c'è la porta — test: `tests/walls.test.ts`
+- [x] La porta sta sul bordo esterno della sua cella — test: `tests/walls.test.ts`
+- [x] Ogni frame di muri, porta e icone esiste in `kit.json` — test: `tests/assets.test.ts`
 - [ ] Sembra un supermercato su telefono — verified by user playtest
 
 ## Exit condition
