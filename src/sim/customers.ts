@@ -4,6 +4,7 @@ import {
     STEP_MS, GAME_MIN_PER_SEC, CATEGORIES, PRICES, CUSTOMER_TYPES, CUSTOMER_SPEED, BEAR_HAPPY, BEAR_BONUS_MONEY, BEAR_BONUS_REP,
     SPILL_DRAIN, PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS, AUTO_COLLECT_SEC,
     DAY_CLOSE_MIN, LAST_ARRIVAL_MIN, REP_SERVED, REP_LOST, SERVED_BY, SLICE_SEC,
+    CART_CHANCE, CART_MAX, INSPECTION_DAY, INSPECTION_HOUR, INSPECTION_FINE, INSPECTION_BONUS,
 } from './config.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
@@ -23,6 +24,7 @@ export function walkableFor(s: GameState): Walkable {
         for (let x = r.x; x < r.x + r.w; x++) for (let y = r.y; y < r.y + r.h; y++) open.add(`${x},${y}`);
     }
     for (const o of s.objects) if (o.type !== 'porta') open.delete(`${o.x},${o.y}`);
+    for (const c of s.carts) open.delete(`${c.x},${c.y}`);
     return (x, y) => open.has(`${x},${y}`);
 }
 
@@ -103,10 +105,23 @@ function nextGoal(s: GameState, c: Customer, w: Walkable) {
         }
         c.patience -= PATIENCE_MISSING; // missing or empty: annoyed, skip it
     }
+    if (c.kind === 'ispettore') {
+        inspect(s);
+        return leave(s, c, w, false);
+    }
     const t = c.basket.length ? pickTill(s, w, c) : null;
     if (!t) return leave(s, c, w, true);
     c.goal = { kind: 'till', id: t.till.id };
     c.path = t.path;
+}
+
+/** The inspector leaves: a fine per spill on the floor, or a reputation bonus for a spotless shop. */
+function inspect(s: GameState) {
+    const fine = s.spills.length * INSPECTION_FINE;
+    const rep = fine ? 0 : INSPECTION_BONUS;
+    s.money -= fine;
+    s.reputation = Math.min(100, s.reputation + rep);
+    s.inspection = { fine, rep };
 }
 
 function arrive(s: GameState, c: Customer, w: Walkable) {
@@ -114,9 +129,10 @@ function arrive(s: GameState, c: Customer, w: Walkable) {
     if (!g) return nextGoal(s, c, w);
     if (g.kind === 'shelf') {
         const shelf = s.objects.find((o) => o.id === g.id);
-        if (shelf?.stock) {
+        if (c.kind === 'ispettore') { /* looks, writes, buys nothing */ } else if (shelf?.stock) {
             shelf.stock--;
             c.basket.push(shelf.category!);
+            if (s.carts.length < CART_MAX && rand(s) < CART_CHANCE) s.carts.push({ id: s.nextId++, x: c.x, y: c.y }); // left the cart here
         } else c.patience -= PATIENCE_MISSING; // emptied while walking there
         c.next++;
         c.goal = null;
@@ -252,9 +268,12 @@ export function updateCustomers(s: GameState) {
         s.spawnAcc -= every;
         if (s.clockSec < (DAY_CLOSE_MIN - LAST_ARRIVAL_MIN) * 60) spawnCustomer(s);
     }
+    if (s.day === INSPECTION_DAY && !s.inspection && s.clockSec >= INSPECTION_HOUR * 3600 && !s.customers.some((c) => c.kind === 'ispettore'))
+        spawnCustomer(s, undefined, 'ispettore');
     if (!s.customers.length) return;
 
     serveTills(s);
+    const carts = s.carts.length;
     const w = walkableFor(s);
     for (const c of s.customers) {
         const away = c.state === 'leaving' || c.state === 'leaving_angry';
@@ -262,7 +281,7 @@ export function updateCustomers(s: GameState) {
         if (c.state === 'queueing') c.patience -= PATIENCE_QUEUE_DRAIN * type.drain * STEP_S;
         else if (c.path.length && !away) c.patience -= PATIENCE_WALK_DRAIN * type.drain * STEP_S;
         if (!away && c.state !== 'paying' && c.state !== 'ready' && spillNear(s, c.x, c.y)) c.patience -= SPILL_DRAIN * type.drain * STEP_S;
-        if (c.patience <= 0 && !away && c.state !== 'paying' && c.state !== 'ready') {
+        if (c.patience <= 0 && !away && c.kind !== 'ispettore' && c.state !== 'paying' && c.state !== 'ready') {
             leave(s, c, w, true);
             continue;
         }
@@ -291,5 +310,6 @@ export function updateCustomers(s: GameState) {
         } else arrive(s, c, w);
     }
     s.customers = s.customers.filter((c) => !Number.isNaN(c.x));
+    if (s.carts.length > carts) return rerouteCustomers(s); // a cart now blocks the aisle: everyone re-plans
     lineUp(s, w); // after moving: whoever just reached a till already has their place in line
 }

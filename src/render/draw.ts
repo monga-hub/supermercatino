@@ -96,7 +96,7 @@ export function drawCustomer(g: G, over: G, s: GameState, c: Customer, put: Put 
     const f = feet(c.x, c.y);
     const drawn = put(personFrame(s, c), f.x, f.y + 2, depth, goesLeft(c, c.path[0]));
     if (!drawn) box(g, c.x, c.y, CUSTOMER_H, angry ? CUSTOMER_ANGRY : CUSTOMER, 0.35);
-    if (c.state === 'leaving' || angry) return;
+    if (c.state === 'leaving' || angry || c.kind === 'ispettore') return; // the inspector has no patience to lose
     // patience bar over the head
     const p = gridToIso(c.x, c.y);
     const top = p.y + TILE_H / 2 - (drawn ? 52 : CUSTOMER_H + 14);
@@ -189,6 +189,10 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
             const front = edge === 'fr' || edge === 'fl';
             return { d: o.x + o.y + (front ? 0.6 : -0.5), draw: (z: number) => panel(put, 'porta', o.x, o.y, edge, z) || drawObject(g, o) };
         }),
+        ...s.carts.map((c) => ({ d: c.x + c.y, draw: (z: number) => {
+            const p = gridToIso(c.x, c.y);
+            if (!put(SPRITES.carrello, p.x, p.y + TILE_H - 4, z)) box(g, c.x, c.y, 14, 0xc0392b, 0.5); // fallback: red box
+        } })),
         ...s.spills.map((p) => ({ d: p.x + p.y - 0.45, draw: (z: number) => {
             const f = feet(p.x, p.y);
             if (put(SPILL_FRAMES[p.id % SPILL_FRAMES.length], f.x, f.y + TILE_H / 4, z)) return;

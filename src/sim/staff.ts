@@ -2,7 +2,7 @@
 import { SERVED_BY, ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW } from './config.ts';
 import { rand, pick } from './rng.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
-import type { GameState, Role, Trait, Staff, ShopObject } from './state.ts';
+import type { GameState, Role, Trait, Staff, ShopObject, Cart } from './state.ts';
 import { updateCleaner } from './dirt.ts';
 
 /** Top up the candidate list to CANDIDATES_PER_ROLE per role. */
@@ -85,9 +85,32 @@ function pathToWarehouse(s: GameState, w: Walkable, from: Cell) {
     return best;
 }
 
-/** One trip at a time: warehouse -> shelf, filling it up. Tapped shelves first, then almost empty ones. */
+/** Walk to an abandoned cart (staff can step on it) to take it away. */
+function goForCart(s: GameState, st: Staff, w: Walkable, cart: Cart) {
+    const path = findPath(w, { x: Math.round(st.x), y: Math.round(st.y) }, cart);
+    if (!path) return false;
+    Object.assign(st, { cart: cart.id, path, state: 'cart' });
+    s.cartQueue = s.cartQueue.filter((id) => id !== cart.id);
+    return true;
+}
+
+/**
+ * One trip at a time: warehouse -> shelf, filling it up. Tapped carts and shelves first,
+ * then almost empty shelves, then any abandoned cart (milestone 14).
+ */
 function updateStocker(s: GameState, st: Staff, w: Walkable) {
+    if (st.cart !== undefined) {
+        const cart = s.carts.find((c) => c.id === st.cart);
+        if (cart && st.path.length) return walk(st, STAFF_SPEED * TRAITS[st.trait].speed);
+        if (cart) s.carts = s.carts.filter((c) => c !== cart); // taken away
+        Object.assign(st, { cart: undefined, path: [], state: 'idle' });
+        return;
+    }
     if (!st.job) {
+        const free = s.carts.filter((c) => !s.staff.some((o) => o.cart === c.id));
+        s.cartQueue = s.cartQueue.filter((id) => s.carts.some((c) => c.id === id));
+        const tapped = s.cartQueue.map((id) => free.find((c) => c.id === id)).find(Boolean);
+        if (tapped && goForCart(s, st, w, tapped)) return;
         st.state = 'idle';
         const taken = new Set(s.staff.map((o) => o.job?.shelfId));
         // ponytail: idle stockers re-search every tick; fine while shelves are few
@@ -97,7 +120,7 @@ function updateStocker(s: GameState, st: Staff, w: Walkable) {
         const shelf = s.restockQueue.map((id) => open.find((o) => o.id === id)).find(Boolean)
             ?? open.find((o) => o.stock! < AUTO_RESTOCK_BELOW);
         const path = shelf && pathToWarehouse(s, w, st);
-        if (!shelf || !path) return;
+        if (!shelf || !path) return void free.find((c) => goForCart(s, st, w, c));
         s.restockQueue = s.restockQueue.filter((id) => id !== shelf.id);
         st.job = { shelfId: shelf.id, category: shelf.category!, units: 0 };
         st.path = path;
@@ -140,6 +163,7 @@ export function rerouteStaff(s: GameState) {
         Object.assign(st, { x: Math.round(st.x), y: Math.round(st.y), path: [], state: 'idle' });
         if (st.role === 'cassiere' || st.role === 'banconiere') st.tillId = null;
         else if (st.role === 'pulizie') st.clean = undefined;
+        else if (st.cart !== undefined) st.cart = undefined;
         else if (st.job) {
             s.warehouse[st.job.category] += st.job.units;
             st.job = null;

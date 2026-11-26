@@ -1,6 +1,6 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { setSpeed, togglePause, type GameState, type Speed } from '../../sim/state.ts';
-import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN, DAY_OPEN_MIN, BAD_DAYS } from '../../sim/config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN, DAY_OPEN_MIN, BAD_DAYS, INSPECTION_DAY } from '../../sim/config.ts';
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
 import type { Tool, Game } from './Game.ts';
@@ -14,7 +14,7 @@ const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 
 type Btn = { t: GameObjects.Text; active: () => boolean; bg: string; fg?: string };
 
-const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'in attesa', cleaning: 'pulisce', at_till: 'al suo posto', fetching: 'va in magazzino', delivering: 'porta la merce' };
+const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'in attesa', cleaning: 'pulisce', cart: 'sposta un carrello', at_till: 'al suo posto', fetching: 'va in magazzino', delivering: 'porta la merce' };
 
 // Overlay scene: own camera, so it doesn't zoom/pan with the shop.
 export class Hud extends Scene {
@@ -327,6 +327,7 @@ export class Hud extends Scene {
             `${mark(sum.reputation >= g.reputation)} Reputazione ${sum.reputation}% / ${g.reputation}%`,
             `${mark(s.servedTotal >= g.served)} Serviti ${s.servedTotal} / ${g.served}`,
         ];
+        if (!o && sum.day === INSPECTION_DAY - 1) body.push('', 'Domani passa l\'ispettore sanitario: tieni pulito!');
         if (o) body.push('', o.reason);
         else if (sum.reputation < REP_MIN) body.push('', `Attenzione: reputazione sotto il ${REP_MIN}%. Un'altra chiusura così e perdi.`);
         else if (sum.money < 0) body.push('', 'Attenzione: cassa in rosso. Un\'altra chiusura così e perdi.');

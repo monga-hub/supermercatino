@@ -12,7 +12,7 @@ export function loadGame(text: string | null): GameState | null {
     try {
         const d = JSON.parse(text ?? '');
         const s = d?.v === VERSION && d.s;
-        if (s && typeof s === 'object' && s.rooms) Object.assign(s, { spills: s.spills ?? [], cleanQueue: s.cleanQueue ?? [] }); // milestone 11 saves: no dirt yet
+        if (s && typeof s === 'object' && s.rooms) Object.assign(s, { spills: s.spills ?? [], cleanQueue: s.cleanQueue ?? [], carts: s.carts ?? [], cartQueue: s.cartQueue ?? [], inspection: s.inspection ?? null }); // older saves: fields added in 12, 14
         return s && typeof s === 'object' && Object.keys(createState()).every((k) => k in s) ? s : null;
     } catch {
         return null;

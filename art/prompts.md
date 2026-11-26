@@ -54,3 +54,8 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 
 - `bancone.jpg` 3×1 (testa comune degli arredi) — banco salumi in legno scuro con vetrina curva piena di prosciutto, salame, mortadella e formaggi e un'affettatrice rossa tipo Berkel sopra; lo stesso con la vetrina vuota; pacchetto di affettato incartato.
 - `banconiere.jpg` 4×2 (testa comune dei personaggi, "NO counter, NO slicer") — salumiere cinquantenne grassoccio, calvo coi baffi grigi, cappellino di carta bianco, camice bianco, grembiule a righe bianche e rosse. Riga 1: camminata ×3, fermo con le mani sulla pancia; riga 2: affetta (braccio avanti, braccio indietro), porge il pacchetto, saluta.
+
+## Imprevisti (milestone 14)
+
+- `ispettore.jpg` 3×3 (testa comune dei personaggi) — ispettore sanitario magro e severo, capelli neri impomatati, baffetti, occhiali tondi, impermeabile beige, cartellina e penna. Righe: camminata rigida ×3; camminata scrivendo ×3; fermo che scruta, spunta la cartellina, annusa disgustato.
+- `imprevisti.jpg` 3×1 — chiesto nella chat delle icone ("same style"): icona tonda col carrello, icona tonda con cartellina e timbro, carrello rosso anni '80 con sacchetto di carta in iso. Gemini ha fatto un layout irregolare: ritagliato a mano in un 3×1 (carrello, icona carrello, icona ispezione).

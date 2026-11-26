@@ -5,7 +5,7 @@ import { spawnCustomer, checkout } from '../src/sim/customers.ts';
 import { CUSTOMER_TYPES, PRICES, BEAR_BONUS_MONEY, BEAR_BONUS_REP, REP_SERVED } from '../src/sim/config.ts';
 import { shop, untilTicks, noArrivals } from './helpers.ts';
 
-const KINDS = Object.keys(CUSTOMER_TYPES);
+const KINDS = Object.keys(CUSTOMER_TYPES).filter((k) => k !== 'ispettore'); // the inspector never comes at random
 
 test('natural arrivals mix every customer type, the bear is the rarest', () => {
     const s = shop({ cashier: false });

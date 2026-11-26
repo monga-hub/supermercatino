@@ -19,7 +19,7 @@ export type ShopObject = { id: number; type: ObjectType; x: number; y: number; c
 export type Role = keyof typeof ROLES;
 export type Trait = keyof typeof TRAITS;
 export type Candidate = { id: number; role: Role; name: string; trait: Trait; wage: number };
-export type StaffState = 'arriving' | 'idle' | 'at_till' | 'fetching' | 'delivering' | 'cleaning';
+export type StaffState = 'arriving' | 'idle' | 'at_till' | 'fetching' | 'delivering' | 'cleaning' | 'cart';
 export type Staff = Candidate & {
     state: StaffState;
     x: number;
@@ -31,7 +31,10 @@ export type Staff = Candidate & {
     job: { shelfId: number; category: Category; units: number } | null;
     /** Cleaner: spill being walked to / mopped, seconds of mopping left. */
     clean?: { spillId: number; timer: number };
+    /** Stocker: abandoned cart being walked to (milestone 14). */
+    cart?: number;
 };
+export type Cart = { id: number; x: number; y: number };
 
 export type CustomerState = 'shopping' | 'queueing' | 'paying' | 'ready' | 'leaving' | 'leaving_angry';
 export type CustomerKind = keyof typeof CUSTOMER_TYPES;
@@ -85,6 +88,11 @@ export type GameState = {
     /** Yogurt on the floor (milestone 12); spill ids tapped for cleaning, served first. */
     spills: Spill[];
     cleanQueue: number[];
+    /** Abandoned carts (block customers) and cart ids tapped for removal (milestone 14). */
+    carts: Cart[];
+    cartQueue: number[];
+    /** Outcome of the level's health inspection, once it happened. */
+    inspection: { fine: number; rep: number } | null;
     /** 0–100: drives arrivals. */
     reputation: number;
     servedTotal: number;
@@ -130,6 +138,9 @@ export function createState(): GameState {
         restockQueue: [],
         spills: [],
         cleanQueue: [],
+        carts: [],
+        cartQueue: [],
+        inspection: null,
         reputation: REP_START,
         servedTotal: 0,
         happyBears: 0,

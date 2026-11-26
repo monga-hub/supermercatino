@@ -16,6 +16,7 @@ export type Command =
     | { type: 'restock'; shelfId: number }
     | { type: 'collect'; tillId: number }
     | { type: 'clean'; spillId: number }
+    | { type: 'removeCart'; cartId: number }
     | { type: 'continue' };
 
 export type Result = { ok: true; cost: number } | { ok: false; reason: string };
@@ -76,6 +77,11 @@ export function check(s: GameState, c: Command): Result {
         if (s.cleanQueue.includes(c.spillId) || s.staff.some((st) => st.clean?.spillId === c.spillId)) return fail('Già in arrivo');
         return s.staff.some((st) => st.role === 'pulizie') ? { ok: true, cost: 0 } : fail('Serve un addetto pulizie');
     }
+    if (c.type === 'removeCart') {
+        if (!s.carts.some((x) => x.id === c.cartId)) return fail('Niente da spostare');
+        if (s.cartQueue.includes(c.cartId) || s.staff.some((st) => st.cart === c.cartId)) return fail('Già in arrivo');
+        return s.staff.some((st) => st.role === 'magazziniere') ? { ok: true, cost: 0 } : fail('Serve un magazziniere');
+    }
     if (c.type === 'continue') return s.summary && !s.outcome ? { ok: true, cost: 0 } : fail('Niente da continuare');
     if (c.type === 'collect') return readyAt(s, c.tillId) ? { ok: true, cost: 0 } : fail('Nessun conto da incassare');
     if (c.type === 'order') {
@@ -126,6 +132,8 @@ export function apply(s: GameState, c: Command): Result {
         nextDay(s);
     } else if (c.type === 'clean') {
         s.cleanQueue.push(c.spillId);
+    } else if (c.type === 'removeCart') {
+        s.cartQueue.push(c.cartId);
     } else if (c.type === 'order') {
         s.warehouse[c.category as Category] += ORDER_UNITS;
         s.goodsToday += r.cost;
@@ -137,6 +145,7 @@ export function apply(s: GameState, c: Command): Result {
     if (c.type === 'buildRoom' || c.type === 'placeObject' || c.type === 'demolish') {
         const w = walkableFor(s);
         s.spills = s.spills.filter((p) => w(p.x, p.y)); // under a new object or a demolished room: gone
+        s.carts = s.carts.filter((c) => roomAt(s, c.x, c.y) && !objectAt(s, c.x, c.y));
         rerouteCustomers(s);
         rerouteStaff(s);
     }

@@ -62,6 +62,7 @@ export const CUSTOMER_TYPES = {
     giovane: { label: 'Giovane', weight: 15, speed: 1.4, drain: 1.3, list: [1, 2], pay: 1 },
     ponzone: { label: 'Signor Ponzone', weight: 7, speed: 0.9, drain: 1.5, list: [2, 3], pay: 1.5 },
     orso: { label: 'Orso', weight: 2, speed: 0.8, drain: 1, list: [3, 5], pay: 1 },
+    ispettore: { label: 'Ispettore sanitario', weight: 0, speed: 0.9, drain: 0, list: [3, 3], pay: 1 }, // milestone 14: never random
 } as const;
 
 /** The bear leaves happy when its patience is at least BEAR_HAPPY at checkout: big bonus. */
@@ -160,7 +161,7 @@ export const BANKRUPT_BELOW = 0;
 export const BAD_DAYS = 2;
 
 /** Level 1: days available and goals to reach at a closing (money, reputation %, customers served in total). */
-export const LEVEL = { days: 5, goals: { money: 4000, reputation: 70, served: 350 } } as const;
+export const LEVEL = { days: 5, goals: { money: 3500, reputation: 70, served: 350 } } as const;
 
 // --- Dirt (milestone 12)
 
@@ -183,3 +184,15 @@ export const CLEAN_SEC = 3;
 export const SLICE_SEC = 1.5;
 /** The deli man hands over the packet in the last N seconds of slicing (render only). */
 export const GIVE_SEC = 0.7;
+
+// --- Events (milestone 14)
+
+/** Chance a customer leaves their cart by the shelf they just took from; at most CART_MAX carts at once. */
+export const CART_CHANCE = 0.02;
+export const CART_MAX = 2;
+/** The health inspector visits once per level: day and hour of arrival. */
+export const INSPECTION_DAY = 3;
+export const INSPECTION_HOUR = 10;
+/** Fine (€) per spill on the floor when the inspector leaves; reputation bonus for a spotless shop. */
+export const INSPECTION_FINE = 25;
+export const INSPECTION_BONUS = 5;

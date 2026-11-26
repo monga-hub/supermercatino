@@ -36,7 +36,7 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 - [ ] Tipi cliente — Nonna con la lista, Studente fuori sede, Mamma di fretta, Furbetto (salta fila/taccheggia).
   - Source: gameplan v1
   - Rough size: M · Rough value: L
-  - Notes: il Furbetto richiede staff vicino alle casse. In parte → milestone 10-clienti-diversi.md (mamma, vecchietta, giovane, Ponzone, orso); resta il Furbetto.
+  - Notes: il Furbetto richiede staff vicino alle casse. In parte → milestone 10-clienti-diversi.md (mamma, vecchietta, giovane, Ponzone, orso); Furbetto → milestone 15-il-furbetto.md.
 - [ ] Stanze e oggetti restanti — banco salumi, forno, spogliatoio staff; frigo, bancone, affettatrice, forno, cestino.
   - Source: gameplan v1
   - Rough size: M · Rough value: M
@@ -44,11 +44,17 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 - [ ] Sporco e imprevisti — yogurt rovesciato, carrello incastrato, ispezione sanitaria.
   - Source: gameplan v1
   - Rough size: M · Rough value: M
-  - Notes: dipende da addetto pulizie. Sporco + addetto pulizie → milestone 12-sporco-e-pulizie.md; carrello incastrato e ispezione sanitaria restano qui.
+  - Notes: dipende da addetto pulizie. Sporco + addetto pulizie → milestone 12-sporco-e-pulizie.md; carrello incastrato e ispezione sanitaria → milestone 14-imprevisti.md.
 - [x] Obiettivi livello, vittoria e sconfitta — soglie cassa/reputazione/clienti entro N giornate; bancarotta o reputazione minima.
   - Source: gameplan v1
   - Rough size: M · Rough value: L
   - Notes: → milestone 06-fine-giornata-e-obiettivi.md
+- [ ] Forno e frigo — stanza forno col fornaio (il pane come i salumi al banco) e frigo per i latticini.
+  - Source: milestone planning 2026-11-26 (rimandato dopo 14–16)
+  - Rough size: M · Rough value: M
+- [ ] Guardia / vigilante — ruolo staff vicino alle casse che ferma il furbetto da solo (automazione del tocco del 15).
+  - Source: milestone planning 2026-11-26
+  - Rough size: S · Rough value: S
 - [ ] Capo reparto / automazione completa — dipendente o potenziamento che rende inutili i tocchi su scaffali e casse (curva "tocco tutto" → "automatizzo", ADR-0002).
   - Source: user 2026-11-26
 
@@ -70,7 +76,7 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: milestone planning 2026-11-26 (utente: placeholder ora, sprite AI dopo il 03; poi rimandato a dopo il 06, decisione utente 2026-11-26)
   - Rough size: L · Rough value: L
   - Notes: → milestone 07-sprite-dipinti.md; richiede di chiudere l'open question su strumento AI e formato atlas; riferimento moodboard `spesa-nonna`.
-- [ ] Audio — muzak in loop, annunci comici all'altoparlante, SFX (bip cassa, carrello, rovescio).
+- [ ] Audio — muzak in loop, annunci comici all'altoparlante, SFX (bip cassa, carrello, rovescio). → milestone 16-audio.md
   - Source: gameplan v1
   - Rough size: M · Rough value: M
 
