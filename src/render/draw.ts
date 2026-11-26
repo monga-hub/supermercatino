@@ -15,6 +15,7 @@ export const ROOM_FLOOR: Record<RoomType, [number, number]> = {
     sala_vendita: [0xf1e4c8, 0xb5523b], // linoleum crema/mattone
     magazzino: [0x8d7b62, 0x7f6e57],
     area_casse: [0xf1e4c8, 0x4f7f6a],
+    banco_salumi: [0xe6cf9f, 0x8c5a3c], // cotto e legno
 };
 export const CATEGORY_COLOR: Record<string, number> = {
     Pasta: 0xe8c547,
@@ -29,6 +30,7 @@ const OBJECT_LOOK: Record<ObjectType, { h: number; color: number; k: number }> =
     scaffale: { h: 30, color: 0xb0a090, k: 0.8 },
     cassa: { h: 20, color: 0x9aa3ad, k: 0.75 },
     cestino: { h: 12, color: 0x3f7d3a, k: 0.35 },
+    bancone: { h: 22, color: 0xa86b3c, k: 0.85 },
 };
 
 export const shade = (c: number, f: number) =>
@@ -68,7 +70,7 @@ export function box(g: G, x: number, y: number, h: number, color: number, k = 0.
 }
 
 const objectFrame = (o: Pick<ShopObject, 'type' | 'category' | 'stock' | 'rot'>) =>
-    o.type === 'cassa' ? SPRITES.cassa : o.type === 'cestino' ? SPRITES.cestino : o.type === 'porta' ? 'porta_l' : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
+    o.type === 'cassa' ? SPRITES.cassa : o.type === 'cestino' ? SPRITES.cestino : o.type === 'bancone' ? (o.stock ? SPRITES.bancone : SPRITES.banconeVuoto) : o.type === 'porta' ? 'porta_l' : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
 
 export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock' | 'rot'>, alpha = 1, put: Put = noPut, depth = 0) {
     const p = gridToIso(o.x, o.y);
@@ -106,12 +108,14 @@ export function drawCustomer(g: G, over: G, s: GameState, c: Customer, put: Put 
     g.fillRect(p.x - 12, top, 24 * v, 4);
 }
 
-export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazziniere: 0x2e7d5b, pulizie: 0x3b82c4 };
+export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazziniere: 0x2e7d5b, pulizie: 0x3b82c4, banconiere: 0xf4efe6 };
 
 /** A seated cashier is drawn half a cell behind the till, so the till doesn't hide them. */
 const SEAT_OFFSET = 0.45;
 /** Seated cashier sprite: screen px from the till's cell centre, behind the register, facing the customers. */
 const SEAT_PX = { x: 17, y: -6 };
+/** Deli man: standing behind the counter, facing the customers. */
+const DELI_PX = { x: -6, y: -20 };
 
 export function drawStaff(g: G, s: GameState, st: Staff, put: Put = noPut, depth = 0) {
     const o = st.state === 'at_till' ? SEAT_OFFSET : 0;
@@ -120,7 +124,8 @@ export function drawStaff(g: G, s: GameState, st: Staff, put: Put = noPut, depth
     const seated = st.state === 'at_till';
     const at = feet(st.x, st.y);
     const turned = seated && !!s.objects.find((o) => o.id === st.tillId)?.rot; // till mirrored: seat and facing mirror too
-    if (seated ? put(frame, at.x + (turned ? -SEAT_PX.x : SEAT_PX.x), at.y + SEAT_PX.y, depth, !turned) : put(frame, f.x, f.y + 2, depth, goesLeft(st, st.path[0]))) return;
+    const seat = st.role === 'banconiere' ? DELI_PX : SEAT_PX;
+    if (seated ? put(frame, at.x + (turned ? -seat.x : seat.x), at.y + seat.y, depth, st.role === 'banconiere' ? turned : !turned) : put(frame, f.x, f.y + 2, depth, goesLeft(st, st.path[0]))) return;
     box(g, st.x - o, st.y - o, 24, ROLE_COLOR[st.role], 0.38);
     box(g, st.x - o, st.y - o, 28, 0xf4efe6, 0.24); // berretto bianco
     if (st.job?.units) box(g, st.x + 0.15, st.y + 0.15, 16, CRATE, 0.3); // scatolone in mano

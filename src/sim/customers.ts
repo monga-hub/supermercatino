@@ -3,7 +3,7 @@
 import {
     STEP_MS, GAME_MIN_PER_SEC, CATEGORIES, PRICES, CUSTOMER_TYPES, CUSTOMER_SPEED, BEAR_HAPPY, BEAR_BONUS_MONEY, BEAR_BONUS_REP,
     SPILL_DRAIN, PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS, AUTO_COLLECT_SEC,
-    DAY_CLOSE_MIN, LAST_ARRIVAL_MIN, REP_SERVED, REP_LOST,
+    DAY_CLOSE_MIN, LAST_ARRIVAL_MIN, REP_SERVED, REP_LOST, SERVED_BY, SLICE_SEC,
 } from './config.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
@@ -91,12 +91,13 @@ function nextGoal(s: GameState, c: Customer, w: Walkable) {
         const cat = c.list[c.next];
         let best: { shelf: ShopObject; path: Cell[] } | null = null;
         for (const shelf of s.objects) {
-            if (shelf.type !== 'scaffale' || shelf.category !== cat || !shelf.stock) continue;
+            if (shelf.category !== cat || !shelf.stock) continue;
+            if (shelf.type === 'bancone' && !cashierAt(s, shelf)) continue; // nobody slicing
             const path = pathToObject(w, c, shelf);
             if (path && (!best || path.length < best.path.length)) best = { shelf, path };
         }
         if (best) {
-            c.goal = { kind: 'shelf', id: best.shelf.id };
+            c.goal = { kind: best.shelf.type === 'bancone' ? 'till' : 'shelf', id: best.shelf.id }; // the counter has a queue, like a till
             c.path = best.path;
             return;
         }
@@ -163,7 +164,7 @@ function queueCells(s: GameState, w: Walkable, till: ShopObject, n: number): Cel
 
 /** Everyone at a till stands in line on their own cell: whoever is paying first, then by arrival. */
 function lineUp(s: GameState, w: Walkable) {
-    for (const till of s.objects.filter((o) => o.type === 'cassa')) {
+    for (const till of s.objects.filter((o) => SERVED_BY[o.type])) {
         const rank = (c: Customer) => (c.state === 'queueing' ? 1 : 0);
         const line = s.customers
             .filter((c) => c.goal?.kind === 'till' && c.goal.id === till.id && c.state !== 'shopping')
@@ -197,7 +198,7 @@ export function rerouteCustomers(s: GameState) {
 
 /** At each staffed till, the front of the queue starts paying when the till is free and it is at the counter. */
 function serveTills(s: GameState) {
-    for (const till of s.objects.filter((o) => o.type === 'cassa')) {
+    for (const till of s.objects.filter((o) => SERVED_BY[o.type])) {
         const cashier = cashierAt(s, till);
         if (!cashier) continue;
         const here = s.customers.filter((c) => c.goal?.kind === 'till' && c.goal.id === till.id);
@@ -205,9 +206,22 @@ function serveTills(s: GameState) {
         const front = here.filter((c) => c.state === 'queueing').sort((a, b) => a.queuedAt - b.queuedAt)[0];
         if (front && !front.path.length) {
             front.state = 'paying';
-            front.timer = PAY_SEC / TRAITS[cashier.trait].speed;
+            front.timer = (till.type === 'bancone' ? SLICE_SEC : PAY_SEC) / TRAITS[cashier.trait].speed;
         }
     }
+}
+
+/** Done at the deli counter: the packet goes in the basket and shopping goes on. false at a till. */
+function sliced(s: GameState, c: Customer, w: Walkable) {
+    const counter = s.objects.find((o) => c.goal?.kind === 'till' && o.id === c.goal.id);
+    if (counter?.type !== 'bancone') return false;
+    if (counter.stock) {
+        counter.stock--;
+        c.basket.push('Salumi');
+    } else c.patience -= PATIENCE_MISSING;
+    Object.assign(c, { state: 'shopping', goal: null, next: c.next + 1 });
+    nextGoal(s, c, w);
+    return true;
 }
 
 /** The customer whose bill is ready at this till, waiting for the 💰 tap. */
@@ -254,6 +268,7 @@ export function updateCustomers(s: GameState) {
         }
         if (c.state === 'paying') {
             c.timer -= STEP_S;
+            if (c.timer <= 0 && sliced(s, c, w)) continue;
             if (c.timer <= 0) {
                 c.state = 'ready'; // bill done: waits for the 💰 tap
                 c.timer = AUTO_COLLECT_SEC;

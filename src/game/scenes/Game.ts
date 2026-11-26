@@ -129,7 +129,7 @@ export class Game extends Scene {
         const s = this.sim;
         const want: { key: string; x: number; y: number; frame: string; cmd: Command | null }[] = [];
         for (const o of s.objects) {
-            if (o.type === 'scaffale' && o.stock! < TAP_ICON_BELOW) {
+            if (o.category && o.stock! < TAP_ICON_BELOW) {
                 const busy = s.restockQueue.includes(o.id) || s.staff.some((st) => st.job?.shelfId === o.id);
                 want.push({ key: `s${o.id}`, x: o.x, y: o.y, frame: busy ? 'icona_arrivo' : 'icona_restock', cmd: busy ? null : { type: 'restock', shelfId: o.id } });
             }

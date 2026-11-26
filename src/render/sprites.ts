@@ -1,11 +1,13 @@
 // Frame names in public/assets/kit.json (built by tools/kit.py from art/sheets/), and which one a character shows.
 import type { Category, Customer, GameState, Staff } from '../sim/state.ts';
-import { CUSTOMER_TYPES } from '../sim/config.ts';
+import { CUSTOMER_TYPES, GIVE_SEC } from '../sim/config.ts';
 
 export const SPRITES = {
     cassa: 'cassa',
     scaffale: 'scaffale',
     cestino: 'cestino',
+    bancone: 'bancone',
+    banconeVuoto: 'bancone_vuoto',
     shelf: (c: Category) => `scaffale_${c}`,
 };
 
@@ -16,6 +18,7 @@ export const PEOPLE_FRAMES = [
     ...walk('cassiere_walk'), 'cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1',
     ...walk('magazziniere_walk'), ...walk('magazziniere_carry'),
     ...walk('pulizie_walk'), ...walk('pulizie_mop'),
+    ...walk('banconiere_walk'), 'banconiere_idle', 'banconiere_slice_0', 'banconiere_slice_1', 'banconiere_give',
 ];
 
 /** Yogurt spills on the floor, picked by spill id (milestone 12). */
@@ -46,7 +49,10 @@ export function personFrame(s: GameState, p: Customer | Staff): string {
     }
     if (p.role === 'pulizie') return p.state === 'cleaning' ? `pulizie_mop_${CYCLE[Math.floor(s.clockSec / SCAN_SEC) % CYCLE.length]}` : `pulizie_walk_${step(p)}`;
     if (p.role === 'magazziniere') return `magazziniere_${p.job?.units ? 'carry' : 'walk'}_${step(p)}`;
-    if (p.state !== 'at_till') return `cassiere_walk_${step(p)}`;
-    const busy = s.customers.some((c) => c.state === 'paying' && c.goal?.kind === 'till' && c.goal.id === p.tillId);
-    return busy ? `cassiere_scan_${Math.floor(s.clockSec / SCAN_SEC) % 2}` : 'cassiere_seduto';
+    const deli = p.role === 'banconiere';
+    if (p.state !== 'at_till') return `${p.role}_walk_${step(p)}`;
+    const busy = s.customers.find((c) => c.state === 'paying' && c.goal?.kind === 'till' && c.goal.id === p.tillId);
+    const pose = Math.floor(s.clockSec / SCAN_SEC) % 2;
+    if (deli) return !busy ? 'banconiere_idle' : busy.timer < GIVE_SEC ? 'banconiere_give' : `banconiere_slice_${pose}`;
+    return busy ? `cassiere_scan_${pose}` : 'cassiere_seduto';
 }

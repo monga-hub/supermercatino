@@ -24,6 +24,8 @@ SHEETS = [
     ('icone.jpg', 3, 2, ('w', 0.66), ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_felice', 'icona_arrabbiato', 'icona_cestino']),
     ('magazziniere.jpg', 3, 2, ('h', 46), WALK('magazziniere') + ['magazziniere_carry_0', 'magazziniere_carry_1', 'magazziniere_carry_2']),
     ('pulizie.jpg', 3, 2, ('h', 46), WALK('pulizie') + ['pulizie_mop_0', 'pulizie_mop_1', 'pulizie_mop_2']),
+    ('bancone.jpg', 3, 1, ('w', 1.0), ['bancone', 'bancone_vuoto', ('pacchetto_salumi', 0.35)]),
+    ('banconiere.jpg', 4, 2, ('h', 48), WALK('banconiere') + ['banconiere_idle', 'banconiere_slice_0', 'banconiere_slice_1', 'banconiere_give', None]),
     ('sporco.jpg', 3, 2, ('w', 0.8), ['macchia_0', 'macchia_1', 'macchia_2', ('cestino', 0.3), ('icona_pulisci', 0.66), ('cartello_bagnato', 0.4)]),
 ]
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+implemented — in attesa del playtest dell'utente
 
 ## Objective
 
@@ -27,11 +27,11 @@ Il cuore del supermercato italiano: una stanza banco salumi col bancone e l'affe
 
 ## Acceptance criteria
 
-- [ ] Il bancone si piazza solo nel banco salumi — test: `tests/build.test.ts`
-- [ ] Chi ha Salumi in lista fa la fila al bancone e il banconiere lo serve; senza banconiere niente salumi — test: `tests/deli.test.ts`
-- [ ] Gli scaffali non offrono più Salumi — test: `tests/build.test.ts`
-- [ ] Frame di bancone e banconiere nel kit — test: `tests/assets.test.ts`
-- [ ] Bilanciamento: il livello si vince ancora entro 5 giorni — `output/balance.ts`
+- [x] Il bancone si piazza solo nel banco salumi — test: `tests/deli.test.ts`
+- [x] Chi ha Salumi in lista fa la fila al bancone e il banconiere lo serve; senza banconiere niente salumi — test: `tests/deli.test.ts`
+- [x] Gli scaffali non offrono più Salumi — test: `tests/deli.test.ts`
+- [x] Frame di bancone e banconiere nel kit — test: `tests/assets.test.ts`
+- [x] Bilanciamento: il livello si vince ancora entro 5 giorni — `output/balance.ts` (2 casse, tocchi, addetto pulizie: senza banco si perde, col banco si vince al giorno 5, con anche 2 cestini al giorno 4)
 - [ ] Il banco salumi si riconosce ed è bello da guardare — verified by user playtest
 
 ## Exit condition
@@ -44,3 +44,9 @@ L'utente costruisce il banco salumi, assume il banconiere e vede la fila davanti
 - Regressione: `npm test && npm run test:browser && npx tsc --noEmit`.
 
 ## Notes
+
+- Il bancone usa la stessa fila e lo stesso posto di lavoro della cassa (`SERVED_BY` in `config.ts`; il cliente ha `goal.kind === 'till'` anche al bancone). Ha uno stock come uno scaffale (categoria Salumi): il magazziniere lo rifornisce e compare l'icona 📦.
+- Tarature: affettare 1,5 s, Salumi €18 (prima 12), bancone €300.
+- Il pavimento del banco salumi è disegnato a colori (cotto e legno), senza foglio Gemini.
+- Fix: chi viene assunto prima che ci sia una porta entra appena la porta viene messa (prima restava bloccato fuori).
+- Fogli Gemini `art/sheets/bancone.jpg` (bancone pieno, vuoto, pacchetto non ancora usato) e `art/sheets/banconiere.jpg` (4×2; il saluto non è usato). Screenshot: `output/shots-13.mjs`.

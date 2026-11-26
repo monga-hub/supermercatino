@@ -96,3 +96,10 @@ test('staff whose path gets blocked re-plan instead of walking through it', () =
     assert.ok(!st.path.some((c) => c.x === cell.x && c.y === cell.y), 'path avoids the new shelf');
     assert.ok(untilTicks(s, () => st.state === 'at_till') >= 0, 'still reaches the till');
 });
+
+test('staff hired before the door exists walk in once it is built', () => {
+    const s = shop({ door: false });
+    hireCashier(s);
+    assert.equal(apply(s, { type: 'placeObject', object: 'porta', x: 8, y: 5 }).ok, true);
+    assert.ok(untilTicks(s, () => s.staff[0].state === 'at_till') >= 0, 'cashier reaches the till');
+});

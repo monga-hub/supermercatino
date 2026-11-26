@@ -48,6 +48,7 @@ export function check(s: GameState, c: Command): Result {
         if (!room || room.type !== def.room) return fail(`${def.label}: va in ${ROOMS[def.room].label}`);
         if (objectAt(s, c.x, c.y)) return fail('Cella occupata');
         if (c.object === 'scaffale' && !CATEGORIES.includes(c.category as Category)) return fail('Scegli una categoria');
+        if (c.object === 'scaffale' && c.category === 'Salumi') return fail('I salumi si vendono al banco salumi');
         if (c.object === 'porta') {
             // edge of the whole sales floor: rooms of the same type side by side form one area
             const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => roomAt(s, c.x + dx, c.y + dy)?.type !== 'sala_vendita');
@@ -63,7 +64,7 @@ export function check(s: GameState, c: Command): Result {
     if (c.type === 'hire') return s.candidates.some((x) => x.id === c.candidateId) ? { ok: true, cost: 0 } : fail('Candidato non trovato');
     if (c.type === 'restock') {
         const o = s.objects.find((x) => x.id === c.shelfId);
-        if (!o || o.type !== 'scaffale') return fail('Non è uno scaffale');
+        if (!o?.category) return fail('Non è uno scaffale');
         if (o.stock! >= SHELF_CAPACITY) return fail('Scaffale già pieno');
         if (s.restockQueue.includes(o.id) || s.staff.some((st) => st.job?.shelfId === o.id)) return fail('Già in arrivo');
         if (!s.staff.some((st) => st.role === 'magazziniere')) return fail('Serve un magazziniere');
@@ -105,8 +106,8 @@ export function apply(s: GameState, c: Command): Result {
         s.rooms.push({ id: s.nextId++, type: c.room, x: c.x, y: c.y, w: c.w, h: c.h });
     } else if (c.type === 'placeObject') {
         const o: ShopObject = { id: s.nextId++, type: c.object, x: c.x, y: c.y };
-        if (c.object === 'scaffale') {
-            o.category = c.category as Category;
+        if (c.object === 'scaffale' || c.object === 'bancone') {
+            o.category = c.object === 'bancone' ? 'Salumi' : c.category as Category;
             o.stock = SHELF_CAPACITY;
         }
         s.objects.push(o);

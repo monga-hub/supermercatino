@@ -4,7 +4,7 @@
 
 ## Last updated
 
-2026-11-26 by Claude / make-game milestone 12
+2026-11-26 by Claude / make-game milestone 13
 
 ## Current phase
 
@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[12 — Sporco e pulizie](milestones/12-sporco-e-pulizie.md) (implementato, in attesa di playtest). Prossimo: [13 — Banco salumi](milestones/13-banco-salumi.md). 07, 07b, 08, 09, 10, 11 in attesa di playtest.
+[13 — Banco salumi](milestones/13-banco-salumi.md) (implementato, in attesa di playtest). Nessun milestone pianificato dopo: serve milestone planning. 07–12 in attesa di playtest.
 
 ## Last action
 
-Milestone 12: macchie di yogurt (`src/sim/dirt.ts`), cestino, addetto pulizie (terzo ruolo), icona spugna da toccare; fogli Gemini `pulizie.jpg` e `sporco.jpg`. `npm test` 64/64, browser 12/12. Prima: Milestone planning (11 salvataggio e menu, 12 sporco e pulizie, 13 banco salumi, confermati dall'utente). Milestone 11: `src/sim/save.ts`, salvataggio automatico in localStorage, menu iniziale Continua/Nuova partita, briefing con gli obiettivi; `?manual&save` per i test browser. `npm test` 57/57, browser 12/12.
+Milestone 13: stanza banco salumi, bancone con affettatrice, banconiere (quarto ruolo) con la sua fila; Salumi solo al banco. Fogli Gemini `bancone.jpg`, `banconiere.jpg`. `npm test` 69/69, browser 12/12. Prima: Milestone 12: macchie di yogurt (`src/sim/dirt.ts`), cestino, addetto pulizie (terzo ruolo), icona spugna da toccare; fogli Gemini `pulizie.jpg` e `sporco.jpg`. `npm test` 64/64, browser 12/12. Prima: Milestone planning (11 salvataggio e menu, 12 sporco e pulizie, 13 banco salumi, confermati dall'utente). Milestone 11: `src/sim/save.ts`, salvataggio automatico in localStorage, menu iniziale Continua/Nuova partita, briefing con gli obiettivi; `?manual&save` per i test browser. `npm test` 57/57, browser 12/12.
 
 ## Next step
 
-Playtest dell'utente (07–12) sul telefono, poi milestone 13 (banco salumi: fogli Gemini per bancone, affettatrice, banconiere).
+Playtest dell'utente (07–13) sul telefono, poi milestone planning per i prossimi (backlog: forno, spogliatoio, frigo, imprevisti, altri livelli).
 
 ## Blockers
 

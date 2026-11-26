@@ -49,3 +49,8 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 
 - `pulizie.jpg` 3×2 (testa comune dei personaggi) — addetta pulizie di mezza età, permanente riccia grigio-castana, grembiule azzurro col colletto bianco, guanti gialli, zoccoli bianchi, mocio. Riga 1 camminata col mocio dritto ×3; riga 2 passa il mocio ×3 (sinistra, centro, destra, bolle di sapone).
 - `sporco.jpg` 3×2 (testa comune degli arredi) — pozza di yogurt bianco col vasetto rovesciato, schizzo di yogurt alla fragola, pozza di latte (tutte schiacciate come decalcomanie sul pavimento); cestino verde anni '80 su palo; icona tonda crema col bordo marrone e una spugna gialla con le bolle; cartello giallo "pavimento bagnato" senza scritte.
+
+## Banco salumi (milestone 13) — chat nuova per foglio
+
+- `bancone.jpg` 3×1 (testa comune degli arredi) — banco salumi in legno scuro con vetrina curva piena di prosciutto, salame, mortadella e formaggi e un'affettatrice rossa tipo Berkel sopra; lo stesso con la vetrina vuota; pacchetto di affettato incartato.
+- `banconiere.jpg` 4×2 (testa comune dei personaggi, "NO counter, NO slicer") — salumiere cinquantenne grassoccio, calvo coi baffi grigi, cappellino di carta bianco, camice bianco, grembiule a righe bianche e rosse. Riga 1: camminata ×3, fermo con le mani sulla pancia; riga 2: affetta (braccio avanti, braccio indietro), porge il pacchetto, saluta.

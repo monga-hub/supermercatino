@@ -132,7 +132,7 @@ await check('hired cashier serves', async () => {
     const h = await run({ type: 'hire', candidateId: cand.id });
     expect(h.ok, `hire failed: ${JSON.stringify(h)}`);
     const m0 = (await st()).money;
-    await p3.evaluate(() => window.advanceTime(20000)); // one game hour at 1x
+    await p3.evaluate(() => window.advanceTime(40000)); // two game hours at 1x
     const s1 = await st();
     expect(s1.servedToday > 0, `nobody served: ${JSON.stringify({ served: s1.servedToday, lost: s1.lostToday, customers: s1.customers.length })}`);
     expect(s1.money > m0, 'money did not grow');

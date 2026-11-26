@@ -1,5 +1,5 @@
 // Staff: candidates, hiring, and per-role behaviour. Pure, deterministic.
-import { ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW } from './config.ts';
+import { SERVED_BY, ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW } from './config.ts';
 import { rand, pick } from './rng.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import type { GameState, Role, Trait, Staff, ShopObject } from './state.ts';
@@ -38,19 +38,19 @@ function walkableFor(s: GameState): Walkable {
     return (x, y) => open.has(`${x},${y}`);
 }
 
-/** The cashier seated at this till, if any. */
+/** The cashier seated at this till (or the deli man at this counter), if any. */
 export const cashierAt = (s: GameState, till: ShopObject) =>
-    s.staff.find((st) => st.role === 'cassiere' && st.state === 'at_till' && st.tillId === till.id);
+    s.staff.find((st) => st.role === SERVED_BY[till.type] && st.state === 'at_till' && st.tillId === till.id);
 
 function updateCashier(s: GameState, st: Staff, w: Walkable) {
-    let till = s.objects.find((o) => o.id === st.tillId && o.type === 'cassa');
+    let till = s.objects.find((o) => o.id === st.tillId && SERVED_BY[o.type] === st.role);
     if (st.state === 'at_till' && till) return;
     if (!till) {
         // ponytail: idle cashiers re-search every tick; cache per layout change if lots get big
         const taken = new Set(s.staff.filter((o) => o !== st).map((o) => o.tillId));
         let best: { till: ShopObject; path: ReturnType<typeof pathToObject> } | null = null;
         for (const t of s.objects) {
-            if (t.type !== 'cassa' || taken.has(t.id)) continue;
+            if (SERVED_BY[t.type] !== st.role || taken.has(t.id)) continue;
             const path = pathToObject(w, st, t);
             if (path && (!best || path.length < best.path!.length)) best = { till: t, path };
         }
@@ -92,7 +92,7 @@ function updateStocker(s: GameState, st: Staff, w: Walkable) {
         const taken = new Set(s.staff.map((o) => o.job?.shelfId));
         // ponytail: idle stockers re-search every tick; fine while shelves are few
         const open = s.objects.filter((o) =>
-            o.type === 'scaffale' && o.stock! < SHELF_CAPACITY && s.warehouse[o.category!] > 0 && !taken.has(o.id));
+            o.category && o.stock! < SHELF_CAPACITY && s.warehouse[o.category!] > 0 && !taken.has(o.id));
         s.restockQueue = s.restockQueue.filter((id) => s.objects.some((o) => o.id === id && o.stock! < SHELF_CAPACITY));
         const shelf = s.restockQueue.map((id) => open.find((o) => o.id === id)).find(Boolean)
             ?? open.find((o) => o.stock! < AUTO_RESTOCK_BELOW);
@@ -131,11 +131,14 @@ function updateStocker(s: GameState, st: Staff, w: Walkable) {
 /** After the layout changes: staff whose path got blocked stop on their cell and re-plan next tick. */
 export function rerouteStaff(s: GameState) {
     const w = walkableFor(s);
+    const door = s.objects.find((o) => o.type === 'porta');
     for (const st of s.staff) {
+        if (door && !w(Math.round(st.x), Math.round(st.y)) && !(st.x === door.x && st.y === door.y))
+            Object.assign(st, { x: door.x, y: door.y, path: [] }); // hired before there was a door: come in now
         if (st.path.every((c) => w(c.x, c.y))) continue;
         // ponytail: snap to the nearest cell and drop the errand (goods go back to the warehouse); re-plan from scratch
         Object.assign(st, { x: Math.round(st.x), y: Math.round(st.y), path: [], state: 'idle' });
-        if (st.role === 'cassiere') st.tillId = null;
+        if (st.role === 'cassiere' || st.role === 'banconiere') st.tillId = null;
         else if (st.role === 'pulizie') st.clean = undefined;
         else if (st.job) {
             s.warehouse[st.job.category] += st.job.units;
@@ -148,7 +151,7 @@ export function updateStaff(s: GameState) {
     if (!s.staff.length) return;
     const w = walkableFor(s);
     for (const st of s.staff) {
-        if (st.role === 'cassiere') updateCashier(s, st, w);
+        if (st.role === 'cassiere' || st.role === 'banconiere') updateCashier(s, st, w);
         else if (st.role === 'pulizie') updateCleaner(s, st, w);
         else updateStocker(s, st, w);
     }

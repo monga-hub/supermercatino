@@ -30,6 +30,7 @@ export const ROOMS = {
     sala_vendita: { label: 'Sala vendita', costPerCell: 20 },
     magazzino: { label: 'Magazzino', costPerCell: 15 },
     area_casse: { label: 'Area casse', costPerCell: 20 },
+    banco_salumi: { label: 'Banco salumi', costPerCell: 25 },
 } as const;
 
 /** Objects: cost (€) and the room type they must stand in. */
@@ -38,6 +39,7 @@ export const OBJECTS = {
     scaffale: { label: 'Scaffale', cost: 150, room: 'sala_vendita' },
     cassa: { label: 'Cassa', cost: 400, room: 'area_casse' },
     cestino: { label: 'Cestino', cost: 60, room: 'sala_vendita' },
+    bancone: { label: 'Bancone', cost: 300, room: 'banco_salumi' },
 } as const;
 
 // --- Customers (milestone 03). "per second" = real second at 1x.
@@ -46,7 +48,7 @@ export const OBJECTS = {
 export const SHELF_CAPACITY = 10;
 
 /** Sale price per unit (€). */
-export const PRICES = { Pasta: 4, Latticini: 6, Salumi: 12, Pane: 3, Frutta: 5, Detersivi: 8 } as const;
+export const PRICES = { Pasta: 4, Latticini: 6, Salumi: 18, Pane: 3, Frutta: 5, Detersivi: 8 } as const;
 
 
 /**
@@ -86,8 +88,13 @@ export const RNG_SEED = 12345;
 
 // --- Staff (milestone 04)
 
-/** Staff roles. A later milestone adds banconiere. */
-export const ROLES = { cassiere: { label: 'Cassiere' }, magazziniere: { label: 'Magazziniere' }, pulizie: { label: 'Addetto pulizie' } } as const;
+/** Staff roles. */
+export const ROLES = {
+    cassiere: { label: 'Cassiere' }, magazziniere: { label: 'Magazziniere' }, pulizie: { label: 'Addetto pulizie' }, banconiere: { label: 'Banconiere' },
+} as const;
+
+/** Who serves at each serving point: tills and the deli counter share the queue logic (milestone 13). */
+export const SERVED_BY: Partial<Record<keyof typeof OBJECTS, keyof typeof ROLES>> = { cassa: 'cassiere', bancone: 'banconiere' };
 
 /** Candidates on offer for each role at any time. */
 export const CANDIDATES_PER_ROLE = 3;
@@ -169,3 +176,10 @@ export const SPILL_DRAIN = 6;
 export const SPILL_REP = 1;
 /** Seconds of mopping per spill (divided by the trait's speed). */
 export const CLEAN_SEC = 3;
+
+// --- Deli counter (milestone 13)
+
+/** Seconds the deli man slices for one customer (divided by the trait's speed). */
+export const SLICE_SEC = 1.5;
+/** The deli man hands over the packet in the last N seconds of slicing (render only). */
+export const GIVE_SEC = 0.7;
