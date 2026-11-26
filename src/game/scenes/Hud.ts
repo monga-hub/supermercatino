@@ -1,6 +1,6 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { setSpeed, togglePause, type GameState, type Speed } from '../../sim/state.ts';
-import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN, DAY_OPEN_MIN } from '../../sim/config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN, DAY_OPEN_MIN, BAD_DAYS } from '../../sim/config.ts';
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
 import type { Tool, Game } from './Game.ts';
@@ -153,7 +153,7 @@ export class Hud extends Scene {
     }
 
     run(cmd: Command) {
-        return (this.scene.get('Game') as Game).run(cmd);
+        return this.game_.run(cmd);
     }
 
     togglePanel(kind: 'staff' | 'merce') {
@@ -273,28 +273,46 @@ export class Hud extends Scene {
         else setSpeed(this.sim, i as Speed);
     }
 
-    /** Closing summary with Continua, or the level outcome with Ricomincia. Blocks taps on the shop below. */
+    get game_(): Game {
+        return this.scene.get('Game') as unknown as Game;
+    }
+
+    /** Start menu, level briefing, closing summary or level outcome. Blocks taps on the shop below. */
     showCard() {
         const s = this.sim;
-        const key = JSON.stringify([s.summary, s.outcome]);
+        const menu = this.registry.get('menu') as 'start' | 'briefing' | null;
+        const key = JSON.stringify([menu, s.summary, s.outcome]);
         if (key === this.cardKey) return;
         this.cardKey = key;
         this.card?.destroy();
         this.card = null;
-        const sum = s.summary;
-        if (!sum) return;
-        this.closePanel();
-        const { width, height } = this.scale;
-        const w = Math.min(height < 500 ? 560 : 420, width - 24);
-        const c = (this.card = this.add.container(0, 0).setDepth(20));
-        const shade = this.add.rectangle(0, 0, width, height, 0x000000, 0.5).setOrigin(0).setInteractive();
-        c.add(shade);
         const eur = (n: number) => `€${n.toLocaleString('it-IT')}`;
         const g = LEVEL.goals;
+        const close = () => this.registry.set('menu', null);
+        if (menu === 'start') {
+            const game = this.game_;
+            return this.drawCard('Il Supermercatino', [
+                'Un supermercato di quartiere, anni \'80.',
+                'Costruisci, assumi, rifornisci e servi i clienti.',
+            ], [
+                ...(game.saved ? [{ label: 'Continua', fn: () => game.continueSaved() }] : []),
+                { label: 'Nuova partita', fn: () => game.restart() },
+            ]);
+        }
+        if (menu === 'briefing')
+            return this.drawCard('Livello 1', [
+                `Hai ${LEVEL.days} giorni per arrivare a:`,
+                `• Cassa ${eur(g.money)}`,
+                `• Reputazione ${g.reputation}%`,
+                `• ${g.served} clienti serviti`,
+                '',
+                `Perdi se chiudi ${BAD_DAYS} giorni di fila in rosso o con la reputazione sotto il ${REP_MIN}%.`,
+            ], [{ label: 'Inizia', fn: close }]);
+        const sum = s.summary;
+        if (!sum) return;
         const mark = (ok: boolean) => (ok ? '✓' : '✗');
         const o = s.outcome;
-        const title = o ? (o.win ? 'Hai vinto!' : 'Hai perso') : `Fine giornata ${sum.day} di ${LEVEL.days}`;
-        const compact = height < 500; // phone held sideways
+        const compact = this.scale.height < 500; // phone held sideways
         const body = [
             `Incasso: ${eur(sum.income)}`,
             ...(compact
@@ -310,22 +328,40 @@ export class Hud extends Scene {
         if (o) body.push('', o.reason);
         else if (sum.reputation < REP_MIN) body.push('', `Attenzione: reputazione sotto il ${REP_MIN}%. Un'altra chiusura così e perdi.`);
         else if (sum.money < 0) body.push('', 'Attenzione: cassa in rosso. Un\'altra chiusura così e perdi.');
-        if (compact) for (let i = body.length - 1; i >= 0; i--) if (body[i] === '') body.splice(i, 1);
+        this.drawCard(o ? (o.win ? 'Hai vinto!' : 'Hai perso') : `Fine giornata ${sum.day} di ${LEVEL.days}`, body,
+            [o ? { label: 'Ricomincia', fn: () => this.game_.restart() } : { label: 'Continua', fn: () => this.run({ type: 'continue' }) }],
+            !!o && !o.win);
+    }
+
+    /** Centred card over a dark shade: title, text, stacked buttons. */
+    drawCard(title: string, body: string[], buttons: { label: string; fn: () => void }[], bad = false) {
+        this.closePanel();
+        const { width, height } = this.scale;
+        const compact = height < 500;
+        if (compact) body = body.filter((l) => l !== '');
+        const w = Math.min(compact ? 560 : 420, width - 24);
+        const c = (this.card = this.add.container(0, 0).setDepth(20));
+        c.add(this.add.rectangle(0, 0, width, height, 0x000000, 0.5).setOrigin(0).setInteractive());
         const x0 = (width - w) / 2;
-        const titleT = this.add.text(x0 + 16, 0, title, { ...TEXT, fontSize: 22, color: o && !o.win ? '#ff8a7a' : '#e0a030', strokeThickness: 0 });
+        const titleT = this.add.text(x0 + 16, 0, title, { ...TEXT, fontSize: 22, color: bad ? '#ff8a7a' : '#e0a030', strokeThickness: 0 });
         const bodyT = this.add.text(x0 + 16, 0, body.join('\n'), { ...TEXT, fontSize: compact ? 14 : 15, strokeThickness: 0, lineSpacing: compact ? 1 : 4, wordWrap: { width: w - 32 } });
-        const btn = this.add
-            .text(0, 0, o ? 'Ricomincia' : 'Continua', { ...TEXT, fontSize: 19, strokeThickness: 0, backgroundColor: BTN_ACTIVE_BG, color: DARK, padding: { x: 18, y: 9 } })
+        const btns = buttons.map((b) => this.add
+            .text(0, 0, b.label, { ...TEXT, fontSize: 19, strokeThickness: 0, backgroundColor: BTN_ACTIVE_BG, color: DARK, padding: { x: 18, y: 9 } })
             .setOrigin(0.5, 0)
             .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => (o ? (this.scene.get('Game') as Game).restart() : this.run({ type: 'continue' })));
-        const h = 16 + titleT.height + 10 + bodyT.height + 16 + btn.height + 16;
+            .on('pointerdown', b.fn));
+        const btnsH = btns.reduce((h, b) => h + b.height + 10, -10);
+        const h = 16 + titleT.height + 10 + bodyT.height + 16 + btnsH + 16;
         const y0 = Math.max(8, (height - h) / 2);
         const bg = this.add.rectangle(x0, y0, w, h, 0x2b1d16, 0.97).setOrigin(0).setStrokeStyle(3, 0xe0a030);
         titleT.setY(y0 + 16);
         bodyT.setY(titleT.y + titleT.height + 10);
-        btn.setPosition(width / 2, bodyT.y + bodyT.height + 16);
-        c.add([bg, titleT, bodyT, btn]);
+        let y = bodyT.y + bodyT.height + 16;
+        for (const b of btns) {
+            b.setPosition(width / 2, y);
+            y += b.height + 10;
+        }
+        c.add([bg, titleT, bodyT, ...btns]);
     }
 
     update() {
@@ -348,7 +384,7 @@ export class Hud extends Scene {
         }
         const fresh = s.day === 1 && s.clockSec === DAY_OPEN_MIN * 60;
         this.hint.setText(fresh ? 'Costruisci il negozio, poi premi 1x' : 'In pausa: premi 1x')
-            .setVisible(s.paused && !s.summary && !s.outcome);
+            .setVisible(s.paused && !s.summary && !s.outcome && !this.registry.get('menu'));
         if (this.panel && this.panelState() !== this.panelKey) this.openPanel();
         this.showCard();
         const showCats = this.tool?.kind === 'object' && this.tool.object === 'scaffale';

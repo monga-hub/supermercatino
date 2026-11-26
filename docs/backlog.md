@@ -40,10 +40,11 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 - [ ] Stanze e oggetti restanti — banco salumi, forno, spogliatoio staff; frigo, bancone, affettatrice, forno, cestino.
   - Source: gameplan v1
   - Rough size: M · Rough value: M
+  - Notes: banco salumi + bancone + banconiere → milestone 13-banco-salumi.md; cestino → 12; restano forno, spogliatoio, frigo.
 - [ ] Sporco e imprevisti — yogurt rovesciato, carrello incastrato, ispezione sanitaria.
   - Source: gameplan v1
   - Rough size: M · Rough value: M
-  - Notes: dipende da addetto pulizie.
+  - Notes: dipende da addetto pulizie. Sporco + addetto pulizie → milestone 12-sporco-e-pulizie.md; carrello incastrato e ispezione sanitaria restano qui.
 - [x] Obiettivi livello, vittoria e sconfitta — soglie cassa/reputazione/clienti entro N giornate; bancarotta o reputazione minima.
   - Source: gameplan v1
   - Rough size: M · Rough value: L
@@ -51,10 +52,10 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 - [ ] Capo reparto / automazione completa — dipendente o potenziamento che rende inutili i tocchi su scaffali e casse (curva "tocco tutto" → "automatizzo", ADR-0002).
   - Source: user 2026-11-26
 
-- [ ] Salvataggio locale — stato sim serializzato in localStorage.
+- [x] Salvataggio locale — stato sim serializzato in localStorage. → milestone 11-salvataggio-e-menu.md
   - Source: gameplan v1
   - Rough size: S · Rough value: M
-- [ ] Menu e schermate — menu iniziale, briefing livello, fine livello.
+- [x] Menu e schermate — menu iniziale, briefing livello, fine livello. → milestone 11-salvataggio-e-menu.md (la schermata di fine livello c'è dal 06)
   - Source: gameplan v1
   - Rough size: S · Rough value: M
 

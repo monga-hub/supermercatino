@@ -3,6 +3,7 @@ import { createState, tick, advance, type GameState, type RoomType, type ObjectT
 import { apply, check, type Command } from '../../sim/build.ts';
 import { STEP_MS, TAP_ICON_BELOW, BEAR_BONUS_MONEY, BEAR_BONUS_REP } from '../../sim/config.ts';
 import { readyAt } from '../../sim/customers.ts';
+import { saveGame, loadGame, SAVE_KEY } from '../../sim/save.ts';
 import { gridToIso, cellAt, TILE_H, TILE_W } from '../../render/iso.ts';
 import { drawFloor, drawThings, drawObject, tile, type Put } from '../../render/draw.ts';
 import { KIT_SCALE } from '../../render/sprites.ts';
@@ -46,6 +47,11 @@ export class Game extends Scene {
     bears = 0;
     // ?manual: sim advances only through window.advanceTime (deterministic browser tests)
     manual = new URLSearchParams(location.search).has('manual');
+    /** Menu + autosave in localStorage (milestone 11); browser tests opt in with ?manual&save. */
+    saving = !this.manual || new URLSearchParams(location.search).has('save');
+    /** The game found in localStorage at startup ("Continua"), if any. */
+    saved: GameState | null = null;
+    saveAt = 0;
 
     constructor() {
         super('Game');
@@ -78,12 +84,17 @@ export class Game extends Scene {
         this.setupCamera();
         this.setupInput();
         this.registry.events.on('changedata-tool', () => this.preview.clear());
+        this.saved = this.saving ? loadGame(localStorage.getItem(SAVE_KEY)) : null;
+        this.registry.set('menu', this.saving ? 'start' : null);
+        document.addEventListener('visibilitychange', () => document.hidden && this.store());
+        window.addEventListener('pagehide', () => this.store());
         this.scene.launch('Hud');
 
         window.render_game_to_text = () => JSON.stringify(this.sim);
         window.advanceTime = (ms: number) => advance(this.sim, ms);
         window.dispatch = (cmd: Command) => this.run(cmd);
         window.selectTool = (t: Tool) => this.registry.set('tool', t);
+        window.menuState = () => this.registry.get('menu') ?? null;
         window.cellToScreen = (x, y, lift = 0) => {
             const cam = this.cameras.main;
             const p = gridToIso(x, y);
@@ -103,6 +114,10 @@ export class Game extends Scene {
         if (this.sim.happyBears > this.bears)
             this.game.events.emit('toast', `L'orso è contento! +€${BEAR_BONUS_MONEY} e +${BEAR_BONUS_REP} reputazione`);
         this.bears = this.sim.happyBears;
+        if (_time > this.saveAt) {
+            this.saveAt = _time + 3000;
+            this.store();
+        }
         this.used = 0;
         drawThings(this.things, this.over, this.sim, this.put);
         for (let i = this.used; i < this.sprites.length; i++) this.sprites[i].setVisible(false);
@@ -148,9 +163,29 @@ export class Game extends Scene {
         return null;
     }
 
-    /** New level from scratch (after a win or a loss). */
+    /** Write the game to localStorage (not while the start menu still offers the old one); a finished level is erased. */
+    store() {
+        if (!this.saving || this.registry.get('menu') === 'start') return;
+        if (this.sim.outcome) localStorage.removeItem(SAVE_KEY);
+        else localStorage.setItem(SAVE_KEY, saveGame(this.sim));
+    }
+
+    /** "Continua": the saved game, paused. */
+    continueSaved() {
+        this.useState({ ...this.saved!, paused: true });
+        this.registry.set('menu', null);
+    }
+
+    /** New level from scratch ("Nuova partita", or after a win or a loss): the briefing first. */
     restart() {
-        this.sim = createState();
+        this.useState(createState());
+        if (this.saving) this.registry.set('menu', 'briefing');
+        this.store();
+    }
+
+    useState(s: GameState) {
+        this.sim = s;
+        this.bears = s.happyBears;
         this.registry.set('sim', this.sim);
         this.registry.set('tool', null);
         for (const t of this.icons.values()) t.destroy();
@@ -161,7 +196,10 @@ export class Game extends Scene {
 
     run(cmd: Command) {
         const r = apply(this.sim, cmd);
-        if (r.ok) drawFloor(this.floor, this.sim);
+        if (r.ok) {
+            drawFloor(this.floor, this.sim);
+            this.store();
+        }
         else this.game.events.emit('toast', r.reason);
         return r;
     }

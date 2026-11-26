@@ -9,6 +9,8 @@ interface Window {
     dispatch: (cmd: import('./sim/build.ts').Command) => import('./sim/build.ts').Result;
     /** Select a build tool as if from the toolbar (null = none). */
     selectTool: (tool: import('./game/scenes/Game.ts').Tool) => void;
+    /** Open menu card: 'start', 'briefing' or null (milestone 11). */
+    menuState: () => string | null;
     /** Screen point of a cell's centre, raised by `lift` world px, and the camera zoom (browser tests). */
     cellToScreen: (x: number, y: number, lift?: number) => { x: number; y: number; zoom: number };
 }

@@ -4,7 +4,7 @@
 
 ## Last updated
 
-2026-11-26 by Claude / make-game milestone 08
+2026-11-26 by Claude / make-game milestone 11
 
 ## Current phase
 
@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md) (implementato, in attesa di playtest). 07, 07b, 09, 10 implementati, in attesa di playtest. Poi: nuovo giro di milestone planning dal backlog.
+[11 — Salvataggio e menu](milestones/11-salvataggio-e-menu.md) (implementato, in attesa di playtest). Prossimi: [12 — Sporco e pulizie](milestones/12-sporco-e-pulizie.md), [13 — Banco salumi](milestones/13-banco-salumi.md). 07, 07b, 08, 09, 10 in attesa di playtest.
 
 ## Last action
 
-Icone di tocco alzate sopra gli oggetti; milestone 08: fila su celle diverse, livello che parte in pausa con il messaggio "Costruisci il negozio, poi premi 1x", camera che inquadra tutto il lotto all'avvio e al ricomincia, clienti e staff che ricalcolano il percorso dopo costruzioni e demolizioni. `npm test` 55/55, browser 10/10.
+Milestone planning (11 salvataggio e menu, 12 sporco e pulizie, 13 banco salumi, confermati dall'utente). Milestone 11: `src/sim/save.ts`, salvataggio automatico in localStorage, menu iniziale Continua/Nuova partita, briefing con gli obiettivi; `?manual&save` per i test browser. `npm test` 57/57, browser 12/12.
 
 ## Next step
 
-Playtest dell'utente (07, 07b, 09, 10, 08) sul telefono, poi milestone planning dal backlog.
+Playtest dell'utente (07, 07b, 08, 09, 10, 11) sul telefono, poi milestone 12 (fogli Gemini per addetto pulizie, macchie, cestino, icona).
 
 ## Blockers
 

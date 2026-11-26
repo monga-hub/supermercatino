@@ -250,6 +250,57 @@ await check('restart after the level ends', async () => {
     await p7.close();
 });
 
+// milestone 11: ?manual&save shows the menu and uses localStorage (plain ?manual skips both)
+const ps = await browser.newPage({ viewport: { width: 800, height: 600 } });
+const menuOf = () => ps.evaluate(() => window.menuState());
+const stS = async () => JSON.parse(await ps.evaluate(() => window.render_game_to_text()));
+/** Tap down the centre line (from the top or the bottom) until the menu changes. */
+async function tapMenu(fromTop) {
+    const m0 = await menuOf();
+    for (let i = 0; i < 70 && (await menuOf()) === m0; i++) {
+        await ps.mouse.click(400, fromTop ? 100 + i * 8 : 590 - i * 8);
+        await ps.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    }
+    return menuOf();
+}
+const openSaved = async () => {
+    await ps.goto(new URL('?manual&save', base).href);
+    await ps.waitForFunction(() => typeof window.menuState === 'function');
+    await ps.waitForTimeout(300);
+};
+
+await check('save survives reload', async () => {
+    await openSaved();
+    expect((await menuOf()) === 'start', `no start menu: ${await menuOf()}`);
+    expect((await tapMenu(false)) === 'briefing', 'Nuova partita did not open the briefing');
+    expect((await tapMenu(false)) === null, 'Inizia did not close the briefing');
+    const r = await ps.evaluate(() => window.dispatch({ type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 4, h: 4 }));
+    expect(r.ok, 'build failed');
+    await start(ps);
+    await ps.evaluate(() => window.advanceTime(20000));
+    await ps.waitForTimeout(3500); // autosave
+    const s0 = await stS();
+    await openSaved();
+    expect((await menuOf()) === 'start', 'no start menu after reload');
+    expect((await tapMenu(true)) === null, 'Continua did not close the menu');
+    const s1 = await stS();
+    expect(s1.rooms.length === 1 && s1.money === s0.money && s1.clockSec === s0.clockSec, `not restored: ${JSON.stringify([s1.rooms.length, s1.money, s1.clockSec, s0.clockSec])}`);
+    expect(s1.paused, 'a loaded game should start paused');
+});
+
+await check('menu continue and new game', async () => {
+    await openSaved();
+    expect((await tapMenu(false)) === 'briefing', 'Nuova partita did not open the briefing');
+    const s = await stS();
+    expect(s.rooms.length === 0 && s.day === 1, 'new game is not empty');
+    await tapMenu(false);
+    await ps.waitForTimeout(3500);
+    await openSaved();
+    await tapMenu(true); // with a fresh save Continua is there again, and it is the empty shop
+    expect((await stS()).rooms.length === 0, 'Nuova partita did not overwrite the save');
+});
+await ps.close();
+
 await page.waitForTimeout(10000); // let the game run a while
 await check('no console errors', async () => {
     expect(errors.length === 0, errors.join(' | '));
