@@ -19,6 +19,7 @@ export type Tool =
     | { kind: 'room'; room: RoomType }
     | { kind: 'object'; object: ObjectType; category?: Category }
     | { kind: 'demolish' }
+    | { kind: 'rotate' }
     | null;
 
 type Cell = { x: number; y: number };
@@ -174,7 +175,7 @@ export class Game extends Scene {
             };
         }
         if (t.kind === 'object') return { type: 'placeObject', object: t.object, category: t.category, ...c };
-        return { type: 'demolish', ...c };
+        return { type: t.kind, ...c };
     }
 
     drawPreview(p: Input.Pointer) {
@@ -188,8 +189,8 @@ export class Game extends Scene {
         } else if (cmd.type === 'placeObject') {
             tile(g, cmd.x, cmd.y, color, 0.45);
             drawObject(g, { type: cmd.object, x: cmd.x, y: cmd.y, category: cmd.category as Category }, 0.6);
-        } else if (cmd.type === 'demolish') {
-            tile(g, cmd.x, cmd.y, BAD, 0.5);
+        } else if (cmd.type === 'demolish' || cmd.type === 'rotate') {
+            tile(g, cmd.x, cmd.y, cmd.type === 'rotate' ? color : BAD, 0.5);
         }
     }
 

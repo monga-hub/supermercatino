@@ -90,6 +90,7 @@ export class Hud extends Scene {
             this.button(OBJECTS.porta.label, toggle({ kind: 'object', object: 'porta' }), isObj('porta')),
             this.button(OBJECTS.scaffale.label, () => this.setTool(isObj('scaffale')() ? null : { kind: 'object', object: 'scaffale', category: CATEGORIES[0] }), isObj('scaffale')),
             this.button(OBJECTS.cassa.label, toggle({ kind: 'object', object: 'cassa' }), isObj('cassa')),
+            this.button('Ruota', toggle({ kind: 'rotate' }), () => this.tool?.kind === 'rotate', '#6b5a8e'),
             this.button('Demolisci', toggle({ kind: 'demolish' }), () => this.tool?.kind === 'demolish', '#4a4a4a'),
         ];
         this.catBtns = CATEGORIES.map((cat) =>

@@ -12,7 +12,8 @@ export type ObjectType = keyof typeof OBJECTS;
 export type Category = (typeof CATEGORIES)[number];
 
 export type Room = { id: number; type: RoomType; x: number; y: number; w: number; h: number };
-export type ShopObject = { id: number; type: ObjectType; x: number; y: number; category?: Category; stock?: number };
+/** rot: shelves and tills have two orientations (1 = turned 90°, drawn mirrored). */
+export type ShopObject = { id: number; type: ObjectType; x: number; y: number; category?: Category; stock?: number; rot?: 0 | 1 };
 
 export type Role = keyof typeof ROLES;
 export type Trait = keyof typeof TRAITS;

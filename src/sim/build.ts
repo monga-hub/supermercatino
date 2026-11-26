@@ -9,6 +9,7 @@ export type Command =
     | { type: 'buildRoom'; room: RoomType; x: number; y: number; w: number; h: number }
     | { type: 'placeObject'; object: ObjectType; x: number; y: number; category?: string }
     | { type: 'demolish'; x: number; y: number }
+    | { type: 'rotate'; x: number; y: number }
     | { type: 'hire'; candidateId: number }
     | { type: 'fire'; staffId: number }
     | { type: 'order'; category: string }
@@ -52,6 +53,11 @@ export function check(s: GameState, c: Command): Result {
             if (!edge) return fail('La porta va sul bordo della sala');
         }
         return afford(s, def.cost);
+    }
+    if (c.type === 'rotate') {
+        const o = objectAt(s, c.x, c.y);
+        if (!o) return fail('Niente da ruotare');
+        return o.type === 'porta' ? fail('La porta si gira da sola') : { ok: true, cost: 0 };
     }
     if (c.type === 'hire') return s.candidates.some((x) => x.id === c.candidateId) ? { ok: true, cost: 0 } : fail('Candidato non trovato');
     if (c.type === 'restock') {
@@ -98,6 +104,9 @@ export function apply(s: GameState, c: Command): Result {
             o.stock = SHELF_CAPACITY;
         }
         s.objects.push(o);
+    } else if (c.type === 'rotate') {
+        const o = objectAt(s, c.x, c.y)!;
+        o.rot = o.rot ? 0 : 1;
     } else if (c.type === 'hire') {
         hire(s, c.candidateId);
     } else if (c.type === 'fire') {

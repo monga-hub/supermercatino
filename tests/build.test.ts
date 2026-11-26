@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createState } from '../src/sim/state.ts';
 import { apply, check } from '../src/sim/build.ts';
 import { START_MONEY, ROOMS, OBJECTS, DEMOLISH_REFUND, GRID_W } from '../src/sim/config.ts';
+import { shop } from './helpers.ts';
 
 const sala = (x = 0, y = 0, w = 4, h = 4) => ({ type: 'buildRoom', room: 'sala_vendita', x, y, w, h }) as const;
 const casse = (x = 5, y = 0, w = 2, h = 2) => ({ type: 'buildRoom', room: 'area_casse', x, y, w, h }) as const;
@@ -83,4 +84,25 @@ test('check does not mutate', () => {
     const before = structuredClone(s);
     assert.equal(check(s, sala()).ok, true);
     assert.deepEqual(s, before);
+});
+
+test('rotate turns a shelf or a till between its two orientations, for free', () => {
+    const s = shop({ cashier: false });
+    const shelf = s.objects.find((o) => o.type === 'scaffale')!;
+    const money = s.money;
+    assert.equal(apply(s, { type: 'rotate', x: shelf.x, y: shelf.y }).ok, true);
+    assert.equal(shelf.rot, 1);
+    assert.equal(apply(s, { type: 'rotate', x: shelf.x, y: shelf.y }).ok, true);
+    assert.equal(shelf.rot, 0);
+    const till = s.objects.find((o) => o.type === 'cassa')!;
+    assert.equal(apply(s, { type: 'rotate', x: till.x, y: till.y }).ok, true);
+    assert.equal(till.rot, 1);
+    assert.equal(s.money, money);
+});
+
+test('rotate needs a shelf or a till', () => {
+    const s = shop({ cashier: false });
+    const door = s.objects.find((o) => o.type === 'porta')!;
+    assert.deepEqual(check(s, { type: 'rotate', x: door.x, y: door.y }), { ok: false, reason: 'La porta si gira da sola' });
+    assert.deepEqual(check(s, { type: 'rotate', x: 0, y: 0 }), { ok: false, reason: 'Niente da ruotare' });
 });

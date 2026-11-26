@@ -76,20 +76,19 @@ await check('build while paused', async () => {
 });
 
 await check('build with mouse', async () => {
-    // fresh page: camera centred, toolbar at the bottom-left starting with "Sala vendita"
+    // fresh page: camera centred. Toolbar layout wraps with fonts/width, so tools are picked through the hook.
     const p2 = await browser.newPage({ viewport: { width: 800, height: 600 } });
     await p2.goto(new URL('?manual', base).href);
     await p2.waitForFunction(() => typeof window.render_game_to_text === 'function');
     await p2.waitForTimeout(300);
     const st = async () => JSON.parse(await p2.evaluate(() => window.render_game_to_text()));
-    await p2.mouse.click(60, 578); // Sala vendita
+    await p2.evaluate(() => window.selectTool({ kind: 'room', room: 'sala_vendita' }));
     await p2.mouse.move(400, 100);
     await p2.mouse.down();
     await p2.mouse.move(400, 200, { steps: 8 });
     await p2.mouse.up();
     const s1 = await st();
     expect(s1.rooms.length === 1 && s1.rooms[0].type === 'sala_vendita', `room not built: ${JSON.stringify(s1.rooms)}`);
-    // toolbar widths depend on fonts, so pick the object tool through the hook
     await p2.evaluate(() => window.selectTool({ kind: 'object', object: 'scaffale', category: 'Pasta' }));
     await p2.mouse.click(400, 150); // inside the room
     const s2 = await st();

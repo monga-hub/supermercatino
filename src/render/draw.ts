@@ -65,12 +65,12 @@ export function box(g: G, x: number, y: number, h: number, color: number, k = 0.
     poly(g, [...t.top, ...t.right, ...t.bottom, ...t.left]);
 }
 
-const objectFrame = (o: Pick<ShopObject, 'type' | 'category' | 'stock'>) =>
+const objectFrame = (o: Pick<ShopObject, 'type' | 'category' | 'stock' | 'rot'>) =>
     o.type !== 'scaffale' ? SPRITES[o.type] : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
 
-export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock'>, alpha = 1, put: Put = noPut, depth = 0) {
+export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock' | 'rot'>, alpha = 1, put: Put = noPut, depth = 0) {
     const p = gridToIso(o.x, o.y);
-    if (put(objectFrame(o), p.x, p.y + TILE_H, depth)) return; // stands on the cell's bottom vertex
+    if (put(objectFrame(o), p.x, p.y + TILE_H, depth, !!o.rot)) return; // stands on the cell's bottom vertex; turned = mirrored
     const look = OBJECT_LOOK[o.type];
     box(g, o.x, o.y, look.h, look.color, look.k, alpha);
     // merce in cima; sparisce quando lo scaffale è vuoto
@@ -116,8 +116,9 @@ export function drawStaff(g: G, s: GameState, st: Staff, put: Put = noPut, depth
     const f = feet(st.x - o, st.y - o);
     const frame = personFrame(s, st);
     const seated = st.state === 'at_till';
-    const at = seated ? feet(st.x, st.y) : f;
-    if (seated ? put(frame, at.x + SEAT_PX.x, at.y + SEAT_PX.y, depth, true) : put(frame, f.x, f.y + 2, depth, goesLeft(st, st.path[0]))) return;
+    const at = feet(st.x, st.y);
+    const turned = seated && !!s.objects.find((o) => o.id === st.tillId)?.rot; // till mirrored: seat and facing mirror too
+    if (seated ? put(frame, at.x + (turned ? -SEAT_PX.x : SEAT_PX.x), at.y + SEAT_PX.y, depth, !turned) : put(frame, f.x, f.y + 2, depth, goesLeft(st, st.path[0]))) return;
     box(g, st.x - o, st.y - o, 24, ROLE_COLOR[st.role], 0.38);
     box(g, st.x - o, st.y - o, 28, 0xf4efe6, 0.24); // berretto bianco
     if (st.job?.units) box(g, st.x + 0.15, st.y + 0.15, 16, CRATE, 0.3); // scatolone in mano
