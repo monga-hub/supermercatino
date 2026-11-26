@@ -58,3 +58,11 @@ export function runOut(s: GameState, maxTicks = 20_000) {
     }
     return seen;
 }
+
+/** shop() plus a warehouse left of the sales floor (x0..2, y3..5), no automatic arrivals. */
+export function withWarehouse() {
+    const s = shop();
+    noArrivals(s);
+    assert.equal(apply(s, { type: 'buildRoom', room: 'magazzino', x: 0, y: 3, w: 3, h: 3 }).ok, true);
+    return s;
+}

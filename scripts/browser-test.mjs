@@ -153,10 +153,47 @@ await check('shelves get restocked', async () => {
     await p4.evaluate(() => window.advanceTime(120000)); // half a day at 1x
     const s1 = await st();
     const shelves = s1.objects.filter((o) => o.type === 'scaffale');
-    expect(s1.servedToday > 20, `too few served: ${s1.servedToday}`);
+    expect(s1.servedToday > 10, `too few served: ${s1.servedToday}`); // nobody taps here: bills close alone (ADR-0002)
     expect(shelves.every((o) => o.stock > 0), `empty shelf: ${JSON.stringify(shelves)}`);
     expect(cats.some((c) => s1.warehouse[c] < 40), `warehouse untouched: ${JSON.stringify(s1.warehouse)}`);
     await p4.close();
+});
+
+await check('tap icon collects', async () => {
+    // fresh page, camera centred on cell (10,10) at zoom 1: cell (x,y) centre is at
+    // screen (400 + (x-y)*32, 300 + ((x+y)*16 + 16) - 336)
+    const p5 = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    await p5.goto(new URL('?manual', base).href);
+    await p5.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    const run = (c) => p5.evaluate((x) => window.dispatch(x), c);
+    const st = async () => JSON.parse(await p5.evaluate(() => window.render_game_to_text()));
+    for (const c of [
+        { type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 6, h: 5 },
+        { type: 'placeObject', object: 'scaffale', x: 5, y: 4, category: 'Pasta' },
+        { type: 'placeObject', object: 'scaffale', x: 6, y: 4, category: 'Pane' },
+        { type: 'placeObject', object: 'scaffale', x: 7, y: 4, category: 'Latticini' },
+        { type: 'placeObject', object: 'porta', x: 8, y: 5 },
+        { type: 'buildRoom', room: 'area_casse', x: 3, y: 8, w: 3, h: 2 },
+        { type: 'placeObject', object: 'cassa', x: 4, y: 9 },
+    ]) expect((await run(c)).ok, `setup failed: ${JSON.stringify(c)}`);
+    await run({ type: 'hire', candidateId: (await st()).candidates.find((c) => c.role === 'cassiere').id });
+    let ready;
+    for (let i = 0; i < 200 && !ready; i++) {
+        await p5.evaluate(() => window.advanceTime(500));
+        ready = (await st()).customers.find((c) => c.state === 'ready');
+    }
+    expect(ready, 'no customer reached a ready bill');
+    await frames5();
+    const s0 = await st();
+    await p5.mouse.click(400 + (4 - 9) * 32, 300 + (13 * 16 + 16) - 336 - 45); // the 💰 icon over the till
+    const s1 = await st();
+    expect(s1.servedToday === s0.servedToday + 1, `not collected: served ${s0.servedToday} -> ${s1.servedToday}`);
+    expect(s1.money > s0.money, 'money did not grow');
+    expect(s1.customers.find((c) => c.id === ready.id)?.state === 'leaving', 'customer did not leave');
+    await p5.close();
+    async function frames5() {
+        await p5.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    }
 });
 
 await page.waitForTimeout(10000); // let the game run a while

@@ -1,5 +1,5 @@
 // Staff: candidates, hiring, and per-role behaviour. Pure, deterministic.
-import { ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, RESTOCK_BELOW } from './config.ts';
+import { ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW } from './config.ts';
 import { rand, pick } from './rng.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import type { GameState, Role, Trait, Staff, ShopObject } from './state.ts';
@@ -84,16 +84,20 @@ function pathToWarehouse(s: GameState, w: Walkable, from: Cell) {
     return best;
 }
 
-/** One trip at a time: warehouse -> low shelf, filling it up to capacity. */
+/** One trip at a time: warehouse -> shelf, filling it up. Tapped shelves first, then almost empty ones. */
 function updateStocker(s: GameState, st: Staff, w: Walkable) {
     if (!st.job) {
         st.state = 'idle';
         const taken = new Set(s.staff.map((o) => o.job?.shelfId));
         // ponytail: idle stockers re-search every tick; fine while shelves are few
-        const shelf = s.objects.find((o) =>
-            o.type === 'scaffale' && o.stock! < RESTOCK_BELOW && s.warehouse[o.category!] > 0 && !taken.has(o.id));
+        const open = s.objects.filter((o) =>
+            o.type === 'scaffale' && o.stock! < SHELF_CAPACITY && s.warehouse[o.category!] > 0 && !taken.has(o.id));
+        s.restockQueue = s.restockQueue.filter((id) => s.objects.some((o) => o.id === id && o.stock! < SHELF_CAPACITY));
+        const shelf = s.restockQueue.map((id) => open.find((o) => o.id === id)).find(Boolean)
+            ?? open.find((o) => o.stock! < AUTO_RESTOCK_BELOW);
         const path = shelf && pathToWarehouse(s, w, st);
         if (!shelf || !path) return;
+        s.restockQueue = s.restockQueue.filter((id) => id !== shelf.id);
         st.job = { shelfId: shelf.id, category: shelf.category!, units: 0 };
         st.path = path;
         st.state = 'fetching';

@@ -2,7 +2,7 @@
 // or leaving_angry when patience runs out). Pure, deterministic (seeded RNG in state).
 import {
     STEP_MS, GAME_MIN_PER_SEC, CATEGORIES, PRICES, SPAWN_EVERY_MIN, LIST_MIN, LIST_MAX, CUSTOMER_SPEED,
-    PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS,
+    PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS, AUTO_COLLECT_SEC,
 } from './config.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
@@ -117,13 +117,27 @@ function serveTills(s: GameState) {
         const cashier = cashierAt(s, till);
         if (!cashier) continue;
         const here = s.customers.filter((c) => c.goal?.kind === 'till' && c.goal.id === till.id);
-        if (here.some((c) => c.state === 'paying')) continue;
+        if (here.some((c) => c.state === 'paying' || c.state === 'ready')) continue;
         const front = here.filter((c) => c.state === 'queueing').sort((a, b) => a.queuedAt - b.queuedAt)[0];
         if (front) {
             front.state = 'paying';
             front.timer = PAY_SEC / TRAITS[cashier.trait].speed;
         }
     }
+}
+
+/** The customer whose bill is ready at this till, waiting for the 💰 tap. */
+export const readyAt = (s: GameState, tillId: number) =>
+    s.customers.find((c) => c.state === 'ready' && c.goal?.kind === 'till' && c.goal.id === tillId);
+
+/** Take the money (plus a tip when collected with a tap) and let the customer go. */
+export function checkout(s: GameState, c: Customer, tip: number, w = walkableFor(s)) {
+    s.money += c.basket.reduce((sum, cat) => sum + PRICES[cat], 0) + tip;
+    const till = s.objects.find((o) => c.goal?.kind === 'till' && o.id === c.goal.id);
+    const cashier = till && cashierAt(s, till);
+    if (cashier) c.patience = Math.min(PATIENCE_START, c.patience + TRAITS[cashier.trait].patienceBonus);
+    s.servedToday++;
+    leave(s, c, w, false);
 }
 
 export function updateCustomers(s: GameState) {
@@ -140,20 +154,21 @@ export function updateCustomers(s: GameState) {
         const away = c.state === 'leaving' || c.state === 'leaving_angry';
         if (c.state === 'queueing') c.patience -= PATIENCE_QUEUE_DRAIN * STEP_S;
         else if (c.path.length && !away) c.patience -= PATIENCE_WALK_DRAIN * STEP_S;
-        if (c.patience <= 0 && !away && c.state !== 'paying') {
+        if (c.patience <= 0 && !away && c.state !== 'paying' && c.state !== 'ready') {
             leave(s, c, w, true);
             continue;
         }
         if (c.state === 'paying') {
             c.timer -= STEP_S;
             if (c.timer <= 0) {
-                s.money += c.basket.reduce((sum, cat) => sum + PRICES[cat], 0);
-                const till = s.objects.find((o) => c.goal?.kind === 'till' && o.id === c.goal.id);
-                const cashier = till && cashierAt(s, till);
-                if (cashier) c.patience = Math.min(PATIENCE_START, c.patience + TRAITS[cashier.trait].patienceBonus);
-                s.servedToday++;
-                leave(s, c, w, false);
+                c.state = 'ready'; // bill done: waits for the 💰 tap
+                c.timer = AUTO_COLLECT_SEC;
             }
+            continue;
+        }
+        if (c.state === 'ready') {
+            c.timer -= STEP_S;
+            if (c.timer <= 0) checkout(s, c, 0, w); // nobody tapped: the cashier closes it, no tip
             continue;
         }
         if (c.state === 'queueing') continue;

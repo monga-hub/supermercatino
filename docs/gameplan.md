@@ -10,8 +10,8 @@ Un livello = un negozio vuoto con obiettivi. Tempo reale con pausa e 3 velocità
 
 1. **Costruisci** — disegni stanze sulla griglia isometrica (sala vendita, magazzino, banco salumi, forno, casse, spogliatoio staff) e ci piazzi dentro oggetti (scaffali, frighi, banconi, casse, cestini).
 2. **Assumi** — scegli staff da una lista candidati (stipendio vs abilità/tratto) e li assegni a un ruolo.
-3. **Rifornisci** — ordini merce per categoria; il magazziniere la porta dal magazzino agli scaffali.
-4. **Servi** — i clienti entrano con una lista spesa, girano per i reparti, prendono la merce, fanno la fila e pagano.
+3. **Rifornisci** — ordini merce per categoria; il magazziniere la porta dal magazzino agli scaffali. Tocchi 📦 su uno scaffale che si svuota per metterlo in coda con priorità; senza tocco il magazziniere interviene solo quando è quasi vuoto (ADR-0002).
+4. **Servi** — i clienti entrano con una lista spesa, girano per i reparti, prendono la merce, fanno la fila e pagano. Quando il conto è pronto compare 💰 sulla cassa: toccandola incassi subito con una mancia, altrimenti il cassiere chiude da solo dopo qualche secondo (ADR-0002).
 5. **Reagisci** — scaffali vuoti, file lunghe, sporco, furbetti e imprevisti abbassano la soddisfazione; sistemi il layout, assumi, riordini.
 6. **Espandi** — con gli incassi compri spazio/oggetti/reparti nuovi finché raggiungi gli obiettivi.
 

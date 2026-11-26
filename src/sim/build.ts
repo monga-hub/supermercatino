@@ -1,5 +1,6 @@
 // Build commands. Commands are plain data so UI, tests and agents share one entry point.
-import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_CAPACITY, ORDER_UNITS, UNIT_COST } from './config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_CAPACITY, ORDER_UNITS, UNIT_COST, TIP } from './config.ts';
+import { readyAt, checkout } from './customers.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
 import { hire, fire } from './staff.ts';
 
@@ -9,7 +10,9 @@ export type Command =
     | { type: 'demolish'; x: number; y: number }
     | { type: 'hire'; candidateId: number }
     | { type: 'fire'; staffId: number }
-    | { type: 'order'; category: string };
+    | { type: 'order'; category: string }
+    | { type: 'restock'; shelfId: number }
+    | { type: 'collect'; tillId: number };
 
 export type Result = { ok: true; cost: number } | { ok: false; reason: string };
 
@@ -49,6 +52,16 @@ export function check(s: GameState, c: Command): Result {
         return afford(s, def.cost);
     }
     if (c.type === 'hire') return s.candidates.some((x) => x.id === c.candidateId) ? { ok: true, cost: 0 } : fail('Candidato non trovato');
+    if (c.type === 'restock') {
+        const o = s.objects.find((x) => x.id === c.shelfId);
+        if (!o || o.type !== 'scaffale') return fail('Non è uno scaffale');
+        if (o.stock! >= SHELF_CAPACITY) return fail('Scaffale già pieno');
+        if (s.restockQueue.includes(o.id) || s.staff.some((st) => st.job?.shelfId === o.id)) return fail('Già in arrivo');
+        if (!s.staff.some((st) => st.role === 'magazziniere')) return fail('Serve un magazziniere');
+        if (!s.warehouse[o.category!]) return fail(`Niente ${o.category} in magazzino`);
+        return { ok: true, cost: 0 };
+    }
+    if (c.type === 'collect') return readyAt(s, c.tillId) ? { ok: true, cost: 0 } : fail('Nessun conto da incassare');
     if (c.type === 'order') {
         if (!CATEGORIES.includes(c.category as Category)) return fail('Categoria sconosciuta');
         if (!s.rooms.some((r) => r.type === 'magazzino')) return fail('Serve un magazzino');
@@ -86,6 +99,10 @@ export function apply(s: GameState, c: Command): Result {
         hire(s, c.candidateId);
     } else if (c.type === 'fire') {
         fire(s, c.staffId);
+    } else if (c.type === 'restock') {
+        s.restockQueue.push(c.shelfId);
+    } else if (c.type === 'collect') {
+        checkout(s, readyAt(s, c.tillId)!, TIP);
     } else if (c.type === 'order') {
         s.warehouse[c.category as Category] += ORDER_UNITS;
     } else {

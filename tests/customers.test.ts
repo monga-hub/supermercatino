@@ -23,7 +23,7 @@ test('happy path pays', () => {
     const c = spawnCustomer(s, ['Pasta'])!;
     assert.ok(c, 'spawned');
     const seen = runOut(s);
-    assert.deepEqual(seen.get(c.id), ['shopping', 'queueing', 'paying', 'leaving']);
+    assert.deepEqual(seen.get(c.id), ['shopping', 'queueing', 'paying', 'ready', 'leaving']);
     assert.equal(s.objects.find((o) => o.type === 'scaffale')!.stock, SHELF_CAPACITY - 1);
     assert.equal(s.money, m0 + PRICES.Pasta);
     assert.equal(s.servedToday, 1);

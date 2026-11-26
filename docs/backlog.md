@@ -48,6 +48,9 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: gameplan v1
   - Rough size: M · Rough value: L
   - Notes: → milestone 06-fine-giornata-e-obiettivi.md
+- [ ] Capo reparto / automazione completa — dipendente o potenziamento che rende inutili i tocchi su scaffali e casse (curva "tocco tutto" → "automatizzo", ADR-0002).
+  - Source: user 2026-11-26
+
 - [ ] Salvataggio locale — stato sim serializzato in localStorage.
   - Source: gameplan v1
   - Rough size: S · Rough value: M

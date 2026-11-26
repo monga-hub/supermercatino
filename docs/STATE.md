@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[05 — Rifornisci gli scaffali](milestones/05-rifornisci-gli-scaffali.md) (in-progress, AC automatiche verdi). 04 chiuso. Poi 06 Fine giornata e obiettivi; sprite AI dopo il 06.
+[05b — Tocca per accelerare](milestones/05b-tocca-per-accelerare.md) (in-progress, AC automatiche verdi; ADR-0002 modello ibrido). [05](milestones/05-rifornisci-gli-scaffali.md) in attesa di playtest. 04 chiuso. Poi 06 Fine giornata e obiettivi; sprite AI dopo il 06.
 
 ## Last action
 
-Milestone 05 implementato: `warehouse` per categoria, comando `order` (serve un magazzino), ruolo Magazziniere che va in magazzino, prende quanto manca e riempie gli scaffali sotto soglia; pannello Merce nell'HUD; pannelli scorrevoli. Test: `npm test` 26/26, `npm run test:browser` 7/7. Prima: stanze di qualsiasi misura (stesso tipo affiancato = un'area unica).
+Milestone 05b (ADR-0002, tocchi ibridi): icone 📦/⏳ sugli scaffali e 💰 sulle casse; comando `restock` (coda con priorità per i magazzinieri), comando `collect` (incasso con mancia), stato cliente `ready` con incasso automatico dopo 3 s. Test: `npm test` 31/31, `npm run test:browser` 8/8. Prima: milestone 05 (magazzino, Merce, magazziniere).
 
 ## Next step
 
-Playtest utente del 05 da telefono (magazzino, Merce → Ordina, magazziniere che rifornisce). Se ok: 05 → done e si parte col 06 (Fine giornata e obiettivi).
+Playtest utente da telefono di 05 e 05b insieme (Merce → Ordina, magazziniere, tocchi su 📦 e 💰). Se ok: 05 e 05b → done, poi 06 (Fine giornata e obiettivi, con le mance).
 
 ## Blockers
 

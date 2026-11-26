@@ -102,5 +102,16 @@ export const ORDER_UNITS = 20;
 /** Purchase cost per unit (€): roughly half the sale price. */
 export const UNIT_COST = { Pasta: 1, Latticini: 2, Salumi: 3, Pane: 1, Frutta: 2, Detersivi: 3 } as const;
 
-/** A stocker refills a shelf when its stock drops below this. */
-export const RESTOCK_BELOW = 4;
+// --- Taps (milestone 05b, ADR-0002): tapping speeds things up, automation is slower.
+
+/** Without a tap, a stocker refills a shelf only when its stock drops below this. */
+export const AUTO_RESTOCK_BELOW = 2;
+
+/** The 📦 tap icon shows over a shelf below this stock. */
+export const TAP_ICON_BELOW = 5;
+
+/** Seconds a bill waits for the 💰 tap before the cashier closes it alone (no tip). */
+export const AUTO_COLLECT_SEC = 3;
+
+/** Tip (€) for collecting with a tap. */
+export const TIP = 1;

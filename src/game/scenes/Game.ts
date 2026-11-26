@@ -1,8 +1,9 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { createState, tick, advance, type GameState, type RoomType, type ObjectType, type Category } from '../../sim/state.ts';
 import { apply, check, type Command } from '../../sim/build.ts';
-import { STEP_MS } from '../../sim/config.ts';
-import { gridToIso, cellAt } from '../../render/iso.ts';
+import { STEP_MS, TAP_ICON_BELOW } from '../../sim/config.ts';
+import { readyAt } from '../../sim/customers.ts';
+import { gridToIso, cellAt, TILE_H } from '../../render/iso.ts';
 import { drawFloor, drawThings, drawObject, tile } from '../../render/draw.ts';
 import type { Hud } from './Hud.ts';
 
@@ -30,6 +31,8 @@ export class Game extends Scene {
     preview: GameObjects.Graphics;
     pinch: { d: number; mx: number; my: number } | null = null;
     pinched = false; // a pinch happened during this touch: its pointerup must not build
+    /** Tap icons over shelves and tills, pooled by key; each carries its command in data 'cmd'. */
+    icons = new Map<string, GameObjects.Text>();
     // ?manual: sim advances only through window.advanceTime (deterministic browser tests)
     manual = new URLSearchParams(location.search).has('manual');
 
@@ -70,6 +73,45 @@ export class Game extends Scene {
             }
         }
         drawThings(this.things, this.sim);
+        this.drawIcons(_time);
+    }
+
+    /** 📦 over shelves running low (⏳ once on their way), 💰 over tills with a bill ready. */
+    drawIcons(time: number) {
+        const s = this.sim;
+        const want: { key: string; x: number; y: number; label: string; cmd: Command | null }[] = [];
+        for (const o of s.objects) {
+            if (o.type === 'scaffale' && o.stock! < TAP_ICON_BELOW) {
+                const busy = s.restockQueue.includes(o.id) || s.staff.some((st) => st.job?.shelfId === o.id);
+                want.push({ key: `s${o.id}`, x: o.x, y: o.y, label: busy ? '⏳' : '📦', cmd: busy ? null : { type: 'restock', shelfId: o.id } });
+            }
+            if (o.type === 'cassa' && readyAt(s, o.id)) want.push({ key: `t${o.id}`, x: o.x, y: o.y, label: '💰', cmd: { type: 'collect', tillId: o.id } });
+        }
+        for (const t of this.icons.values()) t.setVisible(false);
+        const scale = 1 / Math.min(1, this.cameras.main.zoom); // keep icons finger-sized when zoomed out
+        for (const w of want) {
+            let t = this.icons.get(w.key);
+            if (!t) {
+                t = this.add.text(0, 0, '', { fontSize: 26, backgroundColor: '#fff3d6', padding: { x: 5, y: 3 } }).setOrigin(0.5, 1).setDepth(10);
+                this.icons.set(w.key, t);
+            }
+            const p = gridToIso(w.x, w.y);
+            const bob = w.cmd ? Math.sin(time / 180) * 3 : 0;
+            t.setText(w.label).setPosition(p.x, p.y + TILE_H / 2 - 40 + bob).setScale(scale).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
+        }
+    }
+
+    /** The command of the tap icon under this pointer, or (no tool active) of the object tapped. */
+    iconCommand(p: Input.Pointer): Command | null {
+        const c = this.cellOf(p);
+        for (const t of this.icons.values()) {
+            if (!t.visible || !t.getData('cmd')) continue;
+            const b = t.getBounds();
+            const pad = 10 * t.scaleX;
+            const onIcon = p.worldX > b.x - pad && p.worldX < b.right + pad && p.worldY > b.y - pad && p.worldY < b.bottom + pad;
+            if (onIcon || (!this.tool && t.getData('cell') === `${c.x},${c.y}`)) return t.getData('cmd');
+        }
+        return null;
     }
 
     run(cmd: Command) {
@@ -177,8 +219,11 @@ export class Game extends Scene {
                 this.pinch = null;
                 this.pinched = false;
             }
-            if (wasPinch || !this.tool || !p.leftButtonReleased() || hud.onPanel(p.downX, p.downY)) return;
+            if (wasPinch || !p.leftButtonReleased() || hud.onPanel(p.downX, p.downY)) return;
             const isTap = p.getDistance() <= TAP_SLOP;
+            const tapped = isTap && this.iconCommand(p);
+            if (tapped) return void this.run(tapped);
+            if (!this.tool) return;
             if (this.tool.kind === 'room' || isTap) {
                 const cmd = this.commandFor(p);
                 if (cmd) this.run(cmd);

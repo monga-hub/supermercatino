@@ -28,7 +28,7 @@ export type Staff = Candidate & {
     job: { shelfId: number; category: Category; units: number } | null;
 };
 
-export type CustomerState = 'shopping' | 'queueing' | 'paying' | 'leaving' | 'leaving_angry';
+export type CustomerState = 'shopping' | 'queueing' | 'paying' | 'ready' | 'leaving' | 'leaving_angry';
 export type Customer = {
     id: number;
     state: CustomerState;
@@ -45,7 +45,7 @@ export type Customer = {
     patience: number;
     /** Order of arrival at the till (FIFO). */
     queuedAt: number;
-    /** Seconds left at the till while paying. */
+    /** Seconds left at the till while paying, then until the automatic checkout when ready. */
     timer: number;
 };
 
@@ -73,6 +73,8 @@ export type GameState = {
     staff: Staff[];
     /** Units per category in the warehouse. */
     warehouse: Record<Category, number>;
+    /** Shelf ids tapped for restocking, served first (FIFO). */
+    restockQueue: number[];
 };
 
 export function createState(): GameState {
@@ -95,6 +97,7 @@ export function createState(): GameState {
         candidates: [],
         staff: [],
         warehouse: Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Category, number>,
+        restockQueue: [],
     };
     refillCandidates(s);
     return s;
