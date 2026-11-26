@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+in-progress — automated AC green; waiting for user playtest
 
 ## Objective
 
@@ -34,13 +34,13 @@ Chiudere il primo loop giocabile: costruisco → i clienti entrano, comprano, fa
 
 ## Acceptance criteria
 
-- [ ] A* trova il percorso più breve tra due celle, aggira gli oggetti, restituisce `null` se irraggiungibile — test: `tests/path.test.ts::astar shortest, blocked, unreachable`
-- [ ] Con negozio valido e tempo che scorre arrivano clienti; senza porta o cassa raggiungibile non ne arriva nessuno — test: `tests/customers.test.ts::spawn only with door and reachable till`
-- [ ] Un cliente con lista soddisfabile percorre tutti gli stati fino a `leaving`, lo stock cala e i soldi aumentano del prezzo atteso — test: `tests/customers.test.ts::happy path pays`
-- [ ] Con lo scaffale della sua categoria vuoto o assente la pazienza cala; a zero esce `leaving_angry` senza pagare — test: `tests/customers.test.ts::empty shelf makes customer leave angry`
-- [ ] La fila serve un cliente alla volta in ordine di arrivo — test: `tests/customers.test.ts::queue is FIFO`
-- [ ] Stessa seed + stessi comandi → stesso stato dopo N tick (determinismo) — test: `tests/customers.test.ts::deterministic with seed`
-- [ ] Nel browser, dopo `advanceTime` di un'ora di gioco su un negozio costruito via comandi, `render_game_to_text()` mostra clienti serviti > 0 e soldi aumentati — test: `scripts/browser-test.mjs::customers buy and pay`
+- [x] A* trova il percorso più breve tra due celle, aggira gli oggetti, restituisce `null` se irraggiungibile — test: `tests/path.test.ts::astar shortest, blocked, unreachable`
+- [x] Con negozio valido e tempo che scorre arrivano clienti; senza porta o cassa raggiungibile non ne arriva nessuno — test: `tests/customers.test.ts::spawn only with door and reachable till`
+- [x] Un cliente con lista soddisfabile percorre tutti gli stati fino a `leaving`, lo stock cala e i soldi aumentano del prezzo atteso — test: `tests/customers.test.ts::happy path pays`
+- [x] Con lo scaffale della sua categoria vuoto o assente la pazienza cala; a zero esce `leaving_angry` senza pagare — test: `tests/customers.test.ts::empty shelf makes customer leave angry`
+- [x] La fila serve un cliente alla volta in ordine di arrivo — test: `tests/customers.test.ts::queue is FIFO`
+- [x] Stessa seed + stessi comandi → stesso stato dopo N tick (determinismo) — test: `tests/customers.test.ts::deterministic with seed`
+- [x] Nel browser, dopo `advanceTime` di un'ora di gioco su un negozio costruito via comandi, `render_game_to_text()` mostra clienti serviti > 0 e soldi aumentati — test: `scripts/browser-test.mjs::customers buy and pay`
 - [ ] Movimento dei clienti leggibile, barra pazienza visibile da zoom medio — verified by user playtest
 
 ## Exit condition
@@ -57,3 +57,9 @@ L'utente costruisce un negozio minimo (sala vendita, area casse, porta, scaffale
 
 - Cassa automatica e stock fisso sono temporanei: il milestone staff/rifornimento li sostituisce (vedi `docs/backlog.md`).
 - Tutti i tempi, prezzi e tassi in `src/sim/config.ts`.
+- Implementazione: `src/sim/path.ts` (A*), `src/sim/customers.ts` (arrivi, stati, fila, pagamento, pazienza), chiamati da `tick`. RNG mulberry32 con stato in `state.rng`.
+- I clienti camminano su sala vendita e area casse (non magazzino); gli oggetti bloccano tranne la porta. Arrivano e spariscono sulla cella della porta. Si fermano su una cella libera accanto a scaffale/cassa.
+- Lista spesa: 1–3 categorie diverse tra tutte e 6, anche quelle che il negozio non ha (è la pressione del gioco). Ogni voce mancante o scaffale vuoto: −35 pazienza. Cesto vuoto a fine giro → esce arrabbiato.
+- Fila: si sceglie la cassa raggiungibile con meno gente; serve in ordine di arrivo (`queuedAt`). Per ora chi è in fila sta sulla stessa cella (si sovrappongono nel disegno).
+- Disegno: strato pavimento ridisegnato solo con i comandi; oggetti e clienti in uno strato unico ordinato per profondità ogni frame.
+- Test: `state.spawnAcc` molto negativo blocca gli arrivi automatici, così il test controlla chi entra.

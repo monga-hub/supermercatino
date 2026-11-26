@@ -1,5 +1,5 @@
 // Build commands. Commands are plain data so UI, tests and agents share one entry point.
-import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND } from './config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_STOCK } from './config.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
 
 export type Command =
@@ -66,7 +66,10 @@ export function apply(s: GameState, c: Command): Result {
         s.rooms.push({ id: s.nextId++, type: c.room, x: c.x, y: c.y, w: c.w, h: c.h });
     } else if (c.type === 'placeObject') {
         const o: ShopObject = { id: s.nextId++, type: c.object, x: c.x, y: c.y };
-        if (c.object === 'scaffale') o.category = c.category as Category;
+        if (c.object === 'scaffale') {
+            o.category = c.category as Category;
+            o.stock = SHELF_STOCK;
+        }
         s.objects.push(o);
     } else {
         const obj = objectAt(s, c.x, c.y);

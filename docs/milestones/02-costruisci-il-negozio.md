@@ -2,7 +2,7 @@
 
 ## Status
 
-in-progress — automated AC green; waiting for user playtest (preview + mouse/tap)
+done (2026-11-26) — playtest utente ok da telefono
 
 ## Objective
 
@@ -38,7 +38,7 @@ Primo verbo del loop: costruire. Il giocatore disegna stanze sulla griglia trasc
 - [x] `demolish` rimuove e rimborsa la quota da `config.ts` — test: `tests/build.test.ts::demolish refunds`
 - [x] Nel browser, costruire in pausa aggiorna `render_game_to_text()` (stanze, oggetti, soldi) senza far avanzare l'ora — test: `scripts/browser-test.mjs::build while paused`
 - [x] Trascinare con il mouse costruisce una stanza, un click piazza un oggetto — test: `scripts/browser-test.mjs::build with mouse`
-- [ ] Anteprima verde/rossa leggibile, piazzamento con mouse e con tap — verified by user playtest
+- [x] Anteprima verde/rossa leggibile, piazzamento con mouse e con tap — verified by user playtest
 
 ## Exit condition
 

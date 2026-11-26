@@ -38,3 +38,35 @@ export const OBJECTS = {
     scaffale: { label: 'Scaffale', cost: 150, room: 'sala_vendita' },
     cassa: { label: 'Cassa', cost: 400, room: 'area_casse' },
 } as const;
+
+// --- Customers (milestone 03). "per second" = real second at 1x.
+
+/** Units on a newly placed shelf. No restocking until the staff milestone. */
+export const SHELF_STOCK = 10;
+
+/** Sale price per unit (€). */
+export const PRICES = { Pasta: 2, Latticini: 3, Salumi: 6, Pane: 2, Frutta: 3, Detersivi: 5 } as const;
+
+/** A new customer every N game minutes (only with a door and a reachable till). */
+export const SPAWN_EVERY_MIN = 10;
+
+/** Shopping list length range (categories). */
+export const LIST_MIN = 1;
+export const LIST_MAX = 3;
+
+/** Walking speed, cells per second. */
+export const CUSTOMER_SPEED = 2;
+
+export const PATIENCE_START = 100;
+/** Patience lost per second waiting in the till queue. */
+export const PATIENCE_QUEUE_DRAIN = 4;
+/** Patience lost per second walking (long routes annoy). */
+export const PATIENCE_WALK_DRAIN = 0.5;
+/** Patience lost when a list item is missing or its shelf is empty. */
+export const PATIENCE_MISSING = 35;
+
+/** Seconds the till needs per customer (automatic till until staff exists). */
+export const PAY_SEC = 2;
+
+/** Seed of the sim's random generator (shopping lists). */
+export const RNG_SEED = 12345;

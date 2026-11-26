@@ -32,7 +32,7 @@ Nessun'altra dipendenza prevista. Pathfinding A* su griglia scritto in casa (pic
 ```
 src/
   game/       # entry Phaser (main.ts) + scenes/ (Game, Hud)
-  sim/        # simulazione pura TS, niente Phaser: griglia, stanze, clienti, staff, economia, tick
+  sim/        # TS puro, niente Phaser: state.ts (stato, tick), config.ts, build.ts (comandi), path.ts (A*), customers.ts
   render/     # iso.ts (griglia↔iso), draw.ts (disegno placeholder: tile, box, colori)
 public/assets # sprite dipinti, audio
 tests/      # node --test (sim)

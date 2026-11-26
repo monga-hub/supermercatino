@@ -17,6 +17,7 @@ type Btn = { t: GameObjects.Text; active: () => boolean; bg: string; fg?: string
 export class Hud extends Scene {
     clock: GameObjects.Text;
     money: GameObjects.Text;
+    served: GameObjects.Text;
     toast: GameObjects.Text;
     speedBtns: Btn[] = [];
     toolBtns: Btn[] = [];
@@ -47,6 +48,7 @@ export class Hud extends Scene {
     create() {
         this.clock = this.add.text(12, 12, '', TEXT);
         this.money = this.add.text(0, 12, '', TEXT).setOrigin(1, 0);
+        this.served = this.add.text(0, 44, '', { ...TEXT, fontSize: 16, strokeThickness: 4 }).setOrigin(1, 0);
         this.toast = this.add.text(0, 100, '', { ...TEXT, fontSize: 18, backgroundColor: '#000000aa', padding: { x: 10, y: 6 } }).setOrigin(0.5, 0).setVisible(false);
 
         // speed: index 0 = pause, 1..3 = speed
@@ -104,6 +106,7 @@ export class Hud extends Scene {
     layout() {
         const { width, height } = this.scale;
         this.money.setX(width - 12);
+        this.served.setX(width - 12);
         this.toast.setX(width / 2);
         this.flow(this.speedBtns, 50, width);
         // toolbar anchored to the bottom: measure, then place
@@ -130,6 +133,7 @@ export class Hud extends Scene {
         const mm = String(Math.floor((s.clockSec % 3600) / 60)).padStart(2, '0');
         this.clock.setText(`Giorno ${s.day}   ${hh}:${mm}`);
         this.money.setText(`€ ${s.money.toLocaleString('it-IT')}`);
+        this.served.setText(`Serviti ${s.servedToday} · Persi ${s.lostToday}`);
         for (const b of [...this.speedBtns, ...this.toolBtns, ...this.catBtns]) {
             const on = b.active();
             b.t.setBackgroundColor(on ? BTN_ACTIVE_BG : b.bg);

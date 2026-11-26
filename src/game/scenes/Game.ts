@@ -3,7 +3,7 @@ import { createState, tick, advance, type GameState, type RoomType, type ObjectT
 import { apply, check, type Command } from '../../sim/build.ts';
 import { STEP_MS } from '../../sim/config.ts';
 import { gridToIso, cellAt } from '../../render/iso.ts';
-import { drawWorld, drawObject, tile } from '../../render/draw.ts';
+import { drawFloor, drawThings, drawObject, tile } from '../../render/draw.ts';
 
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 2.5;
@@ -24,7 +24,8 @@ type Cell = { x: number; y: number };
 export class Game extends Scene {
     sim: GameState;
     acc = 0;
-    world: GameObjects.Graphics;
+    floor: GameObjects.Graphics;
+    things: GameObjects.Graphics;
     preview: GameObjects.Graphics;
     pinch: { d: number; mx: number; my: number } | null = null;
     pinched = false; // a pinch happened during this touch: its pointerup must not build
@@ -43,9 +44,10 @@ export class Game extends Scene {
         this.sim = createState();
         this.registry.set('sim', this.sim);
         this.registry.set('tool', null);
-        this.world = this.add.graphics();
+        this.floor = this.add.graphics();
         this.preview = this.add.graphics();
-        drawWorld(this.world, this.sim);
+        this.things = this.add.graphics();
+        drawFloor(this.floor, this.sim);
         this.setupCamera();
         this.setupInput();
         this.registry.events.on('changedata-tool', () => this.preview.clear());
@@ -58,18 +60,20 @@ export class Game extends Scene {
     }
 
     update(_time: number, delta: number) {
-        if (this.manual || this.sim.paused) return;
-        // ponytail: cap delta so a backgrounded tab doesn't replay minutes of ticks at once
-        this.acc += Math.min(delta, 250) * this.sim.speed;
-        while (this.acc >= STEP_MS) {
-            tick(this.sim);
-            this.acc -= STEP_MS;
+        if (!this.manual && !this.sim.paused) {
+            // ponytail: cap delta so a backgrounded tab doesn't replay minutes of ticks at once
+            this.acc += Math.min(delta, 250) * this.sim.speed;
+            while (this.acc >= STEP_MS) {
+                tick(this.sim);
+                this.acc -= STEP_MS;
+            }
         }
+        drawThings(this.things, this.sim);
     }
 
     run(cmd: Command) {
         const r = apply(this.sim, cmd);
-        if (r.ok) drawWorld(this.world, this.sim);
+        if (r.ok) drawFloor(this.floor, this.sim);
         else this.game.events.emit('toast', r.reason);
         return r;
     }

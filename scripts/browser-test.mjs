@@ -98,6 +98,32 @@ await check('build with mouse', async () => {
     await p2.close();
 });
 
+await check('customers buy and pay', async () => {
+    const p3 = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    await p3.goto(new URL('?manual', base).href);
+    await p3.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    const run = (c) => p3.evaluate((x) => window.dispatch(x), c);
+    for (const c of [
+        { type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 6, h: 5 },
+        { type: 'placeObject', object: 'scaffale', x: 5, y: 4, category: 'Pasta' },
+        { type: 'placeObject', object: 'scaffale', x: 6, y: 4, category: 'Pane' },
+        { type: 'placeObject', object: 'scaffale', x: 7, y: 4, category: 'Latticini' },
+        { type: 'placeObject', object: 'porta', x: 8, y: 5 },
+        { type: 'buildRoom', room: 'area_casse', x: 3, y: 8, w: 3, h: 2 },
+        { type: 'placeObject', object: 'cassa', x: 4, y: 9 },
+    ]) {
+        const r = await run(c);
+        expect(r.ok, `setup failed: ${JSON.stringify(c)} ${JSON.stringify(r)}`);
+    }
+    const st = async () => JSON.parse(await p3.evaluate(() => window.render_game_to_text()));
+    const m0 = (await st()).money;
+    await p3.evaluate(() => window.advanceTime(20000)); // one game hour at 1x
+    const s1 = await st();
+    expect(s1.servedToday > 0, `nobody served: ${JSON.stringify({ served: s1.servedToday, lost: s1.lostToday, customers: s1.customers.length })}`);
+    expect(s1.money > m0, 'money did not grow');
+    await p3.close();
+});
+
 await page.waitForTimeout(10000); // let the game run a while
 await check('no console errors', async () => {
     expect(errors.length === 0, errors.join(' | '));

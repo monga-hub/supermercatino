@@ -1,5 +1,7 @@
 // Pure simulation: no Phaser. The whole game is one JSON-serializable object.
-import { GRID_W, GRID_H, STEP_MS, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC, SPEEDS, START_MONEY, ROOMS, OBJECTS, CATEGORIES } from './config.ts';
+import { GRID_W, GRID_H, STEP_MS, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC, SPEEDS, START_MONEY, ROOMS, OBJECTS, CATEGORIES, RNG_SEED } from './config.ts';
+import { updateCustomers } from './customers.ts';
+import type { Cell } from './path.ts';
 
 export type Speed = (typeof SPEEDS)[number];
 
@@ -8,7 +10,28 @@ export type ObjectType = keyof typeof OBJECTS;
 export type Category = (typeof CATEGORIES)[number];
 
 export type Room = { id: number; type: RoomType; x: number; y: number; w: number; h: number };
-export type ShopObject = { id: number; type: ObjectType; x: number; y: number; category?: Category };
+export type ShopObject = { id: number; type: ObjectType; x: number; y: number; category?: Category; stock?: number };
+
+export type CustomerState = 'shopping' | 'queueing' | 'paying' | 'leaving' | 'leaving_angry';
+export type Customer = {
+    id: number;
+    state: CustomerState;
+    /** Position in grid cells (fractional while walking). */
+    x: number;
+    y: number;
+    path: Cell[];
+    /** Where the current path leads: a shelf/till object id, or the door. */
+    goal: { kind: 'shelf' | 'till'; id: number } | { kind: 'door' } | null;
+    list: Category[];
+    /** Index of the next list item to look for. */
+    next: number;
+    basket: Category[];
+    patience: number;
+    /** Order of arrival at the till (FIFO). */
+    queuedAt: number;
+    /** Seconds left at the till while paying. */
+    timer: number;
+};
 
 export type GameState = {
     grid: { w: number; h: number };
@@ -21,6 +44,15 @@ export type GameState = {
     rooms: Room[];
     objects: ShopObject[];
     nextId: number;
+    customers: Customer[];
+    servedToday: number;
+    lostToday: number;
+    /** Game seconds accumulated towards the next arrival. */
+    spawnAcc: number;
+    /** Arrival counter for till queues. */
+    queueSeq: number;
+    /** mulberry32 state. */
+    rng: number;
 };
 
 export function createState(): GameState {
@@ -34,6 +66,12 @@ export function createState(): GameState {
         rooms: [],
         objects: [],
         nextId: 1,
+        customers: [],
+        servedToday: 0,
+        lostToday: 0,
+        spawnAcc: 0,
+        queueSeq: 0,
+        rng: RNG_SEED,
     };
 }
 
@@ -43,7 +81,10 @@ export function tick(s: GameState): void {
     if (s.clockSec >= DAY_CLOSE_MIN * 60) {
         s.day += 1;
         s.clockSec = DAY_OPEN_MIN * 60;
+        s.servedToday = 0;
+        s.lostToday = 0;
     }
+    updateCustomers(s);
 }
 
 /** Advance by `realMs` of wall-clock time at the current speed. Deterministic. */

@@ -1,7 +1,7 @@
 // Placeholder drawing: flat iso tiles and boxes. Replaced by AI sprites after milestone 03.
 import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
-import type { GameState, RoomType, ObjectType, ShopObject } from '../sim/state.ts';
+import type { GameState, RoomType, ObjectType, ShopObject, Customer } from '../sim/state.ts';
 
 type G = GameObjects.Graphics;
 
@@ -61,13 +61,31 @@ export function box(g: G, x: number, y: number, h: number, color: number, k = 0.
     poly(g, [...t.top, ...t.right, ...t.bottom, ...t.left]);
 }
 
-export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category'>, alpha = 1) {
+export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock'>, alpha = 1) {
     const look = OBJECT_LOOK[o.type];
     box(g, o.x, o.y, look.h, look.color, look.k, alpha);
-    if (o.category) box(g, o.x, o.y, look.h + 3, CATEGORY_COLOR[o.category], look.k * 0.6, alpha); // merce in cima
+    // merce in cima; sparisce quando lo scaffale è vuoto
+    if (o.category && o.stock !== 0) box(g, o.x, o.y, look.h + 3, CATEGORY_COLOR[o.category], look.k * 0.6, alpha);
 }
 
-export function drawWorld(g: G, s: GameState) {
+const CUSTOMER = 0x3d6fb5;
+const CUSTOMER_ANGRY = 0xd64541;
+const CUSTOMER_H = 22;
+
+export function drawCustomer(g: G, c: Customer) {
+    box(g, c.x, c.y, CUSTOMER_H, c.state === 'leaving_angry' ? CUSTOMER_ANGRY : CUSTOMER, 0.35);
+    // patience bar over the head
+    const p = gridToIso(c.x, c.y);
+    const top = p.y + TILE_H / 2 - CUSTOMER_H - 14;
+    const v = Math.max(0, c.patience) / 100;
+    g.fillStyle(0x000000, 0.6);
+    g.fillRect(p.x - 13, top - 1, 26, 6);
+    g.fillStyle(v > 0.5 ? 0x6fae4a : v > 0.25 ? 0xe0a030 : CUSTOMER_ANGRY);
+    g.fillRect(p.x - 12, top, 24 * v, 4);
+}
+
+/** Floor layer: lot and rooms. Redraw only when the layout changes. */
+export function drawFloor(g: G, s: GameState) {
     g.clear();
     const owner = new Map<string, RoomType>();
     for (const r of s.rooms)
@@ -80,6 +98,14 @@ export function drawWorld(g: G, s: GameState) {
             tile(g, x, y, pal[(x + y) % 2]);
         }
     }
-    // draw back-to-front so nearer boxes cover farther ones
-    for (const o of [...s.objects].sort((a, b) => a.x + a.y - (b.x + b.y))) drawObject(g, o);
+}
+
+/** Things layer: objects and customers, back-to-front so nearer ones cover farther ones. Redraw every frame. */
+export function drawThings(g: G, s: GameState) {
+    g.clear();
+    const items: { d: number; draw: () => void }[] = [
+        ...s.objects.map((o) => ({ d: o.x + o.y, draw: () => drawObject(g, o) })),
+        ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: () => drawCustomer(g, c) })),
+    ];
+    for (const it of items.sort((a, b) => a.d - b.d)) it.draw();
 }
