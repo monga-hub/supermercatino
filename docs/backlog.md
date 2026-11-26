@@ -36,7 +36,7 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 - [ ] Tipi cliente — Nonna con la lista, Studente fuori sede, Mamma di fretta, Furbetto (salta fila/taccheggia).
   - Source: gameplan v1
   - Rough size: M · Rough value: L
-  - Notes: il Furbetto richiede staff vicino alle casse.
+  - Notes: il Furbetto richiede staff vicino alle casse. In parte → milestone 10-clienti-diversi.md (mamma, vecchietta, giovane, Ponzone, orso); resta il Furbetto.
 - [ ] Stanze e oggetti restanti — banco salumi, forno, spogliatoio staff; frigo, bancone, affettatrice, forno, cestino.
   - Source: gameplan v1
   - Rough size: M · Rough value: M
