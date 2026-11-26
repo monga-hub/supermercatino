@@ -2,7 +2,6 @@
 import type { Category, Customer, GameState, Staff } from '../sim/state.ts';
 
 export const SPRITES = {
-    porta: 'porta',
     cassa: 'cassa',
     scaffale: 'scaffale',
     shelf: (c: Category) => `scaffale_${c}`,
@@ -15,6 +14,9 @@ export const PEOPLE_FRAMES = [
     ...walk('cassiere_walk'), 'cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1',
     ...walk('magazziniere_walk'), ...walk('magazziniere_carry'),
 ];
+
+/** Wall and door panels, one per back-edge orientation (tools/kit.py WALLS). */
+export const WALL_FRAMES = ['muro', 'muro_poster', 'porta'].flatMap((n) => [`${n}_l`, `${n}_r`]);
 
 /** kit.png frames are stored at 2x (tools/kit.py RES). */
 export const KIT_SCALE = 0.5;

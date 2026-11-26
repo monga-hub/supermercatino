@@ -15,7 +15,7 @@ RES = 2  # frames stored at 2x, drawn at 0.5 scale: sharp when zoomed in
 WALK = lambda n: [f'{n}_walk_0', f'{n}_walk_1', f'{n}_walk_2']
 SHEETS = [
     ('arredi.jpg', 3, 3, ('w', 1.0), ['scaffale', 'scaffale_Pasta', 'scaffale_Latticini', 'scaffale_Salumi', 'scaffale_Pane',
-                                      'scaffale_Frutta', 'scaffale_Detersivi', 'cassa', ('porta', 0.7)]),
+                                      'scaffale_Frutta', 'scaffale_Detersivi', 'cassa', None]),  # door: see WALLS
     ('cliente.jpg', 3, 3, ('h', 44), WALK('cliente') + ['cliente_angry_0', 'cliente_angry_1', 'cliente_angry_2',
                                                         'cliente_idle', 'cliente_pay', 'cliente_pick']),
     ('cassiere.jpg', 3, 2, ('h', 46), WALK('cassiere') + ['cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1']),
@@ -57,14 +57,40 @@ def pieces():
         cw, ch = img.width // cols, img.height // rows
         f = None
         for i, name in enumerate(names):
+            if not name: continue
             name, w = name if isinstance(name, tuple) else (name, v)
             p, left = cutout(img.crop(((i % cols) * cw, (i // cols) * ch, (i % cols + 1) * cw, (i // cols + 1) * ch)))
             if kind == 'w': f, ax = w * TILE_W * RES / p.width, 0.5
             else: f, ax = f or v * RES / p.height, min(1, max(0, (cw / 2 - left) / p.width))
             yield name, p.resize((max(1, round(p.width * f)), max(1, round(p.height * f))), Image.LANCZOS), round(ax, 3)
 
+WALL_H = 60  # game px
+# (frame, panel index in pareti.jpg, horizontal crop as fractions of the panel): textures are front views.
+WALLS = [('muro', 0, (0.0, 0.5)), ('muro_poster', 1, (0.25, 0.75)), ('porta', 2, (0.08, 0.92))]
+
+def slant(tex, dark):
+    """Front-view texture -> wall standing on a cell's top-left edge (frame bottom-centre = edge midpoint + 8 px down)."""
+    w, h = 32 * RES, WALL_H * RES
+    tex = tex.resize((w, h), Image.LANCZOS)
+    top = Image.new('RGBA', (w, 3 * RES), (70, 40, 25, 255)); tex.paste(top, (0, 0))  # wall cap
+    if dark: tex = Image.eval(tex.convert('RGB'), lambda c: int(c * 0.82)).convert('RGBA')
+    # output (x, y) -> texture (x, y + 16 - x/2) in RES units: the bottom edge rises 16 px over 32 px
+    out = tex.transform((w, h + 16 * RES), Image.AFFINE, (1, 0, 0, 0.5, 1, -16 * RES), Image.BICUBIC, fillcolor=(0, 0, 0, 0))
+    return out
+
+def walls():
+    path = ROOT / 'art/sheets/pareti.jpg'
+    if not path.exists(): return []
+    img = Image.open(path).convert('RGBA'); cw = img.width // 3
+    out = []
+    for name, i, (a, b) in WALLS:
+        panel, _ = cutout(img.crop((i * cw, 0, (i + 1) * cw, img.height)))
+        tex = panel.crop((round(a * panel.width), 0, round(b * panel.width), panel.height))
+        out += [(f'{name}_l', slant(tex, False), 0.5), (f'{name}_r', slant(tex, True).transpose(Image.FLIP_LEFT_RIGHT), 0.5)]
+    return out
+
 def main():
-    items = list(pieces())
+    items = list(pieces()) + walls()
     W, pad, x, y, rowh, at = 1024, 2, 0, 0, 0, {}
     for name, p, _ in items:  # shelf packing, rows left to right
         if x + p.width > W: x, y, rowh = 0, y + rowh + pad, 0

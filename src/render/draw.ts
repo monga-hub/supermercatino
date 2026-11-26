@@ -2,6 +2,7 @@
 import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
 import { SPRITES, personFrame } from './sprites.ts';
+import { walls, doorEdge, type Edge } from './walls.ts';
 import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role, Category } from '../sim/state.ts';
 
 type G = GameObjects.Graphics;
@@ -66,7 +67,7 @@ export function box(g: G, x: number, y: number, h: number, color: number, k = 0.
 }
 
 const objectFrame = (o: Pick<ShopObject, 'type' | 'category' | 'stock' | 'rot'>) =>
-    o.type !== 'scaffale' ? SPRITES[o.type] : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
+    o.type === 'cassa' ? SPRITES.cassa : o.type === 'porta' ? 'porta_l' : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
 
 export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock' | 'rot'>, alpha = 1, put: Put = noPut, depth = 0) {
     const p = gridToIso(o.x, o.y);
@@ -151,7 +152,21 @@ export function drawFloor(g: G, s: GameState) {
             tile(g, x, y, pal[(x + y) % 2]);
         }
     }
+    for (const o of s.objects) if (o.type === 'porta') box(g, o.x, o.y, 1, 0xa33a2c, 0.7); // doormat
 }
+
+/** Wall/door panel on a cell edge: frame and bottom-centre offset from the cell's top vertex. Front edges are parallel to back ones. */
+const EDGE: Record<Edge, { side: 'l' | 'r'; dx: number; dy: number }> = {
+    l: { side: 'l', dx: -TILE_W / 4, dy: TILE_H / 2 },
+    r: { side: 'r', dx: TILE_W / 4, dy: TILE_H / 2 },
+    fr: { side: 'l', dx: TILE_W / 4, dy: TILE_H },
+    fl: { side: 'r', dx: -TILE_W / 4, dy: TILE_H },
+};
+function panel(put: Put, name: string, x: number, y: number, edge: Edge, depth: number) {
+    const e = EDGE[edge], p = gridToIso(x, y);
+    return put(`${name}_${e.side}`, p.x + e.dx, p.y + e.dy, depth);
+}
+const poster = (x: number, y: number) => (x * 7 + y * 13) % 5 === 0;
 
 /**
  * Things layer, redrawn every frame. Sprites get depth 1 + (x + y), so nearer ones cover farther ones.
@@ -161,7 +176,13 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
     g.clear();
     over.clear();
     const items: { d: number; draw: (depth: number) => void }[] = [
-        ...s.objects.map((o) => ({ d: o.x + o.y, draw: (z: number) => drawObject(g, o, 1, put, z) })),
+        ...walls(s).map((w) => ({ d: w.x + w.y - 0.5, draw: (z: number) => panel(put, poster(w.x, w.y) ? 'muro_poster' : 'muro', w.x, w.y, w.side, z) })),
+        ...s.objects.map((o) => {
+            if (o.type !== 'porta') return { d: o.x + o.y, draw: (z: number) => drawObject(g, o, 1, put, z) };
+            const edge = doorEdge(s, o);
+            const front = edge === 'fr' || edge === 'fl';
+            return { d: o.x + o.y + (front ? 0.6 : -0.5), draw: (z: number) => panel(put, 'porta', o.x, o.y, edge, z) || drawObject(g, o) };
+        }),
         ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: (z: number) => drawCustomer(g, over, s, c, put, z) })),
         ...crates(s).map((c) => ({ d: c.x + c.y - 0.01, draw: () => {
             box(g, c.x, c.y, c.h, CRATE, 0.6);
