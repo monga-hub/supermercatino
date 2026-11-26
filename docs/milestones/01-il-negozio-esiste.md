@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+in-progress — automated AC green; waiting for user playtest (pan/zoom desktop + touch)
 
 ## Objective
 
@@ -33,14 +33,14 @@ Mettere in piedi l'ossatura su cui si appoggia tutto il resto: lo stato della si
 
 ## Acceptance criteria
 
-- [ ] `createState()` restituisce uno stato serializzabile: `JSON.parse(JSON.stringify(s))` è deep-equal a `s` — test: `tests/sim.test.ts::state is JSON-serializable`
-- [ ] `tick` a 1x avanza l'orologio della durata attesa; a 2x/3x proporzionalmente; in pausa non avanza — test: `tests/sim.test.ts::clock advances with speed and stops on pause`
-- [ ] Arrivato all'orario di chiusura il giorno successivo riparte dall'apertura e `day` incrementa — test: `tests/sim.test.ts::day rolls over at closing time`
-- [ ] `src/sim/` non importa Phaser — test: `tests/sim.test.ts::sim does not import phaser`
-- [ ] Conversione griglia→iso→griglia è identità su tutte le celle — test: `tests/iso.test.ts::grid-iso roundtrip`
-- [ ] Nel browser `render_game_to_text()` restituisce JSON con griglia, giorno, ora e velocità; `advanceTime(60000)` a 1x sposta l'ora del valore atteso — test: `scripts/browser-test.mjs::hooks expose and advance state`
-- [ ] Premere `spazio` mette in pausa (l'ora non cambia dopo `advanceTime`), `3` imposta 3x — test: `scripts/browser-test.mjs::keyboard speed controls`
-- [ ] Zero errori in console all'avvio e dopo 10 s di gioco — test: `scripts/browser-test.mjs::no console errors`
+- [x] `createState()` restituisce uno stato serializzabile: `JSON.parse(JSON.stringify(s))` è deep-equal a `s` — test: `tests/sim.test.ts::state is JSON-serializable`
+- [x] `tick` a 1x avanza l'orologio della durata attesa; a 2x/3x proporzionalmente; in pausa non avanza — test: `tests/sim.test.ts::clock advances with speed and stops on pause`
+- [x] Arrivato all'orario di chiusura il giorno successivo riparte dall'apertura e `day` incrementa — test: `tests/sim.test.ts::day rolls over at closing time`
+- [x] `src/sim/` non importa Phaser — test: `tests/sim.test.ts::sim does not import phaser`
+- [x] Conversione griglia→iso→griglia è identità su tutte le celle — test: `tests/iso.test.ts::grid-iso roundtrip`
+- [x] Nel browser `render_game_to_text()` restituisce JSON con griglia, giorno, ora e velocità; `advanceTime(60000)` a 1x sposta l'ora del valore atteso — test: `scripts/browser-test.mjs::hooks expose and advance state`
+- [x] Premere `spazio` mette in pausa (l'ora non cambia dopo `advanceTime`), `3` imposta 3x — test: `scripts/browser-test.mjs::keyboard speed controls`
+- [x] Zero errori in console all'avvio e dopo 10 s di gioco — test: `scripts/browser-test.mjs::no console errors`
 - [ ] Pan con drag e zoom con rotella fluidi, zoom limitato — verified by user playtest
 - [ ] Pan con un dito e pinch-zoom a due dita su telefono/tablet — verified by user playtest
 
@@ -58,4 +58,9 @@ L'utente apre il gioco (desktop e telefono) → vede il pavimento iso a scacchi,
 
 - Test sim in `.ts` eseguiti da Node 24 con type stripping: import con estensione `.ts` esplicita (già permesso da `allowImportingTsExtensions` nel tsconfig); niente `enum`, niente parameter properties nelle classi, niente namespace (sintassi non cancellabile). Se `node --test` non trova i `.ts` di default, impostare lo script a `node --test "tests/**/*.test.ts"`.
 - `scripts/browser-test.mjs` cresce da smoke a più controlli nominati; tenerlo un solo file finché regge.
+- Orologio in secondi di gioco interi (`clockSec`) invece di minuti float: sommare 0,3 min a passo accumulava errore.
+- La velocità esegue più passi fissi, non passi più lunghi: la sim resta identica a ogni velocità.
+- `?manual` nell'URL ferma l'avanzamento in tempo reale: la sim avanza solo con `advanceTime` (test browser deterministici).
+- HUD in una scena separata (`Hud`) con camera propria, così non zooma col negozio. Scala Phaser `RESIZE` a tutto schermo.
+- Deploy: `.github/workflows/deploy.yml` (build + `npm test` + GitHub Pages a ogni push su main).
 - Grafica placeholder decisa dall'utente il 2026-11-26 (vedi `docs/gameplan.md` → Art style).

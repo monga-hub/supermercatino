@@ -20,17 +20,18 @@ Nessun'altra dipendenza prevista. Pathfinding A* su griglia scritto in casa (pic
 
 - **Package manager:** npm
 - **Build:** Vite. `npm run dev` / `npm run build` (gli script del template lanciano anche `log.js`, ping anonimo a Phaser); `npm run dev-nolog` / `npm run build-nolog` senza ping. Dev server su http://localhost:8080.
-- **Testing:** `npm test` (= `node --test`, logica pura: simulazione, economia, pathfinding; file `tests/*.test.ts`) + `npm run test:browser` (Playwright, `scripts/browser-test.mjs`, richiede dev server attivo) che usa gli hook `window.render_game_to_text()` e `window.advanceTime(ms)`. Oggi lo script browser fa solo smoke (canvas presente, zero errori console).
+- **Testing:** `npm test` (= `node --test`, logica pura: simulazione, economia, pathfinding; file `tests/*.test.ts`) + `npm run test:browser` (Playwright, `scripts/browser-test.mjs`, richiede dev server attivo) che usa gli hook `window.render_game_to_text()` e `window.advanceTime(ms)`. Lo script browser apre il gioco con `?manual` (la sim non avanza in tempo reale, solo con `advanceTime`) ed esegue controlli nominati; accetta un URL come argomento (es. build di produzione con `vite preview`).
 - **Linting / formatting:** il template non ne fornisce; type-check con `npx tsc --noEmit`.
+- **Deploy:** GitHub Actions `.github/workflows/deploy.yml`: a ogni push su `main` esegue `npm test`, `npm run build-nolog` e pubblica `dist/` su GitHub Pages (https://monga-hub.github.io/supermercatino/). `base: './'` in Vite rende i percorsi relativi.
 - **Asset / binary storage:** Git LFS no (per ora). Sprite AI in `public/assets/`.
 
 ## Project layout
 
-Stato dopo lo scaffold: `src/main.ts` → `src/game/main.ts` (config Phaser) → `src/game/scenes/Game.ts` (scena del template, da sostituire). `vite/config.{dev,prod}.mjs`, `index.html`, `public/`. Le cartelle sotto nascono quando servono:
+`src/main.ts` → `src/game/main.ts` (config Phaser, scala `RESIZE` a tutto schermo) → scene `Game` (pavimento iso, camera, guida la sim, hook) e `Hud` (overlay con camera propria: orologio, velocità). `vite/config.{dev,prod}.mjs`, `index.html`, `public/`. Le cartelle nascono quando servono:
 
 ```
 src/
-  game/       # entry Phaser (main.ts) + scenes/
+  game/       # entry Phaser (main.ts) + scenes/ (Game, Hud)
   sim/        # simulazione pura TS, niente Phaser: griglia, stanze, clienti, staff, economia, tick
   render/     # conversione coordinate griglia↔iso, sprite, camera
 public/assets # sprite dipinti, audio
@@ -41,7 +42,7 @@ docs/
 
 ## Conventions
 
-- **Separazione sim/render (vincolante, ADR-0001):** `src/sim` non importa Phaser. Stato = oggetto serializzabile in JSON. Avanza con `tick(state, dt)` a passo fisso. Phaser legge lo stato e disegna.
+- **Separazione sim/render (vincolante, ADR-0001):** `src/sim` non importa Phaser. Stato = oggetto serializzabile in JSON. Avanza con `tick(state)` a passo fisso (`STEP_MS`); la velocità esegue più passi, non passi più lunghi; `advance(state, realMs)` per avanzare di tempo reale. Phaser legge lo stato e disegna.
 - **Hook per agenti/test (obbligatori dal milestone 01):** `window.render_game_to_text()` restituisce lo stato sim in JSON; `window.advanceTime(ms)` avanza la sim di tick fissi in modo deterministico. Sono la base del loop live-iterate e di `scripts/browser-test.mjs`.
 - **Code naming:** camelCase variabili/funzioni, PascalCase classi/tipi, kebab-case file asset.
 - **Termini di dominio in italiano** nei dati di gioco (categorie, ruoli, tipi cliente); codice in inglese.

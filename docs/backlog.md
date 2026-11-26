@@ -70,7 +70,10 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 
 ## Tooling & QA
 
-<vuoto>
+- [x] Deploy su GitHub Pages — workflow `.github/workflows/deploy.yml` che a ogni push su main fa `npm run build-nolog` e pubblica `dist/` su https://monga-hub.github.io/supermercatino/ per testare da qualsiasi dispositivo.
+  - Source: utente 2026-11-26 ("aspettiamo che ci sia qualcosa di vero da provare")
+  - Rough size: S · Rough value: M
+  - Notes: da fare a fine milestone 01, quando c'è griglia/camera da provare su telefono. Pagina pubblica (repo pubblico). → milestone 01-il-negozio-esiste.md (workflow pronto; attivazione Pages e push in attesa di conferma utente)
 
 ## Open questions
 

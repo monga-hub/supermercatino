@@ -44,7 +44,7 @@ These docs are the agreed state of the project. Read them at session start; do *
 
 All of these live in `docs/tech.md` / ADR-0001; this is a reflection, not the source.
 
-- **Sim/render separation (ADR-0001, binding)** — `src/sim/` is pure TypeScript and never imports Phaser. Game state is one JSON-serializable object advanced by `tick(state, dt)` at a fixed step. Phaser scenes only read state, draw it, and turn input into commands. No game logic in scenes.
+- **Sim/render separation (ADR-0001, binding)** — `src/sim/` is pure TypeScript and never imports Phaser. Game state is one JSON-serializable object advanced by `tick(state)` at a fixed step (`STEP_MS`); speed runs more steps, never bigger ones. Phaser scenes only read state, draw it, and turn input into commands. No game logic in scenes.
 - **Single state object** — the sim state is the only source of truth (it is also the save file and the future online payload). No parallel state in scenes.
 - **Balance numbers in `src/sim/config.ts`** — prices, wages, speeds, thresholds. Zero magic numbers in logic.
 - **Customers and staff are small state machines** — a string `state` field on each entity in the sim state.
@@ -58,6 +58,7 @@ All of these live in `docs/tech.md` / ADR-0001; this is a reflection, not the so
 - **Dev server:** `npm run dev` (http://localhost:8080; `npm run dev-nolog` skips the template's anonymous Phaser ping)
 - **Tests:** `npm test` (node --test, pure sim) · `npm run test:browser` (Playwright; dev server must be running)
 - **Build:** `npm run build` (or `npm run build-nolog`) → `dist/`
+- **Deploy:** push to `main` → GitHub Actions builds and publishes to GitHub Pages
 - **Lint / format:** n/a — type-check with `npx tsc --noEmit`
 
 ## Live iterate (after every code change)

@@ -4,7 +4,7 @@
 
 ## Last updated
 
-2026-11-26 by Claude / make-game scaffold
+2026-11-26 by Claude / make-game milestone 01
 
 ## Current phase
 
@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[01 — Il negozio esiste](milestones/01-il-negozio-esiste.md) (planned). Poi 02 Costruisci il negozio, 03 Primo cliente paga.
+[01 — Il negozio esiste](milestones/01-il-negozio-esiste.md) (in-progress). Poi 02 Costruisci il negozio, 03 Primo cliente paga.
 
 ## Last action
 
-Scaffold: template ufficiale `phaserjs/template-vite-ts` variante Minimal (Phaser 4.0.0, Vite 6, TS 5.7). L'installer `npm create @phaserjs/game@latest` si bloccava al download su Node 24 (connessione a phaser.io senza seguire il redirect, CPU 100%); stesso zip scaricato da codeload GitHub e applicato a mano l'overlay "Minimal" del pacchetto installer v1.3.2. Aggiunti Playwright, `scripts/browser-test.mjs` (smoke), script `test`/`test:browser`, `.claude/launch.json`, `AGENTS.md`, `CLAUDE.md`. Smoke test verde: canvas renderizzato, zero errori console. Commit dello scaffold + AGENTS. Poi milestone planning: scritti milestone 01–03 e `docs/backlog.md`; grafica placeholder fino al 03 (gameplan aggiornato).
+Milestone 01 implementato: sim pura (`src/sim/state.ts`, `config.ts`) con orologio in secondi interi, pausa e 1x/2x/3x, cambio giorno a chiusura; conversione iso (`src/render/iso.ts`); scene `Game` (pavimento a scacchi, drag/rotella/pinch) e `Hud` (orologio + pulsanti, tasti spazio/1/2/3); hook `render_game_to_text`/`advanceTime`; `?manual` per test deterministici. Test: `npm test` 5/5, `npm run test:browser` 3/3 su dev e su build di produzione. Preparato `.github/workflows/deploy.yml` per GitHub Pages.
 
 ## Next step
 
-Milestone 01, pipeline development step 3: scrivere i test rossi `tests/sim.test.ts` (stato serializzabile, orologio/velocità, rollover giorno, niente import Phaser) e verificare che `node --test` esegua i `.ts`.
+Playtest dell'utente sulle due AC rimaste (pan/zoom desktop, pan/pinch touch). Se ok: milestone 01 → done, si apre il 02 coi test rossi di `tests/build.test.ts`.
 
 ## Blockers
 
@@ -28,6 +28,7 @@ none
 
 ## Notes for next session
 
-- La scena `src/game/scenes/Game.ts` e `public/assets/{bg,logo}.png` sono del template: da sostituire nel milestone 01.
 - `npm audit` segnala vulnerabilità nelle devDependencies del template (Vite 6.3.x); valutare upgrade in un milestone dedicato, non è bloccante per lo sviluppo locale.
-- `node --test` su file `.ts` si appoggia allo type-stripping nativo di Node 24: verificarlo col primo test.
+- `node --test` gira sui `.ts` con lo type stripping di Node 24 (verificato). Lo script `npm test` è limitato a `tests/**/*.test.ts` perché il pattern di default prendeva anche `scripts/browser-test.mjs`.
+- Nel pannello browser di Claude compare `WebSocket connection to 'ws://localhost:8080/' failed` (ricarica automatica di Vite); Playwright su pagina pulita non lo vede. Non è del gioco.
+- Testi Phaser a risoluzione 1: su schermi retina possono sembrare un po' sfocati; da sistemare con gli sprite/HUD definitivi.
