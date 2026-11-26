@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+in-progress — automated AC green; waiting for user playtest (preview + mouse/tap)
 
 ## Objective
 
@@ -31,12 +31,13 @@ Primo verbo del loop: costruire. Il giocatore disegna stanze sulla griglia trasc
 
 ## Acceptance criteria
 
-- [ ] `buildRoom` crea una stanza valida e scala il costo; rifiuta sovrapposizioni e rettangoli sotto la dimensione minima — test: `tests/build.test.ts::buildRoom validates and charges`
-- [ ] `placeObject` accetta scaffale in sala vendita e cassa in area casse, rifiuta il contrario e le celle occupate — test: `tests/build.test.ts::objects only in the right room`
-- [ ] La porta si piazza solo sul bordo della sala vendita — test: `tests/build.test.ts::door on sales-floor edge`
-- [ ] Con soldi insufficienti ogni comando di costruzione è rifiutato e lo stato non cambia — test: `tests/build.test.ts::no money no build`
-- [ ] `demolish` rimuove e rimborsa la quota da `config.ts` — test: `tests/build.test.ts::demolish refunds`
-- [ ] Nel browser, costruire in pausa aggiorna `render_game_to_text()` (stanze, oggetti, soldi) senza far avanzare l'ora — test: `scripts/browser-test.mjs::build while paused`
+- [x] `buildRoom` crea una stanza valida e scala il costo; rifiuta sovrapposizioni e rettangoli sotto la dimensione minima — test: `tests/build.test.ts::buildRoom validates and charges`
+- [x] `placeObject` accetta scaffale in sala vendita e cassa in area casse, rifiuta il contrario e le celle occupate — test: `tests/build.test.ts::objects only in the right room`
+- [x] La porta si piazza solo sul bordo della sala vendita — test: `tests/build.test.ts::door on sales-floor edge`
+- [x] Con soldi insufficienti ogni comando di costruzione è rifiutato e lo stato non cambia — test: `tests/build.test.ts::no money no build`
+- [x] `demolish` rimuove e rimborsa la quota da `config.ts` — test: `tests/build.test.ts::demolish refunds`
+- [x] Nel browser, costruire in pausa aggiorna `render_game_to_text()` (stanze, oggetti, soldi) senza far avanzare l'ora — test: `scripts/browser-test.mjs::build while paused`
+- [x] Trascinare con il mouse costruisce una stanza, un click piazza un oggetto — test: `scripts/browser-test.mjs::build with mouse`
 - [ ] Anteprima verde/rossa leggibile, piazzamento con mouse e con tap — verified by user playtest
 
 ## Exit condition
@@ -52,4 +53,9 @@ L'utente in pausa disegna una sala vendita e un'area casse, piazza porta, scaffa
 ## Notes
 
 - Costi e dimensioni minime solo in `src/sim/config.ts`; numeri provvisori, si tarano in playtest.
+- I comandi sono dati (`Command` in `src/sim/build.ts`): `check(state, cmd)` valida senza toccare lo stato (usato per l'anteprima), `apply(state, cmd)` valida ed esegue. UI, test e hook `window.dispatch(cmd)` passano tutti da lì. I test usano `apply` invece delle funzioni `buildRoom/placeObject/demolish` previste nello Scope: stessa logica, un solo ingresso.
+- Input: niente logica su `pointerdown`. Un click veloce può consegnare down+up nello stesso frame e Phaser salta il `pointerdown` della scena; si usa `pointerup` con `pointer.downX/downY` e `getDistance()` (tap ≤ 10 px).
+- Comandi touch: con strumento stanza un dito disegna, due dita zoomano e spostano; con oggetti/demolisci un dito sposta la vista e il tap piazza. Desktop: tasto destro/centrale sposta sempre la vista, `Esc` toglie lo strumento.
+- `window.selectTool(tool)`: hook per agenti/test, perché le larghezze dei pulsanti dipendono dai font (in headless cambiano).
+- Il lotto vuoto ora è cemento; il linoleum a scacchi è il pavimento della sala vendita.
 - Categorie merce come stringhe italiane nei dati (convenzione `docs/tech.md`).

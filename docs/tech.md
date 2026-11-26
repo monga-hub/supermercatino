@@ -33,7 +33,7 @@ Nessun'altra dipendenza prevista. Pathfinding A* su griglia scritto in casa (pic
 src/
   game/       # entry Phaser (main.ts) + scenes/ (Game, Hud)
   sim/        # simulazione pura TS, niente Phaser: griglia, stanze, clienti, staff, economia, tick
-  render/     # conversione coordinate griglia↔iso, sprite, camera
+  render/     # iso.ts (griglia↔iso), draw.ts (disegno placeholder: tile, box, colori)
 public/assets # sprite dipinti, audio
 tests/      # node --test (sim)
 scripts/    # browser-test.mjs (Playwright)
@@ -43,7 +43,8 @@ docs/
 ## Conventions
 
 - **Separazione sim/render (vincolante, ADR-0001):** `src/sim` non importa Phaser. Stato = oggetto serializzabile in JSON. Avanza con `tick(state)` a passo fisso (`STEP_MS`); la velocità esegue più passi, non passi più lunghi; `advance(state, realMs)` per avanzare di tempo reale. Phaser legge lo stato e disegna.
-- **Hook per agenti/test (obbligatori dal milestone 01):** `window.render_game_to_text()` restituisce lo stato sim in JSON; `window.advanceTime(ms)` avanza la sim di tick fissi in modo deterministico. Sono la base del loop live-iterate e di `scripts/browser-test.mjs`.
+- **Hook per agenti/test (obbligatori dal milestone 01):** `window.render_game_to_text()` restituisce lo stato sim in JSON; `window.advanceTime(ms)` avanza la sim di tick fissi in modo deterministico. Sono la base del loop live-iterate e di `scripts/browser-test.mjs`. Dal milestone 02 anche `window.dispatch(cmd)` (esegue un comando sim, restituisce `{ ok, cost }` o `{ ok: false, reason }`) e `window.selectTool(tool)` (strumento di costruzione come dalla barra).
+- **Comandi come dati:** ogni azione del giocatore sulla sim è un oggetto `Command` (`src/sim/build.ts`): `check` valida senza modificare, `apply` valida ed esegue. UI, test e agenti usano lo stesso ingresso.
 - **Code naming:** camelCase variabili/funzioni, PascalCase classi/tipi, kebab-case file asset.
 - **Termini di dominio in italiano** nei dati di gioco (categorie, ruoli, tipi cliente); codice in inglese.
 - **Numeri di bilanciamento** (prezzi, stipendi, velocità, soglie) in un unico modulo `src/sim/config.ts`, mai sparsi nella logica: si tarano in playtest.

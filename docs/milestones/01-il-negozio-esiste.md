@@ -2,7 +2,7 @@
 
 ## Status
 
-in-progress — automated AC green; waiting for user playtest (pan/zoom desktop + touch)
+done (2026-11-26) — playtest utente ok su desktop e touch
 
 ## Objective
 
@@ -41,8 +41,8 @@ Mettere in piedi l'ossatura su cui si appoggia tutto il resto: lo stato della si
 - [x] Nel browser `render_game_to_text()` restituisce JSON con griglia, giorno, ora e velocità; `advanceTime(60000)` a 1x sposta l'ora del valore atteso — test: `scripts/browser-test.mjs::hooks expose and advance state`
 - [x] Premere `spazio` mette in pausa (l'ora non cambia dopo `advanceTime`), `3` imposta 3x — test: `scripts/browser-test.mjs::keyboard speed controls`
 - [x] Zero errori in console all'avvio e dopo 10 s di gioco — test: `scripts/browser-test.mjs::no console errors`
-- [ ] Pan con drag e zoom con rotella fluidi, zoom limitato — verified by user playtest
-- [ ] Pan con un dito e pinch-zoom a due dita su telefono/tablet — verified by user playtest
+- [x] Pan con drag e zoom con rotella fluidi, zoom limitato — verified by user playtest
+- [x] Pan con un dito e pinch-zoom a due dita su telefono/tablet — verified by user playtest
 
 ## Exit condition
 

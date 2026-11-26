@@ -51,6 +51,7 @@ All of these live in `docs/tech.md` / ADR-0001; this is a reflection, not the so
 - **Isometric conversion is a formula** in `src/render/` — no iso plugins, no ECS, no UI framework (HUD in Phaser).
 - **`window.render_game_to_text()`** — returns the sim state as JSON for agent inspection without screenshots.
 - **`window.advanceTime(ms)`** — steps the sim deterministically for verification.
+- **Commands are data** — every player action on the sim is a `Command` run through `apply(state, cmd)` (`check` to validate without mutating). `window.dispatch(cmd)` and `window.selectTool(tool)` let agents drive the game.
 - **Naming** — code in English; domain data in Italian (categorie, ruoli, tipi cliente). Assets `<tipo>-<nome>[-<direzione>].png` in `public/assets/`.
 
 ## Stack-specific commands
