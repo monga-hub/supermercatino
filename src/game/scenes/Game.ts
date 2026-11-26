@@ -1,7 +1,7 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { createState, tick, advance, type GameState, type RoomType, type ObjectType, type Category } from '../../sim/state.ts';
 import { apply, check, type Command } from '../../sim/build.ts';
-import { STEP_MS, TAP_ICON_BELOW } from '../../sim/config.ts';
+import { STEP_MS, TAP_ICON_BELOW, BEAR_BONUS_MONEY, BEAR_BONUS_REP } from '../../sim/config.ts';
 import { readyAt } from '../../sim/customers.ts';
 import { gridToIso, cellAt, TILE_H } from '../../render/iso.ts';
 import { drawFloor, drawThings, drawObject, tile, type Put } from '../../render/draw.ts';
@@ -39,6 +39,8 @@ export class Game extends Scene {
     pinched = false; // a pinch happened during this touch: its pointerup must not build
     /** Tap icons over shelves and tills, pooled by key; each carries its command in data 'cmd'. */
     icons = new Map<string, GameObjects.Image>();
+    /** happyBears last seen, to celebrate each new one. */
+    bears = 0;
     // ?manual: sim advances only through window.advanceTime (deterministic browser tests)
     manual = new URLSearchParams(location.search).has('manual');
 
@@ -90,6 +92,9 @@ export class Game extends Scene {
                 this.acc -= STEP_MS;
             }
         }
+        if (this.sim.happyBears > this.bears)
+            this.game.events.emit('toast', `L'orso è contento! +€${BEAR_BONUS_MONEY} e +${BEAR_BONUS_REP} reputazione`);
+        this.bears = this.sim.happyBears;
         this.used = 0;
         drawThings(this.things, this.over, this.sim, this.put);
         for (let i = this.used; i < this.sprites.length; i++) this.sprites[i].setVisible(false);

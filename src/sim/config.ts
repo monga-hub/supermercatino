@@ -48,9 +48,23 @@ export const SHELF_CAPACITY = 10;
 export const PRICES = { Pasta: 4, Latticini: 6, Salumi: 12, Pane: 3, Frutta: 5, Detersivi: 8 } as const;
 
 
-/** Shopping list length range (categories). */
-export const LIST_MIN = 1;
-export const LIST_MAX = 3;
+/**
+ * Customer types (milestone 10): spawn weight, walk speed and patience-drain multipliers,
+ * shopping list length range (categories), price multiplier.
+ */
+export const CUSTOMER_TYPES = {
+    signora: { label: 'Signora', weight: 40, speed: 1, drain: 1, list: [1, 3], pay: 1 },
+    mamma: { label: 'Mamma col bambino', weight: 18, speed: 0.8, drain: 1.2, list: [2, 4], pay: 1 },
+    vecchietta: { label: 'Vecchietta', weight: 18, speed: 0.6, drain: 0.6, list: [1, 2], pay: 1 },
+    giovane: { label: 'Giovane', weight: 15, speed: 1.4, drain: 1.3, list: [1, 2], pay: 1 },
+    ponzone: { label: 'Signor Ponzone', weight: 7, speed: 0.9, drain: 1.5, list: [2, 3], pay: 1.5 },
+    orso: { label: 'Orso', weight: 2, speed: 0.8, drain: 1, list: [3, 5], pay: 1 },
+} as const;
+
+/** The bear leaves happy when its patience is at least BEAR_HAPPY at checkout: big bonus. */
+export const BEAR_HAPPY = 50;
+export const BEAR_BONUS_MONEY = 60;
+export const BEAR_BONUS_REP = 6;
 
 /** Walking speed, cells per second. */
 export const CUSTOMER_SPEED = 2;

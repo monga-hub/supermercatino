@@ -4,7 +4,7 @@
 
 ## Last updated
 
-2026-11-26 by Claude / make-game milestone 07
+2026-11-26 by Claude / make-game milestone 10
 
 ## Current phase
 
@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[09 — Sembra un supermercato](milestones/09-sembra-un-supermercato.md) (implementato, in attesa di playtest). 07 e 07b implementati, in attesa di playtest. Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md).
+[10 — Clienti diversi](milestones/10-clienti-diversi.md) (implementato, in attesa di playtest). 07, 07b, 09 implementati, in attesa di playtest. Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md).
 
 ## Last action
 
-Milestone 09: strumento Ruota (scaffali e casse, due orientamenti), muri dipinti sui bordi in fondo dell'edificio con la porta sul bordo esterno della sua cella (`src/render/walls.ts`, texture `art/sheets/pareti.jpg` inclinate da `tools/kit.py`), icone di tocco dipinte (`art/sheets/icone.jpg`). `npm test` 45/45, browser 10/10.
+Milestone 10: sei tipi di cliente (`CUSTOMER_TYPES` in `src/sim/config.ts`: signora, mamma col bambino, vecchietta, giovane, Signor Ponzone, orso), ognuno col suo foglio Gemini 3×3 in `art/sheets/`. L'orso contento alla cassa dà +€60 e +6 reputazione con un messaggio. `npm test` 51/51, browser 10/10.
 
 ## Next step
 
-Playtest dell'utente (07, 07b, 09) sul telefono, poi 08.
+Playtest dell'utente (07, 07b, 09, 10) sul telefono, poi 08.
 
 ## Blockers
 

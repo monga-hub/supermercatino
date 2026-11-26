@@ -1,5 +1,6 @@
 // Frame names in public/assets/kit.json (built by tools/kit.py from art/sheets/), and which one a character shows.
 import type { Category, Customer, GameState, Staff } from '../sim/state.ts';
+import { CUSTOMER_TYPES } from '../sim/config.ts';
 
 export const SPRITES = {
     cassa: 'cassa',
@@ -10,7 +11,7 @@ export const SPRITES = {
 /** Every character frame personFrame() can return (tests/assets.test.ts checks they exist). */
 const walk = (n: string) => [0, 1, 2].map((i) => `${n}_${i}`);
 export const PEOPLE_FRAMES = [
-    ...walk('cliente_walk'), ...walk('cliente_angry'), 'cliente_idle', 'cliente_pay',
+    ...Object.keys(CUSTOMER_TYPES).flatMap((k) => [...walk(`${k}_walk`), ...walk(`${k}_angry`), `${k}_idle`, `${k}_pay`]),
     ...walk('cassiere_walk'), 'cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1',
     ...walk('magazziniere_walk'), ...walk('magazziniere_carry'),
 ];
@@ -34,9 +35,9 @@ const SCAN_SEC = 54;
 /** Character frame for the sim state. Pure: tests/sprites.test.ts. */
 export function personFrame(s: GameState, p: Customer | Staff): string {
     if (!('role' in p)) {
-        if (p.state === 'queueing') return 'cliente_idle';
-        if (p.state === 'paying' || p.state === 'ready') return 'cliente_pay';
-        return `cliente_${p.state === 'leaving_angry' ? 'angry' : 'walk'}_${step(p)}`;
+        if (p.state === 'queueing') return `${p.kind}_idle`;
+        if (p.state === 'paying' || p.state === 'ready') return `${p.kind}_pay`;
+        return `${p.kind}_${p.state === 'leaving_angry' ? 'angry' : 'walk'}_${step(p)}`;
     }
     if (p.role === 'magazziniere') return `magazziniere_${p.job?.units ? 'carry' : 'walk'}_${step(p)}`;
     if (p.state !== 'at_till') return `cassiere_walk_${step(p)}`;

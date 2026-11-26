@@ -35,3 +35,12 @@ hair, clothes, proportions, scale): <personaggio>. Full body, seen from an isome
   Riga 1 camminata ×3; riga 2 seduta sullo sgabello: mani sulle ginocchia, alza un articolo, batte sui tasti (no bancone).
 - `magazziniere.jpg` 3×2 — stock boy, white cap, green work coat, grey trousers.
   Riga 1 camminata a mani vuote ×3; riga 2 camminata con scatolone ×3.
+
+## Clienti (milestone 10) — 3×3 come `cliente.jpg`, chat nuova per foglio
+
+Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / paga / prende.
+- `mamma.jpg` — giovane mamma (ricci scuri, giubbotto di jeans, gonna rossa) che tiene per mano il figlio biondo (maglietta a righe).
+- `vecchietta.jpg` — vecchietta coi capelli bianchi raccolti, occhiali, cardigan grigio, bastone e cestino.
+- `giovane.jpg` — ragazzo di 20 anni anni '80, giacca a vento turchese, jeans stonewashed, cuffie del walkman al collo.
+- `ponzone.jpg` — Signor Ponzone: signore pomposo e panciuto, baffi arricciati, gessato blu doppiopetto, catena d'oro, naso all'insù; arrabbiato viola in faccia col pugno alzato; paga con una banconota grossa.
+- `orso.jpg` — grande orso bruno simpatico in piedi, sciarpa rossa, cestino di vimini; arrabbiato ringhia coi denti; paga con una moneta d'oro.

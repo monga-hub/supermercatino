@@ -1,5 +1,5 @@
 // Pure simulation: no Phaser. The whole game is one JSON-serializable object.
-import { GRID_W, GRID_H, STEP_MS, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC, SPEEDS, START_MONEY, ROOMS, OBJECTS, CATEGORIES, RNG_SEED, ROLES, TRAITS, REP_START } from './config.ts';
+import { GRID_W, GRID_H, STEP_MS, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC, SPEEDS, START_MONEY, ROOMS, OBJECTS, CATEGORIES, RNG_SEED, ROLES, TRAITS, REP_START, CUSTOMER_TYPES } from './config.ts';
 import { closeDay } from './day.ts';
 import { updateCustomers } from './customers.ts';
 import { updateStaff, refillCandidates } from './staff.ts';
@@ -31,8 +31,10 @@ export type Staff = Candidate & {
 };
 
 export type CustomerState = 'shopping' | 'queueing' | 'paying' | 'ready' | 'leaving' | 'leaving_angry';
+export type CustomerKind = keyof typeof CUSTOMER_TYPES;
 export type Customer = {
     id: number;
+    kind: CustomerKind;
     state: CustomerState;
     /** Position in grid cells (fractional while walking). */
     x: number;
@@ -80,6 +82,8 @@ export type GameState = {
     /** 0–100: drives arrivals. */
     reputation: number;
     servedTotal: number;
+    /** Bears that left happy (big bonus each); the HUD celebrates when it grows. */
+    happyBears: number;
     /** Sales (and tips) and goods ordered today, for the day summary. */
     incomeToday: number;
     goodsToday: number;
@@ -120,6 +124,7 @@ export function createState(): GameState {
         restockQueue: [],
         reputation: REP_START,
         servedTotal: 0,
+        happyBears: 0,
         incomeToday: 0,
         goodsToday: 0,
         redDays: 0,

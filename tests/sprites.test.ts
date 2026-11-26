@@ -13,21 +13,29 @@ test('a walking customer steps through walk frames', () => {
         tick(s);
         seen.add(personFrame(s, c));
     }
-    assert.ok([...seen].every((f) => f.startsWith('cliente_walk_')), [...seen].join());
+    assert.ok([...seen].every((f) => f.startsWith('signora_walk_')), [...seen].join());
     assert.ok(seen.size >= 2, 'frames change while walking');
+});
+
+test('each customer type has its own frames', () => {
+    const s = shop();
+    const c = spawnCustomer(s, ['Pasta'], 'orso')!;
+    assert.match(personFrame(s, c), /^orso_walk_[012]$/);
+    c.state = 'queueing';
+    assert.equal(personFrame(s, c), 'orso_idle');
 });
 
 test('customer poses: queue, pay, angry', () => {
     const s = shop();
     const c = spawnCustomer(s, ['Pasta'])!;
     c.state = 'queueing';
-    assert.equal(personFrame(s, c), 'cliente_idle');
+    assert.equal(personFrame(s, c), 'signora_idle');
     c.state = 'paying';
-    assert.equal(personFrame(s, c), 'cliente_pay');
+    assert.equal(personFrame(s, c), 'signora_pay');
     c.state = 'ready';
-    assert.equal(personFrame(s, c), 'cliente_pay');
+    assert.equal(personFrame(s, c), 'signora_pay');
     c.state = 'leaving_angry';
-    assert.match(personFrame(s, c), /^cliente_angry_[012]$/);
+    assert.match(personFrame(s, c), /^signora_angry_[012]$/);
 });
 
 test('cashier alternates scan poses while a customer pays at her till', () => {

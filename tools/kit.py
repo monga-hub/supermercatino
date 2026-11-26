@@ -16,8 +16,10 @@ WALK = lambda n: [f'{n}_walk_0', f'{n}_walk_1', f'{n}_walk_2']
 SHEETS = [
     ('arredi.jpg', 3, 3, ('w', 1.0), ['scaffale', 'scaffale_Pasta', 'scaffale_Latticini', 'scaffale_Salumi', 'scaffale_Pane',
                                       'scaffale_Frutta', 'scaffale_Detersivi', 'cassa', None]),  # door: see WALLS
-    ('cliente.jpg', 3, 3, ('h', 44), WALK('cliente') + ['cliente_angry_0', 'cliente_angry_1', 'cliente_angry_2',
-                                                        'cliente_idle', 'cliente_pay', 'cliente_pick']),
+    *[(f'{sheet}.jpg', 3, 3, ('h', h), WALK(kind) + [f'{kind}_angry_0', f'{kind}_angry_1', f'{kind}_angry_2',
+                                                    f'{kind}_idle', f'{kind}_pay', f'{kind}_pick'])
+      for sheet, kind, h in [('cliente', 'signora', 44), ('mamma', 'mamma', 44), ('vecchietta', 'vecchietta', 38),
+                             ('giovane', 'giovane', 46), ('ponzone', 'ponzone', 46), ('orso', 'orso', 58)]],
     ('cassiere.jpg', 3, 2, ('h', 46), WALK('cassiere') + ['cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1']),
     ('icone.jpg', 3, 2, ('w', 0.66), ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_felice', 'icona_arrabbiato', 'icona_cestino']),
     ('magazziniere.jpg', 3, 2, ('h', 46), WALK('magazziniere') + ['magazziniere_carry_0', 'magazziniere_carry_1', 'magazziniere_carry_2']),
