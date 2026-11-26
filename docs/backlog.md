@@ -33,15 +33,15 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: gameplan v1
   - Rough size: S · Rough value: L
   - Notes: → milestone 06-fine-giornata-e-obiettivi.md
-- [ ] Tipi cliente — Nonna con la lista, Studente fuori sede, Mamma di fretta, Furbetto (salta fila/taccheggia).
+- [x] Tipi cliente — Nonna con la lista, Studente fuori sede, Mamma di fretta, Furbetto (salta fila/taccheggia).
   - Source: gameplan v1
   - Rough size: M · Rough value: L
   - Notes: il Furbetto richiede staff vicino alle casse. In parte → milestone 10-clienti-diversi.md (mamma, vecchietta, giovane, Ponzone, orso); Furbetto → milestone 15-il-furbetto.md.
 - [ ] Stanze e oggetti restanti — banco salumi, forno, spogliatoio staff; frigo, bancone, affettatrice, forno, cestino.
   - Source: gameplan v1
   - Rough size: M · Rough value: M
-  - Notes: banco salumi + bancone + banconiere → milestone 13-banco-salumi.md; cestino → 12; restano forno, spogliatoio, frigo.
-- [ ] Sporco e imprevisti — yogurt rovesciato, carrello incastrato, ispezione sanitaria.
+  - Notes: banco salumi + bancone + banconiere → milestone 13-banco-salumi.md; cestino → 12; forno e frigo → milestone 17-forno-e-frigo.md; spogliatoio → milestone 18-spogliatoio-e-stanchezza.md.
+- [x] Sporco e imprevisti — yogurt rovesciato, carrello incastrato, ispezione sanitaria.
   - Source: gameplan v1
   - Rough size: M · Rough value: M
   - Notes: dipende da addetto pulizie. Sporco + addetto pulizie → milestone 12-sporco-e-pulizie.md; carrello incastrato e ispezione sanitaria → milestone 14-imprevisti.md.
@@ -49,14 +49,17 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: gameplan v1
   - Rough size: M · Rough value: L
   - Notes: → milestone 06-fine-giornata-e-obiettivi.md
-- [ ] Forno e frigo — stanza forno col fornaio (il pane come i salumi al banco) e frigo per i latticini.
+- [x] Forno e frigo — stanza forno col fornaio (il pane come i salumi al banco) e frigo per i latticini.
   - Source: milestone planning 2026-11-26 (rimandato dopo 14–16)
   - Rough size: M · Rough value: M
-- [ ] Guardia / vigilante — ruolo staff vicino alle casse che ferma il furbetto da solo (automazione del tocco del 15).
+  - Notes: → milestone 17-forno-e-frigo.md
+- [x] Guardia / vigilante — ruolo staff vicino alle casse che ferma il furbetto da solo (automazione del tocco del 15).
   - Source: milestone planning 2026-11-26
   - Rough size: S · Rough value: S
-- [ ] Capo reparto / automazione completa — dipendente o potenziamento che rende inutili i tocchi su scaffali e casse (curva "tocco tutto" → "automatizzo", ADR-0002).
+  - Notes: → milestone 19-guardia-e-capo-reparto.md
+- [x] Capo reparto / automazione completa — dipendente o potenziamento che rende inutili i tocchi su scaffali e casse (curva "tocco tutto" → "automatizzo", ADR-0002).
   - Source: user 2026-11-26
+  - Notes: → milestone 19-guardia-e-capo-reparto.md
 
 - [x] Salvataggio locale — stato sim serializzato in localStorage. → milestone 11-salvataggio-e-menu.md
   - Source: gameplan v1
