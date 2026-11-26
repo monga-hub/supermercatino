@@ -108,6 +108,8 @@ export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazzinie
 
 /** A seated cashier is drawn half a cell behind the till, so the till doesn't hide them. */
 const SEAT_OFFSET = 0.45;
+/** Seated cashier sprite: screen px from the till's cell centre, behind the register, facing the customers. */
+const SEAT_PX = { x: 17, y: -6 };
 
 export function drawStaff(g: G, st: Staff, put: Put = noPut, depth = 0) {
     const o = st.state === 'at_till' ? SEAT_OFFSET : 0;
@@ -115,7 +117,9 @@ export function drawStaff(g: G, st: Staff, put: Put = noPut, depth = 0) {
     const frame = st.role === 'cassiere'
         ? (st.state === 'at_till' ? SPRITES.cassiereSeduto : SPRITES.cassiere)
         : (st.job?.units ? SPRITES.magazziniereScatolone : SPRITES.magazziniere);
-    if (put(frame, f.x, f.y + 2, depth, goesLeft(st, st.path[0]))) return;
+    const seated = st.state === 'at_till';
+    const at = seated ? feet(st.x, st.y) : f;
+    if (seated ? put(frame, at.x + SEAT_PX.x, at.y + SEAT_PX.y, depth, true) : put(frame, f.x, f.y + 2, depth, goesLeft(st, st.path[0]))) return;
     box(g, st.x - o, st.y - o, 24, ROLE_COLOR[st.role], 0.38);
     box(g, st.x - o, st.y - o, 28, 0xf4efe6, 0.24); // berretto bianco
     if (st.job?.units) box(g, st.x + 0.15, st.y + 0.15, 16, CRATE, 0.3); // scatolone in mano

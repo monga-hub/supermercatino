@@ -73,6 +73,16 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: gameplan v1
   - Rough size: M · Rough value: M
 
+- [ ] Animazioni dei personaggi — un foglio Gemini per personaggio: camminata in 3 passi, azione principale (cliente prende dallo scaffale / cassiera batte lo scontrino / magazziniere scarica), arrabbiatura; diverso per ogni personaggio. Oggi sembrano "manichini che si muovono".
+  - Source: utente 2026-11-26 (playtest 07)
+  - Rough size: M · Rough value: L
+  - Notes: rischio: Gemini non tiene lo stesso personaggio identico tra i frame; provare a dare il foglio attuale come riferimento. kit.py va esteso a griglie N×M per personaggio + animazioni Phaser.
+
+- [ ] Pareti sui due lati posteriori — muri sui bordi in alto a sinistra e in alto a destra delle stanze (quelli rivolti verso il giocatore), stile Theme Hospital.
+  - Source: utente 2026-11-26 (playtest 07)
+  - Rough size: M · Rough value: M
+  - Notes: sprite muro (2 orientamenti) da Gemini; i muri non devono coprire le stanze davanti; porta incassata nel muro.
+
 ## Tech & refactors
 
 - [x] Clienti e demolizioni — se demolisci il pavimento o lo scaffale verso cui un cliente sta camminando, il cliente finisce il percorso vecchio.
