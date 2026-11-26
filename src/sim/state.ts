@@ -1,5 +1,6 @@
 // Pure simulation: no Phaser. The whole game is one JSON-serializable object.
-import { GRID_W, GRID_H, STEP_MS, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC, SPEEDS, START_MONEY, ROOMS, OBJECTS, CATEGORIES, RNG_SEED, ROLES, TRAITS } from './config.ts';
+import { GRID_W, GRID_H, STEP_MS, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC, SPEEDS, START_MONEY, ROOMS, OBJECTS, CATEGORIES, RNG_SEED, ROLES, TRAITS, REP_START } from './config.ts';
+import { closeDay } from './day.ts';
 import { updateCustomers } from './customers.ts';
 import { updateStaff, refillCandidates } from './staff.ts';
 import type { Cell } from './path.ts';
@@ -75,6 +76,24 @@ export type GameState = {
     warehouse: Record<Category, number>;
     /** Shelf ids tapped for restocking, served first (FIFO). */
     restockQueue: number[];
+    /** 0–100: drives arrivals. */
+    reputation: number;
+    servedTotal: number;
+    /** Sales (and tips) and goods ordered today, for the day summary. */
+    incomeToday: number;
+    goodsToday: number;
+    /** Closings in a row with money below BANKRUPT_BELOW / reputation below REP_MIN. */
+    redDays: number;
+    lowRepDays: number;
+    /** Shown at closing; the game waits on it until the 'continue' command. */
+    summary: DaySummary | null;
+    /** Level over. */
+    outcome: { win: boolean; reason: string } | null;
+};
+
+export type DaySummary = {
+    day: number; income: number; goods: number; wages: number; rent: number;
+    money: number; served: number; lost: number; reputation: number;
 };
 
 export function createState(): GameState {
@@ -98,6 +117,14 @@ export function createState(): GameState {
         staff: [],
         warehouse: Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Category, number>,
         restockQueue: [],
+        reputation: REP_START,
+        servedTotal: 0,
+        incomeToday: 0,
+        goodsToday: 0,
+        redDays: 0,
+        lowRepDays: 0,
+        summary: null,
+        outcome: null,
     };
     refillCandidates(s);
     return s;
@@ -105,14 +132,9 @@ export function createState(): GameState {
 
 /** One fixed step of game time. Speed is applied by running more steps, not bigger ones. */
 export function tick(s: GameState): void {
+    if (s.summary || s.outcome) return; // waiting for the player at closing
     s.clockSec += (GAME_MIN_PER_SEC * 60 * STEP_MS) / 1000;
-    if (s.clockSec >= DAY_CLOSE_MIN * 60) {
-        s.day += 1;
-        s.clockSec = DAY_OPEN_MIN * 60;
-        s.servedToday = 0;
-        s.lostToday = 0;
-        s.money -= s.staff.reduce((sum, st) => sum + st.wage, 0); // wages
-    }
+    if (s.clockSec >= DAY_CLOSE_MIN * 60) return closeDay(s);
     updateStaff(s);
     updateCustomers(s);
 }
@@ -126,9 +148,9 @@ export function advance(s: GameState, realMs: number): void {
 
 export function setSpeed(s: GameState, speed: Speed): void {
     s.speed = speed;
-    s.paused = false;
+    if (!s.summary && !s.outcome) s.paused = false;
 }
 
 export function togglePause(s: GameState): void {
-    s.paused = !s.paused;
+    if (!s.summary && !s.outcome) s.paused = !s.paused;
 }

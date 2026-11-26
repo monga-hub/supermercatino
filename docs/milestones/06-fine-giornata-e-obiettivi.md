@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+in-progress — automated AC green; waiting for user playtest (a full level on phone)
 
 ## Objective
 
@@ -29,11 +29,11 @@ Trasformare la sandbox in un livello vincibile e perdibile da 15–20 minuti. La
 
 ## Acceptance criteria
 
-- [ ] Gli arrivi si fermano prima della chiusura e alla chiusura il negozio si svuota — test: `tests/day.test.ts::shop closes at closing time`
-- [ ] A fine giornata affitto e stipendi sono scalati e il riepilogo riporta i numeri giusti — test: `tests/day.test.ts::day summary adds up`
-- [ ] Reputazione sale/scende con serviti/persi e cambia la frequenza degli arrivi — test: `tests/day.test.ts::reputation drives arrivals`
-- [ ] Vittoria quando le soglie sono raggiunte; sconfitta per bancarotta o reputazione minima — test: `tests/day.test.ts::win and lose conditions`
-- [ ] Nel browser, il riepilogo appare a fine giornata e *Continua* riparte — test: `scripts/browser-test.mjs::day summary and continue`
+- [x] Gli arrivi si fermano prima della chiusura e alla chiusura il negozio si svuota — test: `tests/day.test.ts::shop closes at closing time`
+- [x] A fine giornata affitto e stipendi sono scalati e il riepilogo riporta i numeri giusti — test: `tests/day.test.ts::day summary adds up`
+- [x] Reputazione sale/scende con serviti/persi e cambia la frequenza degli arrivi — test: `tests/day.test.ts::reputation drives arrivals`
+- [x] Vittoria quando le soglie sono raggiunte; sconfitta per bancarotta o reputazione minima — test: `tests/day.test.ts::win and lose conditions`
+- [x] Nel browser, il riepilogo appare a fine giornata e *Continua* riparte — test: `scripts/browser-test.mjs::day summary and continue`
 - [ ] Un livello si gioca in 15–20 minuti ed è vincibile con un negozio ragionevole — verified by user playtest
 
 ## Exit condition
@@ -50,3 +50,7 @@ L'utente gioca il livello 1 dall'inizio: a ogni chiusura vede il riepilogo della
 
 - Promuove dal backlog: "Economia giornaliera", "Reputazione → afflusso", "Obiettivi livello, vittoria e sconfitta".
 - Numeri (affitto, soglie, durata) provvisori: si tarano col playtest dell'utente.
+- Implementato (`config.ts`): livello 5 giornate, soldi iniziali €5.000, affitto €150, obiettivi cassa ≥ €4.000 + reputazione ≥ 70% + 300→350 serviti totali; prezzi di vendita raddoppiati (margine sulla merce). Arrivi ogni 16 min a reputazione 0% → 6 min a 100%; stop arrivi nell'ultima ora. Reputazione +1 servito, −4 perso.
+- Simulazione headless (`output/balance.ts`, non versionato): 2 casse + tocchi vince al 4° giorno; 1 cassa senza tocchi perde; 1 cassa con tocchi o 2 casse senza tocchi arrivano vicino ma perdono. Obiettivo cassa sceso da €6.000 a €4.000 perché costruire costa ~€3.000.
+- Cambio rispetto allo scope: la sconfitta per reputazione richiede 2 chiusure di fila sotto il 15% (come la bancarotta), altrimenti un negozio minimo perdeva già al primo giorno. Il riepilogo avvisa dopo la prima chiusura brutta.
+- Test extra: `scripts/browser-test.mjs::restart after the level ends`.

@@ -1,6 +1,6 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { setSpeed, togglePause, type GameState, type Speed } from '../../sim/state.ts';
-import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST } from '../../sim/config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN } from '../../sim/config.ts';
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
 import type { Tool, Game } from './Game.ts';
@@ -26,6 +26,9 @@ export class Hud extends Scene {
     toolBtns: Btn[] = [];
     catBtns: Btn[] = [];
     panel: GameObjects.Container | null = null;
+    /** Day summary / level outcome card, rebuilt when its content changes. */
+    card: GameObjects.Container | null = null;
+    cardKey = '';
     panelKind: 'staff' | 'merce' = 'staff';
     panelKey = '';
     panelScroll = 0;
@@ -63,7 +66,7 @@ export class Hud extends Scene {
     create() {
         this.clock = this.add.text(12, 12, '', TEXT);
         this.money = this.add.text(0, 12, '', TEXT).setOrigin(1, 0);
-        this.served = this.add.text(0, 44, '', { ...TEXT, fontSize: 16, strokeThickness: 4 }).setOrigin(1, 0);
+        this.served = this.add.text(0, 44, '', { ...TEXT, fontSize: 14, strokeThickness: 4, align: 'right' }).setOrigin(1, 0);
         this.toast = this.add.text(0, 100, '', { ...TEXT, fontSize: 18, backgroundColor: '#000000aa', padding: { x: 10, y: 6 } }).setOrigin(0.5, 0).setVisible(false).setDepth(10);
 
         // speed: index 0 = pause, 1..3 = speed
@@ -107,6 +110,7 @@ export class Hud extends Scene {
         this.game.events.on('toast', (msg: string) => this.showToast(msg));
         this.scale.on('resize', () => {
             this.layout();
+            this.cardKey = ''; // rebuild the card for the new size
             if (this.panel) this.openPanel();
         });
         this.layout();
@@ -265,13 +269,70 @@ export class Hud extends Scene {
         else setSpeed(this.sim, i as Speed);
     }
 
+    /** Closing summary with Continua, or the level outcome with Ricomincia. Blocks taps on the shop below. */
+    showCard() {
+        const s = this.sim;
+        const key = JSON.stringify([s.summary, s.outcome]);
+        if (key === this.cardKey) return;
+        this.cardKey = key;
+        this.card?.destroy();
+        this.card = null;
+        const sum = s.summary;
+        if (!sum) return;
+        this.closePanel();
+        const { width, height } = this.scale;
+        const w = Math.min(height < 500 ? 560 : 420, width - 24);
+        const c = (this.card = this.add.container(0, 0).setDepth(20));
+        const shade = this.add.rectangle(0, 0, width, height, 0x000000, 0.5).setOrigin(0).setInteractive();
+        c.add(shade);
+        const eur = (n: number) => `€${n.toLocaleString('it-IT')}`;
+        const g = LEVEL.goals;
+        const mark = (ok: boolean) => (ok ? '✓' : '✗');
+        const o = s.outcome;
+        const title = o ? (o.win ? 'Hai vinto!' : 'Hai perso') : `Fine giornata ${sum.day} di ${LEVEL.days}`;
+        const compact = height < 500; // phone held sideways
+        const body = [
+            `Incasso: ${eur(sum.income)}`,
+            ...(compact
+                ? [`Merce: −${eur(sum.goods)} · Stipendi: −${eur(sum.wages)} · Affitto: −${eur(sum.rent)}`]
+                : [`Merce: −${eur(sum.goods)}`, `Stipendi: −${eur(sum.wages)}`, `Affitto: −${eur(sum.rent)}`]),
+            `Serviti ${sum.served} · Persi ${sum.lost}`,
+            '',
+            'Obiettivi:',
+            `${mark(sum.money >= g.money)} Cassa ${eur(sum.money)} / ${eur(g.money)}`,
+            `${mark(sum.reputation >= g.reputation)} Reputazione ${sum.reputation}% / ${g.reputation}%`,
+            `${mark(s.servedTotal >= g.served)} Serviti ${s.servedTotal} / ${g.served}`,
+        ];
+        if (o) body.push('', o.reason);
+        else if (sum.reputation < REP_MIN) body.push('', `Attenzione: reputazione sotto il ${REP_MIN}%. Un'altra chiusura così e perdi.`);
+        else if (sum.money < 0) body.push('', 'Attenzione: cassa in rosso. Un\'altra chiusura così e perdi.');
+        if (compact) for (let i = body.length - 1; i >= 0; i--) if (body[i] === '') body.splice(i, 1);
+        const x0 = (width - w) / 2;
+        const titleT = this.add.text(x0 + 16, 0, title, { ...TEXT, fontSize: 22, color: o && !o.win ? '#ff8a7a' : '#e0a030', strokeThickness: 0 });
+        const bodyT = this.add.text(x0 + 16, 0, body.join('\n'), { ...TEXT, fontSize: compact ? 14 : 15, strokeThickness: 0, lineSpacing: compact ? 1 : 4, wordWrap: { width: w - 32 } });
+        const btn = this.add
+            .text(0, 0, o ? 'Ricomincia' : 'Continua', { ...TEXT, fontSize: 19, strokeThickness: 0, backgroundColor: BTN_ACTIVE_BG, color: DARK, padding: { x: 18, y: 9 } })
+            .setOrigin(0.5, 0)
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => (o ? (this.scene.get('Game') as Game).restart() : this.run({ type: 'continue' })));
+        const h = 16 + titleT.height + 10 + bodyT.height + 16 + btn.height + 16;
+        const y0 = Math.max(8, (height - h) / 2);
+        const bg = this.add.rectangle(x0, y0, w, h, 0x2b1d16, 0.97).setOrigin(0).setStrokeStyle(3, 0xe0a030);
+        titleT.setY(y0 + 16);
+        bodyT.setY(titleT.y + titleT.height + 10);
+        btn.setPosition(width / 2, bodyT.y + bodyT.height + 16);
+        c.add([bg, titleT, bodyT, btn]);
+    }
+
     update() {
         const s = this.sim;
         const hh = String(Math.floor(s.clockSec / 3600)).padStart(2, '0');
         const mm = String(Math.floor((s.clockSec % 3600) / 60)).padStart(2, '0');
-        this.clock.setText(`Giorno ${s.day}   ${hh}:${mm}`);
+        this.clock.setText(`Giorno ${s.day}/${LEVEL.days}   ${hh}:${mm}`);
         this.money.setText(`€ ${s.money.toLocaleString('it-IT')}`);
-        const servedText = `Serviti ${s.servedToday} · Persi ${s.lostToday}`;
+        const g = LEVEL.goals;
+        const servedText = `Serviti ${s.servedToday} · Persi ${s.lostToday} · Rep ${s.reputation}%\n`
+            + `Obiettivi: €${g.money.toLocaleString('it-IT')} · rep ${g.reputation}% · serviti ${s.servedTotal}/${g.served}`;
         if (this.served.text !== servedText) {
             this.served.setText(servedText);
             this.layout();
@@ -282,6 +343,7 @@ export class Hud extends Scene {
             b.t.setColor(on ? DARK : (b.fg ?? LIGHT));
         }
         if (this.panel && this.panelState() !== this.panelKey) this.openPanel();
+        this.showCard();
         const showCats = this.tool?.kind === 'object' && this.tool.object === 'scaffale';
         for (const b of this.catBtns) b.t.setVisible(showCats);
     }

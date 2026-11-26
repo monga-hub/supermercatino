@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { createState, advance, setSpeed, togglePause } from '../src/sim/state.ts';
+import { apply } from '../src/sim/build.ts';
 import { DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC } from '../src/sim/config.ts';
 
 test('state is JSON-serializable', () => {
@@ -41,6 +42,8 @@ test('day rolls over at closing time', () => {
     assert.equal(s.clockSec, DAY_OPEN_MIN * 60);
     const dayRealMs = ((DAY_CLOSE_MIN - DAY_OPEN_MIN) / GAME_MIN_PER_SEC) * 1000;
     advance(s, dayRealMs);
+    assert.ok(s.summary, 'closing summary'); // milestone 06: the day waits for the player
+    assert.equal(apply(s, { type: 'continue' }).ok, true);
     assert.equal(s.day, 2);
     assert.equal(s.clockSec, DAY_OPEN_MIN * 60);
 });

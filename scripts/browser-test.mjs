@@ -196,6 +196,45 @@ await check('tap icon collects', async () => {
     }
 });
 
+await check('day summary and continue', async () => {
+    const p6 = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    await p6.goto(new URL('?manual', base).href);
+    await p6.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    const st = async () => JSON.parse(await p6.evaluate(() => window.render_game_to_text()));
+    await p6.evaluate(() => window.advanceTime(240000)); // a whole day at 1x
+    const s0 = await st();
+    expect(s0.summary && s0.paused && s0.day === 1, `no summary at closing: ${JSON.stringify({ day: s0.day, summary: s0.summary })}`);
+    // the card's layout depends on fonts: tap down the centre line until "Continua" answers
+    for (let y = 590; y > 100 && (await st()).summary; y -= 8) {
+        await p6.mouse.click(400, y);
+        await p6.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    }
+    const s1 = await st();
+    expect(!s1.summary && s1.day === 2 && !s1.paused, `continue failed: ${JSON.stringify({ day: s1.day, paused: s1.paused })}`);
+    expect(s1.money === s0.money, 'tapping the card changed the shop');
+    await p6.close();
+});
+
+await check('restart after the level ends', async () => {
+    const p7 = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    await p7.goto(new URL('?manual', base).href);
+    await p7.waitForFunction(() => typeof window.render_game_to_text === 'function');
+    const st = async () => JSON.parse(await p7.evaluate(() => window.render_game_to_text()));
+    await p7.evaluate(() => window.dispatch({ type: 'buildRoom', room: 'sala_vendita', x: 0, y: 0, w: 3, h: 3 }));
+    for (let d = 0; d < 10 && !(await st()).outcome; d++) {
+        await p7.evaluate(() => window.dispatch({ type: 'continue' }));
+        await p7.evaluate(() => window.advanceTime(240000));
+    }
+    expect((await st()).outcome?.win === false, 'empty shop should lose when time is up');
+    for (let y = 590; y > 100 && (await st()).outcome; y -= 8) {
+        await p7.mouse.click(400, y);
+        await p7.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    }
+    const s1 = await st();
+    expect(!s1.outcome && s1.day === 1 && s1.rooms.length === 0, `not restarted: ${JSON.stringify({ day: s1.day, rooms: s1.rooms.length })}`);
+    await p7.close();
+});
+
 await page.waitForTimeout(10000); // let the game run a while
 await check('no console errors', async () => {
     expect(errors.length === 0, errors.join(' | '));

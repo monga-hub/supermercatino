@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createState, advance, type GameState } from '../src/sim/state.ts';
 import { apply } from '../src/sim/build.ts';
 import { spawnCustomer } from '../src/sim/customers.ts';
-import { TRAITS, ROLES, STAFF_NAMES, CANDIDATES_PER_ROLE, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC } from '../src/sim/config.ts';
+import { DAILY_RENT, TRAITS, ROLES, STAFF_NAMES, CANDIDATES_PER_ROLE, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC } from '../src/sim/config.ts';
 import { shop, hireCashier, noArrivals, untilTicks, runOut } from './helpers.ts';
 
 test('candidates are seeded and valid', () => {
@@ -81,6 +81,6 @@ test('wages paid at day end', () => {
     const st = hireCashier(s);
     const m0 = s.money;
     advance(s, ((DAY_CLOSE_MIN - DAY_OPEN_MIN) / GAME_MIN_PER_SEC) * 1000);
-    assert.equal(s.day, 2);
-    assert.equal(s.money, m0 - st.wage);
+    assert.ok(s.summary, 'day closed');
+    assert.equal(s.money, m0 - st.wage - DAILY_RENT);
 });

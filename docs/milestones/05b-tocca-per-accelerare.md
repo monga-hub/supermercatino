@@ -2,7 +2,7 @@
 
 ## Status
 
-in-progress — automated AC green; waiting for user playtest (icons and taps on phone)
+done — playtest utente ok da telefono (2026-11-26)
 
 ## Objective
 
@@ -34,7 +34,7 @@ Rendere il gioco attivo sul telefono senza perdere il gestionale (ADR-0002). Il 
 - [x] `restock` rifiuta scaffale pieno, già in coda, senza magazziniere, senza merce — test: `tests/taps.test.ts::restock validation`
 - [x] Toccare 💰 incassa subito con mancia; senza tocco incasso automatico dopo `AUTO_COLLECT_SEC` senza mancia — test: `tests/taps.test.ts::collect with tip` e `::auto collect without tip`
 - [x] Nel browser, toccando l'icona 💰 sulla cassa i soldi salgono — test: `scripts/browser-test.mjs::tap icon collects`
-- [ ] Icone leggibili e facili da toccare su telefono — verified by user playtest
+- [x] Icone leggibili e facili da toccare su telefono — verified by user playtest
 
 ## Exit condition
 

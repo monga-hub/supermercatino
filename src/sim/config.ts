@@ -18,7 +18,7 @@ export const GAME_MIN_PER_SEC = 3;
 export const SPEEDS = [1, 2, 3] as const;
 
 /** Money in the till at level start (€). */
-export const START_MONEY = 10_000;
+export const START_MONEY = 5_000;
 
 /** Share of the build cost given back on demolition. */
 export const DEMOLISH_REFUND = 0.5;
@@ -45,10 +45,8 @@ export const OBJECTS = {
 export const SHELF_CAPACITY = 10;
 
 /** Sale price per unit (€). */
-export const PRICES = { Pasta: 2, Latticini: 3, Salumi: 6, Pane: 2, Frutta: 3, Detersivi: 5 } as const;
+export const PRICES = { Pasta: 4, Latticini: 6, Salumi: 12, Pane: 3, Frutta: 5, Detersivi: 8 } as const;
 
-/** A new customer every N game minutes (only with a door and a reachable till). */
-export const SPAWN_EVERY_MIN = 10;
 
 /** Shopping list length range (categories). */
 export const LIST_MIN = 1;
@@ -99,8 +97,8 @@ export const STAFF_SPEED = 2.5;
 /** Units in one ordered crate, delivered straight to the warehouse. */
 export const ORDER_UNITS = 20;
 
-/** Purchase cost per unit (€): roughly half the sale price. */
-export const UNIT_COST = { Pasta: 1, Latticini: 2, Salumi: 3, Pane: 1, Frutta: 2, Detersivi: 3 } as const;
+/** Purchase cost per unit (€): about a third of the sale price. */
+export const UNIT_COST = { Pasta: 1, Latticini: 2, Salumi: 4, Pane: 1, Frutta: 2, Detersivi: 3 } as const;
 
 // --- Taps (milestone 05b, ADR-0002): tapping speeds things up, automation is slower.
 
@@ -115,3 +113,29 @@ export const AUTO_COLLECT_SEC = 3;
 
 /** Tip (€) for collecting with a tap. */
 export const TIP = 1;
+
+// --- Day and level (milestone 06)
+
+/** A new customer every N game minutes, from reputation 0% to 100% (only with a door and a reachable till). */
+export const SPAWN_EVERY_MIN_AT_0 = 16;
+export const SPAWN_EVERY_MIN_AT_100 = 6;
+
+/** No new customers in the last N game minutes before closing. */
+export const LAST_ARRIVAL_MIN = 60;
+
+/** Rent paid at every closing (€). */
+export const DAILY_RENT = 150;
+
+/** Reputation (0–100%): start value, gain per served customer, loss per lost one.
+ *  Game over below REP_MIN at BAD_DAYS closings in a row (same count as bankruptcy). */
+export const REP_START = 50;
+export const REP_SERVED = 1;
+export const REP_LOST = 4;
+export const REP_MIN = 15;
+
+/** Bankruptcy: money below BANKRUPT_BELOW at BAD_DAYS closings in a row. */
+export const BANKRUPT_BELOW = 0;
+export const BAD_DAYS = 2;
+
+/** Level 1: days available and goals to reach at a closing (money, reputation %, customers served in total). */
+export const LEVEL = { days: 5, goals: { money: 4000, reputation: 70, served: 350 } } as const;

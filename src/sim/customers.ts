@@ -1,12 +1,14 @@
 // Customers: a small state machine per customer (shopping -> queueing -> paying -> leaving,
 // or leaving_angry when patience runs out). Pure, deterministic (seeded RNG in state).
 import {
-    STEP_MS, GAME_MIN_PER_SEC, CATEGORIES, PRICES, SPAWN_EVERY_MIN, LIST_MIN, LIST_MAX, CUSTOMER_SPEED,
+    STEP_MS, GAME_MIN_PER_SEC, CATEGORIES, PRICES, LIST_MIN, LIST_MAX, CUSTOMER_SPEED,
     PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS, AUTO_COLLECT_SEC,
+    DAY_CLOSE_MIN, LAST_ARRIVAL_MIN, REP_SERVED, REP_LOST,
 } from './config.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
 import { cashierAt } from './staff.ts';
+import { spawnEveryMin } from './day.ts';
 import type { GameState, Customer, Category, ShopObject } from './state.ts';
 
 const STEP_S = STEP_MS / 1000;
@@ -59,7 +61,10 @@ export function spawnCustomer(s: GameState, list?: Category[]): Customer | null 
 
 function leave(s: GameState, c: Customer, w: Walkable, angry: boolean) {
     c.state = angry ? 'leaving_angry' : 'leaving';
-    if (angry) s.lostToday++;
+    if (angry) {
+        s.lostToday++;
+        s.reputation = Math.max(0, s.reputation - REP_LOST);
+    }
     const d = door(s);
     const path = d && findPath(w, c, d);
     c.goal = { kind: 'door' };
@@ -132,7 +137,11 @@ export const readyAt = (s: GameState, tillId: number) =>
 
 /** Take the money (plus a tip when collected with a tap) and let the customer go. */
 export function checkout(s: GameState, c: Customer, tip: number, w = walkableFor(s)) {
-    s.money += c.basket.reduce((sum, cat) => sum + PRICES[cat], 0) + tip;
+    const paid = c.basket.reduce((sum, cat) => sum + PRICES[cat], 0) + tip;
+    s.money += paid;
+    s.incomeToday += paid;
+    s.servedTotal++;
+    s.reputation = Math.min(100, s.reputation + REP_SERVED);
     const till = s.objects.find((o) => c.goal?.kind === 'till' && o.id === c.goal.id);
     const cashier = till && cashierAt(s, till);
     if (cashier) c.patience = Math.min(PATIENCE_START, c.patience + TRAITS[cashier.trait].patienceBonus);
@@ -142,9 +151,10 @@ export function checkout(s: GameState, c: Customer, tip: number, w = walkableFor
 
 export function updateCustomers(s: GameState) {
     s.spawnAcc += GAME_SEC_PER_STEP;
-    if (s.spawnAcc >= SPAWN_EVERY_MIN * 60) {
-        s.spawnAcc -= SPAWN_EVERY_MIN * 60;
-        spawnCustomer(s);
+    const every = spawnEveryMin(s.reputation) * 60;
+    if (s.spawnAcc >= every) {
+        s.spawnAcc -= every;
+        if (s.clockSec < (DAY_CLOSE_MIN - LAST_ARRIVAL_MIN) * 60) spawnCustomer(s);
     }
     if (!s.customers.length) return;
 

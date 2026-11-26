@@ -2,7 +2,7 @@
 
 ## Status
 
-in-progress — automated AC green; waiting for user playtest (Merce panel and stocker on phone)
+done — playtest utente ok da telefono (2026-11-26)
 
 ## Objective
 
@@ -34,7 +34,7 @@ Terzo verbo del loop: "Rifornisci". Oggi uno scaffale vuoto resta vuoto per semp
 - [x] Il magazziniere rifornisce uno scaffale sotto soglia fino alla capienza, scalando il magazzino — test: `tests/restock.test.ts::stocker refills low shelf`
 - [x] Senza merce in magazzino il magazziniere non parte; senza magazziniere nessun rifornimento — test: `tests/restock.test.ts::no stock or no stocker no refill`
 - [x] Nel browser, con magazziniere e merce ordinata, dopo mezza giornata gli scaffali non sono vuoti — test: `scripts/browser-test.mjs::shelves get restocked`
-- [ ] Pannello Merce chiaro su telefono, trasporto della merce visibile — verified by user playtest
+- [x] Pannello Merce chiaro su telefono, trasporto della merce visibile — verified by user playtest
 
 ## Exit condition
 

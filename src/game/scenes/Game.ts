@@ -114,7 +114,17 @@ export class Game extends Scene {
         return null;
     }
 
-    run(cmd: Command) {
+    /** New level from scratch (after a win or a loss). */
+    restart() {
+        this.sim = createState();
+        this.registry.set('sim', this.sim);
+        this.registry.set('tool', null);
+        for (const t of this.icons.values()) t.destroy();
+        this.icons.clear();
+        drawFloor(this.floor, this.sim);
+    }
+
+        run(cmd: Command) {
         const r = apply(this.sim, cmd);
         if (r.ok) drawFloor(this.floor, this.sim);
         else this.game.events.emit('toast', r.reason);

@@ -35,7 +35,7 @@ Un livello = un negozio vuoto con obiettivi. Tempo reale con pausa e 3 velocità
 ## Win / lose conditions
 
 - **Vittoria livello**: raggiungere tutte le soglie del livello (es. cassa ≥ €X, reputazione ≥ Y%, clienti serviti ≥ Z) entro un numero di giornate.
-- **Sconfitta**: cassa in rosso oltre −€N per K giornate consecutive (bancarotta) oppure reputazione sotto una soglia minima.
+- **Sconfitta**: cassa in rosso per K chiusure consecutive (bancarotta) oppure reputazione sotto una soglia minima per K chiusure consecutive (livello 1: K = 2, soglia 15%). Alla prima chiusura brutta il riepilogo avvisa.
 - Durata target livello: **15–20 minuti**.
 
 ## Art style
