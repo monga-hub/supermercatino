@@ -4,6 +4,7 @@ import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVE
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
 import type { Tool, Game } from './Game.ts';
+import * as audio from '../../audio/synth.ts';
 
 const TEXT = { fontFamily: 'Arial Black', fontSize: 22, color: '#fff3d6', stroke: '#3a2418', strokeThickness: 5 };
 const LIGHT = '#fff3d6';
@@ -78,6 +79,7 @@ export class Hud extends Scene {
         this.speedBtns.push(
             this.button('Staff', () => this.togglePanel('staff'), () => !!this.panel && this.panelKind === 'staff', '#3d5a80'),
             this.button('Merce', () => this.togglePanel('merce'), () => !!this.panel && this.panelKind === 'merce', '#3d5a80'),
+            this.button('Audio', () => audio.setMuted(!audio.muted), () => !audio.muted, '#3d5a80'),
         );
 
         const same = (t: Tool) => JSON.stringify(this.tool) === JSON.stringify(t);
@@ -145,7 +147,8 @@ export class Hud extends Scene {
         this.flow(this.speedBtns, 50, width);
         // served/lost under the money, or below the speed row when the screen is narrow
         const rowEnd = Math.max(...this.speedBtns.map((b) => b.t.x + b.t.width));
-        this.served.setY(rowEnd + 16 > width - 12 - this.served.width ? 92 : 44);
+        const rowsEnd = Math.max(...this.speedBtns.map((b) => b.t.y + b.t.height));
+        this.served.setY(rowEnd + 16 > width - 12 - this.served.width || rowsEnd > 92 ? rowsEnd + 8 : 44);
         this.hint.setPosition(width / 2, this.served.y + this.served.height + 8);
         // toolbar anchored to the bottom: measure, then place
         const toolsH = this.flow(this.toolBtns, 0, width);

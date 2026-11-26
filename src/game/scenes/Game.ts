@@ -8,6 +8,8 @@ import { gridToIso, cellAt, TILE_H, TILE_W } from '../../render/iso.ts';
 import { drawFloor, drawThings, drawObject, tile, type Put } from '../../render/draw.ts';
 import { KIT_SCALE } from '../../render/sprites.ts';
 import type { Hud } from './Hud.ts';
+import { snap, cues, type Snap } from '../../audio/cues.ts';
+import { play } from '../../audio/synth.ts';
 
 const ZOOM_MIN = 0.4;
 /** Tap icons float just above the shelf (80 px) / till (51 px) sprite, low over a spill (by key prefix). */
@@ -74,6 +76,7 @@ export class Game extends Scene {
 
     create() {
         this.sim = createState();
+        this.heard = snap(this.sim);
         this.registry.set('sim', this.sim);
         this.registry.set('tool', null);
         this.floor = this.add.graphics();
@@ -115,6 +118,9 @@ export class Game extends Scene {
             this.game.events.emit('toast', `L'orso è contento! +€${BEAR_BONUS_MONEY} e +${BEAR_BONUS_REP} reputazione`);
         this.bears = this.sim.happyBears;
         this.events_();
+        const now = snap(this.sim);
+        play(cues(this.heard, now));
+        this.heard = now;
         if (_time > this.saveAt) {
             this.saveAt = _time + 3000;
             this.store();
@@ -127,6 +133,8 @@ export class Game extends Scene {
 
     /** Day and inspection seen last frame, to announce changes once (milestone 14). */
     seen = { day: 0, inspection: false, caught: 0, escaped: 0 };
+    /** Sim as the audio last heard it (milestone 16). */
+    heard: Snap;
     events_() {
         const s = this.sim;
         if (s.day !== this.seen.day && s.day === INSPECTION_DAY && !s.inspection) this.game.events.emit('toast', 'Oggi passa l\'ispettore sanitario: tieni pulito!');
@@ -214,6 +222,7 @@ export class Game extends Scene {
         this.sim = s;
         this.bears = s.happyBears;
         this.seen = { day: s.day, inspection: !!s.inspection, ...s.furbetti };
+        this.heard = snap(s);
         this.registry.set('sim', this.sim);
         this.registry.set('tool', null);
         for (const t of this.icons.values()) t.destroy();

@@ -11,6 +11,8 @@ interface Window {
     selectTool: (tool: import('./game/scenes/Game.ts').Tool) => void;
     /** Open menu card: 'start', 'briefing' or null (milestone 11). */
     menuState: () => string | null;
+    /** Audio mute preference and whether the context started (milestone 16). */
+    audioState: () => { muted: boolean; started: boolean };
     /** Screen point of a cell's centre, raised by `lift` world px, and the camera zoom (browser tests). */
     cellToScreen: (x: number, y: number, lift?: number) => { x: number; y: number; zoom: number };
 }

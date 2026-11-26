@@ -49,7 +49,7 @@ Un livello = un negozio vuoto con obiettivi. Tempo reale con pausa e 3 velocità
 
 - **Muzak da supermercato** in loop (sottofondo leggero, anni '80).
 - **Annunci comici all'altoparlante** ("Cassa 3 in apertura", "Signora Pina, il suo prosciutto è pronto").
-- SFX: bip della cassa, carrello, rovescio. Fonte file audio da decidere (vedi Open questions).
+- SFX: bip della cassa, carrello, rovescio. Tutto sintetizzato nel codice (Web Audio) e annunci con la voce del telefono: deciso nel milestone 16.
 
 ## Player goals
 
@@ -80,7 +80,7 @@ Un livello = un negozio vuoto con obiettivi. Tempo reale con pausa e 3 velocità
 ## Open questions (non bloccanti per lo scaffold)
 
 - ~~Strumento AI per gli sprite e formato del foglio (atlas)~~ — Gemini + atlas PNG/JSON (milestone 07).
-- Fonte audio: muzak/annunci generati con AI, CC0, o sintesi vocale? Da decidere nel milestone audio.
+- ~~Fonte audio~~ → tutto sintetizzato, annunci con speechSynthesis (milestone 16).
 - "Online più avanti": classifiche o condivisione negozi? Per ora solo vincolo architetturale (stato simulazione serializzabile, vedi ADR-0001).
 - Prezzi regolabili dal giocatore o fissi? (Default v1: fissi.)
 - Numeri economici esatti (soglie, stipendi, affitto): si tarano in playtest.

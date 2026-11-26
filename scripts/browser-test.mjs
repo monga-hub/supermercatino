@@ -302,6 +302,29 @@ await check('menu continue and new game', async () => {
 await ps.close();
 
 await page.waitForTimeout(10000); // let the game run a while
+await check('audio starts on a tap and the mute button sticks', async () => {
+    const pa = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    pa.on('pageerror', (e) => errors.push(e.message));
+    const open = async () => {
+        await pa.goto(new URL('?manual', base).href);
+        await pa.waitForFunction(() => typeof window.audioState === 'function' && typeof window.render_game_to_text === 'function');
+    };
+    const audio = () => pa.evaluate(() => window.audioState());
+    await open();
+    expect(!(await audio()).started && !(await audio()).muted, 'audio should wait for a gesture, unmuted');
+    // the Audio button is the rightmost of the top row: scan from the right until it toggles
+    for (let x = 790; x > 0 && !(await audio()).muted; x -= 10) {
+        await pa.mouse.click(x, 66);
+        await pa.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    }
+    expect((await audio()).started, 'no audio context after a tap');
+    expect((await audio()).muted, 'Audio button not found');
+    await open();
+    expect((await audio()).muted, 'mute forgotten after reload');
+    await pa.evaluate(() => window.advanceTime(60000)); // events while muted: nothing breaks
+    await pa.close();
+});
+
 await check('no console errors', async () => {
     expect(errors.length === 0, errors.join(' | '));
 });

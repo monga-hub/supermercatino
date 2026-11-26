@@ -76,7 +76,7 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: milestone planning 2026-11-26 (utente: placeholder ora, sprite AI dopo il 03; poi rimandato a dopo il 06, decisione utente 2026-11-26)
   - Rough size: L · Rough value: L
   - Notes: → milestone 07-sprite-dipinti.md; richiede di chiudere l'open question su strumento AI e formato atlas; riferimento moodboard `spesa-nonna`.
-- [ ] Audio — muzak in loop, annunci comici all'altoparlante, SFX (bip cassa, carrello, rovescio). → milestone 16-audio.md
+- [x] Audio — muzak in loop, annunci comici all'altoparlante, SFX (bip cassa, carrello, rovescio). → milestone 16-audio.md
   - Source: gameplan v1
   - Rough size: M · Rough value: M
 
@@ -120,7 +120,7 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 
 - [x] Strumento AI per gli sprite e formato atlas — Gemini (decisione utente 2026-11-26) + atlas PNG/JSON fatto in casa → milestone 07-sprite-dipinti.md
   - Source: gameplan
-- [ ] Fonte audio — muzak/annunci AI, CC0 o sintesi vocale?
+- [x] Fonte audio — muzak/annunci AI, CC0 o sintesi vocale? → sintetizzato, milestone 16-audio.md
   - Source: gameplan
 - [ ] "Online più avanti" — classifiche o condivisione negozi?
   - Source: gameplan
