@@ -39,6 +39,7 @@ test('announcements: opening, inspection, closing soon, a new till', () => {
     assert.match(say((s) => (s.inspection = { fine: 0, rep: 5 })), /superata/i);
     assert.match(say((s) => (s.staff[0].state = 'at_till'), (s) => (s.staff[0].state = 'idle')), /cassa numero 1/);
     assert.match(say((s) => s.furbetti.escaped++), /furbetto/i);
+    assert.match(say((s) => (s.scent = 3600)), /sfornato/);
 });
 
 test('a comic offer twice a day, different each time', () => {

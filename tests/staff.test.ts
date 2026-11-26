@@ -92,7 +92,7 @@ test('staff whose path gets blocked re-plan instead of walking through it', () =
     const st = hireCashier(s);
     untilTicks(s, () => st.path.length > 3);
     const cell = st.path[2];
-    assert.equal(apply(s, { type: 'placeObject', object: 'scaffale', x: cell.x, y: cell.y, category: 'Pane' }).ok, true);
+    assert.equal(apply(s, { type: 'placeObject', object: 'scaffale', x: cell.x, y: cell.y, category: 'Frutta' }).ok, true);
     assert.ok(!st.path.some((c) => c.x === cell.x && c.y === cell.y), 'path avoids the new shelf');
     assert.ok(untilTicks(s, () => st.state === 'at_till') >= 0, 'still reaches the till');
 });

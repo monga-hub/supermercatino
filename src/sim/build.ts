@@ -1,5 +1,5 @@
 // Build commands. Commands are plain data so UI, tests and agents share one entry point.
-import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_CAPACITY, ORDER_UNITS, UNIT_COST, TIP } from './config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, ONLY_IN, DEMOLISH_REFUND, SHELF_CAPACITY, ORDER_UNITS, UNIT_COST, TIP } from './config.ts';
 import { readyAt, checkout, rerouteCustomers, walkableFor, tricking, catchFurbetto } from './customers.ts';
 import { nextDay } from './day.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
@@ -50,7 +50,8 @@ export function check(s: GameState, c: Command): Result {
         if (!room || room.type !== def.room) return fail(`${def.label}: va in ${ROOMS[def.room].label}`);
         if (objectAt(s, c.x, c.y)) return fail('Cella occupata');
         if (c.object === 'scaffale' && !CATEGORIES.includes(c.category as Category)) return fail('Scegli una categoria');
-        if (c.object === 'scaffale' && c.category === 'Salumi') return fail('I salumi si vendono al banco salumi');
+        const special = Object.entries(ONLY_IN).find(([, cat]) => cat === c.category);
+        if (c.object === 'scaffale' && special) return fail(`${c.category}: ci vuole ${OBJECTS[special[0] as ObjectType].label.toLowerCase()}`);
         if (c.object === 'porta') {
             // edge of the whole sales floor: rooms of the same type side by side form one area
             const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => roomAt(s, c.x + dx, c.y + dy)?.type !== 'sala_vendita');
@@ -67,6 +68,7 @@ export function check(s: GameState, c: Command): Result {
     if (c.type === 'restock') {
         const o = s.objects.find((x) => x.id === c.shelfId);
         if (!o?.category) return fail('Non è uno scaffale');
+        if (o.type === 'forno') return fail('Il pane lo sforna il forno');
         if (o.stock! >= SHELF_CAPACITY) return fail('Scaffale già pieno');
         if (s.restockQueue.includes(o.id) || s.staff.some((st) => st.job?.shelfId === o.id)) return fail('Già in arrivo');
         if (!s.staff.some((st) => st.role === 'magazziniere')) return fail('Serve un magazziniere');
@@ -91,6 +93,7 @@ export function check(s: GameState, c: Command): Result {
     if (c.type === 'collect') return readyAt(s, c.tillId) ? { ok: true, cost: 0 } : fail('Nessun conto da incassare');
     if (c.type === 'order') {
         if (!CATEGORIES.includes(c.category as Category)) return fail('Categoria sconosciuta');
+        if (c.category === 'Pane') return fail('Il pane lo sforna il forno');
         if (!s.rooms.some((r) => r.type === 'magazzino')) return fail('Serve un magazzino');
         return afford(s, ORDER_UNITS * UNIT_COST[c.category as Category]);
     }
@@ -117,9 +120,9 @@ export function apply(s: GameState, c: Command): Result {
         s.rooms.push({ id: s.nextId++, type: c.room, x: c.x, y: c.y, w: c.w, h: c.h });
     } else if (c.type === 'placeObject') {
         const o: ShopObject = { id: s.nextId++, type: c.object, x: c.x, y: c.y };
-        if (c.object === 'scaffale' || c.object === 'bancone') {
-            o.category = c.object === 'bancone' ? 'Salumi' : c.category as Category;
-            o.stock = SHELF_CAPACITY;
+        if (c.object === 'scaffale' || c.object in ONLY_IN) {
+            o.category = ONLY_IN[c.object as keyof typeof ONLY_IN] ?? c.category as Category;
+            o.stock = c.object === 'forno' ? 0 : SHELF_CAPACITY; // the oven starts cold
         }
         s.objects.push(o);
     } else if (c.type === 'rotate') {

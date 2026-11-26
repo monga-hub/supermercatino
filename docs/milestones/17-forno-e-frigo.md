@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+implemented (in attesa di playtest)
 
 ## Objective
 
@@ -28,13 +28,13 @@ Completare gli oggetti del gameplan v1: il pane si compra caldo al forno e i lat
 
 ## Acceptance criteria
 
-- [ ] Il forno va solo nella stanza forno e produce Pane a infornate se c'è un banconiere — test: `tests/bakery.test.ts`
-- [ ] Il Pane non si mette più sugli scaffali; i clienti col Pane in lista vanno al forno — test: `tests/bakery.test.ts`
-- [ ] Dopo un'infornata gli arrivi aumentano per un po' — test: `tests/bakery.test.ts`
-- [ ] I Latticini stanno solo nel frigo, il magazziniere lo rifornisce — test: `tests/bakery.test.ts`
-- [ ] I salvataggi vecchi si caricano senza errori — test: `tests/save.test.ts`
-- [ ] Frame di forno, frigo e banconiere al forno nel kit — test: `tests/assets.test.ts`
-- [ ] Bilanciamento: il livello si vince ancora entro 5 giorni — `output/balance.ts`
+- [x] Il forno va solo nella stanza forno e produce Pane a infornate se c'è un banconiere — test: `tests/bakery.test.ts`
+- [x] Il Pane non si mette più sugli scaffali; i clienti col Pane in lista vanno al forno — test: `tests/bakery.test.ts`
+- [x] Dopo un'infornata gli arrivi aumentano per un po' — test: `tests/bakery.test.ts`
+- [x] I Latticini stanno solo nel frigo, il magazziniere lo rifornisce — test: `tests/bakery.test.ts`
+- [x] I salvataggi vecchi si caricano senza errori — test: `tests/save.test.ts`
+- [x] Frame di forno, frigo e banconiere al forno nel kit — test: `tests/assets.test.ts`
+- [x] Bilanciamento: il livello si vince ancora entro 5 giorni — `output/balance.ts`
 - [ ] Il forno e il frigo si riconoscono e il pane caldo si "sente" — verified by user playtest
 
 ## Exit condition
@@ -47,3 +47,12 @@ L'utente costruisce la stanza forno, assume un banconiere, vede sfornare il pane
 - Regressione: `npm test && npm run test:browser && npx tsc --noEmit`.
 
 ## Notes
+
+- Stanza chiamata **Panetteria** (chiave `panetteria`) per non confonderla col tasto dell'oggetto **Forno**.
+- `ONLY_IN` in config: bancone→Salumi, forno→Pane, frigo→Latticini; lo scaffale normale rifiuta queste tre categorie. Il forno è servito dal banconiere (`SERVED_BY`), con fila come il bancone; un banconiere per bancone o forno.
+- `src/sim/bakery.ts`: forno con banconiere al suo posto → `BAKE_BATCH` (6) pani ogni `BAKE_MIN` (20) minuti di gioco, farina pagata a `UNIT_COST.Pane`, fino a capienza. Dopo ogni infornata `scent` per `SCENT_MIN` (60): arrivi ×`SCENT_BOOST` (1.5). Il forno parte vuoto; il Pane non si ordina più e il magazziniere non tocca il forno.
+- Salvataggi vecchi: gli scaffali Pane/Latticini già piazzati restano validi (finché non si demoliscono); `scent` mancante → 0.
+- Annuncio "Pane caldo appena sfornato!" a ogni infornata (cues del 16).
+- Bilanciamento: Pane 3→5 € (pane fresco), forno 250 €. Solo salumi: vince al giorno 5; salumi + forno con 2 casse: perde di poco (rep 65); con 2 cestini o 3 casse: vince al giorno 4–5; senza tocchi perde.
+- Il banconiere al forno usa i frame del salumiere (sta dietro il forno).
+

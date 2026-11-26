@@ -65,3 +65,7 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 - `furbetto.jpg` 3×3 come `cliente.jpg`: ragazzo anni '80 col giubbotto di pelle marrone e jeans; righe camminata, si infila (furtivo), scappa con la merce (angry).
 - `beccato.jpg` 1×1 — chiesto nella chat delle icone ("same style"): icona tonda con cappello da vigile e fischietto.
 
+## Forno e frigo (milestone 17)
+
+- `forno.jpg` 2×2 — chiesto nella chat delle icone ("NOT round icons: game furniture sprites" + stile base, ogni pezzo largo una cella): bancone del pane con forno a legna in mattoni acceso e cesta piena di pagnotte, baguette e rosette; lo stesso spento e vuoto; frigo bianco anni '80 con porta a vetri pieno di latte, yogurt e formaggi; lo stesso vuoto e spento.
+

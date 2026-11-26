@@ -41,5 +41,6 @@ export function nextDay(s: GameState) {
     s.summary = null;
     s.carts = []; // abandoned carts are put back overnight
     s.cartQueue = [];
+    s.scent = 0;
     s.paused = false;
 }

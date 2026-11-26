@@ -31,6 +31,7 @@ export const ROOMS = {
     magazzino: { label: 'Magazzino', costPerCell: 15 },
     area_casse: { label: 'Area casse', costPerCell: 20 },
     banco_salumi: { label: 'Banco salumi', costPerCell: 25 },
+    panetteria: { label: 'Panetteria', costPerCell: 25 },
 } as const;
 
 /** Objects: cost (€) and the room type they must stand in. */
@@ -40,6 +41,8 @@ export const OBJECTS = {
     cassa: { label: 'Cassa', cost: 400, room: 'area_casse' },
     cestino: { label: 'Cestino', cost: 60, room: 'sala_vendita' },
     bancone: { label: 'Bancone', cost: 300, room: 'banco_salumi' },
+    forno: { label: 'Forno', cost: 250, room: 'panetteria' },
+    frigo: { label: 'Frigo', cost: 250, room: 'sala_vendita' },
 } as const;
 
 // --- Customers (milestone 03). "per second" = real second at 1x.
@@ -48,7 +51,7 @@ export const OBJECTS = {
 export const SHELF_CAPACITY = 10;
 
 /** Sale price per unit (€). */
-export const PRICES = { Pasta: 4, Latticini: 6, Salumi: 18, Pane: 3, Frutta: 5, Detersivi: 8 } as const;
+export const PRICES = { Pasta: 4, Latticini: 6, Salumi: 18, Pane: 5, Frutta: 5, Detersivi: 8 } as const;
 
 
 /**
@@ -96,7 +99,7 @@ export const ROLES = {
 } as const;
 
 /** Who serves at each serving point: tills and the deli counter share the queue logic (milestone 13). */
-export const SERVED_BY: Partial<Record<keyof typeof OBJECTS, keyof typeof ROLES>> = { cassa: 'cassiere', bancone: 'banconiere' };
+export const SERVED_BY: Partial<Record<keyof typeof OBJECTS, keyof typeof ROLES>> = { cassa: 'cassiere', bancone: 'banconiere', forno: 'banconiere' };
 
 /** Candidates on offer for each role at any time. */
 export const CANDIDATES_PER_ROLE = 3;
@@ -185,6 +188,17 @@ export const CLEAN_SEC = 3;
 export const SLICE_SEC = 1.5;
 /** The deli man hands over the packet in the last N seconds of slicing (render only). */
 export const GIVE_SEC = 0.7;
+
+// --- Bakery and fridge (milestone 17)
+
+/** Category each special object holds; plain shelves take every other category. */
+export const ONLY_IN = { bancone: 'Salumi', forno: 'Pane', frigo: 'Latticini' } as const;
+/** A staffed oven bakes BAKE_BATCH loaves every BAKE_MIN game minutes (flour paid at UNIT_COST.Pane each). */
+export const BAKE_MIN = 20;
+export const BAKE_BATCH = 6;
+/** After a batch, fresh bread smell: arrivals SCENT_BOOST times as often for SCENT_MIN game minutes. */
+export const SCENT_MIN = 60;
+export const SCENT_BOOST = 1.5;
 
 // --- Events (milestone 14)
 

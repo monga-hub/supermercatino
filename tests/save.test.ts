@@ -17,8 +17,9 @@ test('save and load gives the same state, and the game goes on identically', () 
 });
 
 test('a save from before dirt (milestone 11) still loads, clean', () => {
-    const { spills, cleanQueue, ...old } = shop();
+    const { spills, cleanQueue, scent, ...old } = shop();
     assert.deepEqual(loadGame(JSON.stringify({ v: 1, s: old }))?.spills, []);
+    assert.equal(loadGame(JSON.stringify({ v: 1, s: old }))?.scent, 0, 'from before the bakery (17)');
 });
 
 test('a corrupt or outdated save is ignored', () => {

@@ -1,6 +1,6 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { setSpeed, togglePause, type GameState, type Speed } from '../../sim/state.ts';
-import { ROOMS, OBJECTS, CATEGORIES, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN, DAY_OPEN_MIN, BAD_DAYS, INSPECTION_DAY } from '../../sim/config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, ONLY_IN, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, LEVEL, REP_MIN, DAY_OPEN_MIN, BAD_DAYS, INSPECTION_DAY } from '../../sim/config.ts';
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
 import type { Tool, Game } from './Game.ts';
@@ -95,11 +95,12 @@ export class Hud extends Scene {
             this.button(OBJECTS.scaffale.label, () => this.setTool(isObj('scaffale')() ? null : { kind: 'object', object: 'scaffale', category: CATEGORIES[0] }), isObj('scaffale')),
             this.button(OBJECTS.cassa.label, toggle({ kind: 'object', object: 'cassa' }), isObj('cassa')),
             this.button(OBJECTS.cestino.label, toggle({ kind: 'object', object: 'cestino' }), isObj('cestino')),
-            this.button(OBJECTS.bancone.label, toggle({ kind: 'object', object: 'bancone' }), isObj('bancone')),
+            ...(['bancone', 'forno', 'frigo'] as const).map((object) => this.button(OBJECTS[object].label, toggle({ kind: 'object', object }), isObj(object))),
             this.button('Ruota', toggle({ kind: 'rotate' }), () => this.tool?.kind === 'rotate', '#6b5a8e'),
             this.button('Demolisci', toggle({ kind: 'demolish' }), () => this.tool?.kind === 'demolish', '#4a4a4a'),
         ];
-        this.catBtns = CATEGORIES.filter((c) => c !== 'Salumi').map((cat) => // salumi: deli counter only
+        const special: string[] = Object.values(ONLY_IN);
+        this.catBtns = CATEGORIES.filter((c) => !special.includes(c)).map((cat) => // salumi, pane, latticini: their own counter
             this.button(cat, () => this.setTool({ kind: 'object', object: 'scaffale', category: cat }),
                 () => this.tool?.kind === 'object' && this.tool.category === cat, hex(CATEGORY_COLOR[cat]), DARK),
         );
@@ -229,7 +230,7 @@ export class Hud extends Scene {
                 body.add(this.add.text(x0 + 12, y, 'Costruisci un magazzino per ordinare.', small));
                 y += 30;
             }
-            for (const cat of CATEGORIES)
+            for (const cat of CATEGORIES.filter((c) => c !== 'Pane')) // bread: the oven bakes it
                 row(`${cat} · ${s.warehouse[cat]} pezzi`, `Cassa da ${ORDER_UNITS} pezzi: €${ORDER_UNITS * UNIT_COST[cat]}`, 'Ordina', { type: 'order', category: cat });
             const note = this.add.text(x0 + 12, y, 'Il magazziniere porta la merce agli scaffali quasi vuoti.', { ...small, wordWrap: { width: w - 24 } });
             body.add(note);

@@ -16,7 +16,7 @@ const OFFERS = [
 export function snap(s: GameState) {
     return {
         day: s.day, clock: s.clockSec, served: s.servedTotal, spills: s.spills.length, carts: s.carts.length,
-        bears: s.happyBears, ...s.furbetti, inspection: s.inspection, outcome: s.outcome,
+        bears: s.happyBears, ...s.furbetti, scent: s.scent, inspection: s.inspection, outcome: s.outcome,
         tills: s.staff.filter((p) => p.role === 'cassiere' && p.state === 'at_till').length,
     };
 }
@@ -36,6 +36,7 @@ export function cues(a: Snap, b: Snap): { sounds: Sound[]; say: string | null } 
     const say =
         i && !a.inspection ? (i.fine ? `Comunicazione della direzione: multa di ${i.fine} euro per lo sporco. Che figura!` : 'Ispezione superata! La direzione ringrazia il personale delle pulizie.')
         : b.escaped > a.escaped ? 'Attenzione: un furbetto è scappato senza pagare. Il personale è pregato di stare più attento.'
+        : b.scent > a.scent ? 'Pane caldo appena sfornato! Vi aspettiamo in panetteria.'
         : b.tills > a.tills ? `Si apre la cassa numero ${b.tills}. Prego, avvicinarsi.`
         : at(DAY_OPEN_MIN) ? 'Buongiorno! Il Supermercatino è aperto.' + (b.day === INSPECTION_DAY ? ' Oggi passa l\'ispettore sanitario: occhio allo yogurt!' : '')
         : at(DAY_CLOSE_MIN - 30) ? 'Gentili clienti, il Supermercatino chiude tra mezz\'ora. Si prega di avvicinarsi alle casse.'

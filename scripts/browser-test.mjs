@@ -118,8 +118,8 @@ await check('hired cashier serves', async () => {
     for (const c of [
         { type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 6, h: 5 },
         { type: 'placeObject', object: 'scaffale', x: 5, y: 4, category: 'Pasta' },
-        { type: 'placeObject', object: 'scaffale', x: 6, y: 4, category: 'Pane' },
-        { type: 'placeObject', object: 'scaffale', x: 7, y: 4, category: 'Latticini' },
+        { type: 'placeObject', object: 'scaffale', x: 6, y: 4, category: 'Frutta' },
+        { type: 'placeObject', object: 'scaffale', x: 7, y: 4, category: 'Detersivi' },
         { type: 'placeObject', object: 'porta', x: 8, y: 5 },
         { type: 'buildRoom', room: 'area_casse', x: 3, y: 8, w: 3, h: 2 },
         { type: 'placeObject', object: 'cassa', x: 4, y: 9 },
@@ -146,7 +146,7 @@ await check('shelves get restocked', async () => {
     await start(p4);
     const run = (c) => p4.evaluate((x) => window.dispatch(x), c);
     const st = async () => JSON.parse(await p4.evaluate(() => window.render_game_to_text()));
-    const cats = ['Pasta', 'Pane', 'Latticini'];
+    const cats = ['Pasta', 'Frutta', 'Detersivi'];
     for (const c of [
         { type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 6, h: 5 },
         ...cats.map((category, i) => ({ type: 'placeObject', object: 'scaffale', x: 5 + i, y: 4, category })),
@@ -182,8 +182,8 @@ await check('tap icon collects', async () => {
     for (const c of [
         { type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 6, h: 5 },
         { type: 'placeObject', object: 'scaffale', x: 5, y: 4, category: 'Pasta' },
-        { type: 'placeObject', object: 'scaffale', x: 6, y: 4, category: 'Pane' },
-        { type: 'placeObject', object: 'scaffale', x: 7, y: 4, category: 'Latticini' },
+        { type: 'placeObject', object: 'scaffale', x: 6, y: 4, category: 'Frutta' },
+        { type: 'placeObject', object: 'scaffale', x: 7, y: 4, category: 'Detersivi' },
         { type: 'placeObject', object: 'porta', x: 8, y: 5 },
         { type: 'buildRoom', room: 'area_casse', x: 3, y: 8, w: 3, h: 2 },
         { type: 'placeObject', object: 'cassa', x: 4, y: 9 },

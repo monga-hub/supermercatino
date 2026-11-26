@@ -9,6 +9,10 @@ export const SPRITES = {
     carrello: 'carrello',
     bancone: 'bancone',
     banconeVuoto: 'bancone_vuoto',
+    forno: 'forno',
+    fornoVuoto: 'forno_vuoto',
+    frigo: 'frigo',
+    frigoVuoto: 'frigo_vuoto',
     shelf: (c: Category) => `scaffale_${c}`,
 };
 

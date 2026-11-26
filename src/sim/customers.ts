@@ -3,7 +3,7 @@
 import {
     STEP_MS, GAME_MIN_PER_SEC, CATEGORIES, PRICES, CUSTOMER_TYPES, CUSTOMER_SPEED, BEAR_HAPPY, BEAR_BONUS_MONEY, BEAR_BONUS_REP,
     SPILL_DRAIN, PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS, AUTO_COLLECT_SEC,
-    DAY_CLOSE_MIN, LAST_ARRIVAL_MIN, REP_SERVED, REP_LOST, SERVED_BY, SLICE_SEC,
+    DAY_CLOSE_MIN, LAST_ARRIVAL_MIN, REP_SERVED, REP_LOST, SERVED_BY, SLICE_SEC, SCENT_BOOST,
     CART_CHANCE, CART_MAX, INSPECTION_DAY, INSPECTION_HOUR, INSPECTION_FINE, INSPECTION_BONUS,
     PATIENCE_CUT, FURB_REP_GAIN, FURB_REP_LOSS,
 } from './config.ts';
@@ -96,12 +96,13 @@ function nextGoal(s: GameState, c: Customer, w: Walkable) {
         let best: { shelf: ShopObject; path: Cell[] } | null = null;
         for (const shelf of s.objects) {
             if (shelf.category !== cat || !shelf.stock) continue;
-            if (shelf.type === 'bancone' && !cashierAt(s, shelf)) continue; // nobody slicing
+            const counter = !!SERVED_BY[shelf.type]; // deli counter, oven: queue and wait to be served
+            if (counter && !cashierAt(s, shelf)) continue; // nobody behind it
             const path = pathToObject(w, c, shelf);
             if (path && (!best || path.length < best.path.length)) best = { shelf, path };
         }
         if (best) {
-            c.goal = { kind: best.shelf.type === 'bancone' ? 'till' : 'shelf', id: best.shelf.id }; // the counter has a queue, like a till
+            c.goal = { kind: SERVED_BY[best.shelf.type] ? 'till' : 'shelf', id: best.shelf.id }; // the counter has a queue, like a till
             c.path = best.path;
             return;
         }
@@ -236,18 +237,18 @@ function serveTills(s: GameState) {
         if (front && !front.path.length) {
             delete front.trick; // got away with jumping the queue
             front.state = 'paying';
-            front.timer = (till.type === 'bancone' ? SLICE_SEC : PAY_SEC) / TRAITS[cashier.trait].speed;
+            front.timer = (till.type === 'cassa' ? PAY_SEC : SLICE_SEC) / TRAITS[cashier.trait].speed;
         }
     }
 }
 
-/** Done at the deli counter: the packet goes in the basket and shopping goes on. false at a till. */
+/** Done at a counter (deli, oven): the goods go in the basket and shopping goes on. false at a till. */
 function sliced(s: GameState, c: Customer, w: Walkable) {
     const counter = s.objects.find((o) => c.goal?.kind === 'till' && o.id === c.goal.id);
-    if (counter?.type !== 'bancone') return false;
+    if (!counter?.category) return false;
     if (counter.stock) {
         counter.stock--;
-        c.basket.push('Salumi');
+        c.basket.push(counter.category);
     } else c.patience -= PATIENCE_MISSING;
     Object.assign(c, { state: 'shopping', goal: null, next: c.next + 1 });
     nextGoal(s, c, w);
@@ -288,7 +289,7 @@ export function checkout(s: GameState, c: Customer, tip: number, w = walkableFor
 
 export function updateCustomers(s: GameState) {
     s.spawnAcc += GAME_SEC_PER_STEP;
-    const every = spawnEveryMin(s.reputation) * 60;
+    const every = (spawnEveryMin(s.reputation) * 60) / (s.scent > 0 ? SCENT_BOOST : 1);
     if (s.spawnAcc >= every) {
         s.spawnAcc -= every;
         if (s.clockSec < (DAY_CLOSE_MIN - LAST_ARRIVAL_MIN) * 60) spawnCustomer(s);

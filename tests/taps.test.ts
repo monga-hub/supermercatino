@@ -10,13 +10,13 @@ import { hireStaff, untilTicks, withWarehouse } from './helpers.ts';
 const shelf = (s: GameState, cat: string) => s.objects.find((o) => o.type === 'scaffale' && o.category === cat)!;
 const till = (s: GameState) => s.objects.find((o) => o.type === 'cassa')!;
 
-/** Warehouse shop with a second shelf (Pane), goods for both, and a stocker. */
+/** Warehouse shop with a second shelf (Frutta), goods for both, and a stocker. */
 function stocked() {
     const s = withWarehouse();
     for (const c of [
-        { type: 'placeObject', object: 'scaffale', x: 6, y: 4, category: 'Pane' },
+        { type: 'placeObject', object: 'scaffale', x: 6, y: 4, category: 'Frutta' },
         { type: 'order', category: 'Pasta' },
-        { type: 'order', category: 'Pane' },
+        { type: 'order', category: 'Frutta' },
     ] as const) assert.equal(apply(s, c).ok, true, JSON.stringify(c));
     hireStaff(s, 'magazziniere');
     return s;
@@ -25,9 +25,9 @@ function stocked() {
 test('tap queues shelf first', () => {
     const s = stocked();
     shelf(s, 'Pasta').stock = AUTO_RESTOCK_BELOW; // not low enough for the automatic round
-    shelf(s, 'Pane').stock = AUTO_RESTOCK_BELOW;
-    assert.equal(apply(s, { type: 'restock', shelfId: shelf(s, 'Pane').id }).ok, true);
-    assert.ok(untilTicks(s, () => shelf(s, 'Pane').stock === SHELF_CAPACITY) > 0, 'tapped shelf refilled');
+    shelf(s, 'Frutta').stock = AUTO_RESTOCK_BELOW;
+    assert.equal(apply(s, { type: 'restock', shelfId: shelf(s, 'Frutta').id }).ok, true);
+    assert.ok(untilTicks(s, () => shelf(s, 'Frutta').stock === SHELF_CAPACITY) > 0, 'tapped shelf refilled');
     untilTicks(s, () => false, 2000);
     assert.equal(shelf(s, 'Pasta').stock, AUTO_RESTOCK_BELOW, 'untapped shelf left alone');
     assert.deepEqual(s.restockQueue, []);
@@ -48,9 +48,9 @@ test('restock validation', () => {
     pasta.stock = 5;
     assert.equal(r(pasta.id).ok, true);
     assert.equal(r(pasta.id).ok, false, 'already queued');
-    s.warehouse.Pane = 0;
-    shelf(s, 'Pane').stock = 5;
-    assert.equal(r(shelf(s, 'Pane').id).ok, false, 'no goods in the warehouse');
+    s.warehouse.Frutta = 0;
+    shelf(s, 'Frutta').stock = 5;
+    assert.equal(r(shelf(s, 'Frutta').id).ok, false, 'no goods in the warehouse');
 
     const noStocker = withWarehouse();
     apply(noStocker, { type: 'order', category: 'Pasta' });

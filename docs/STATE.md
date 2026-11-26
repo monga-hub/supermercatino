@@ -4,7 +4,7 @@
 
 ## Last updated
 
-2026-11-26 by Claude / make-game milestone 16
+2026-11-26 by Claude / make-game milestone 17
 
 ## Current phase
 
@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[16 — Audio](milestones/16-audio.md) (implementato, in attesa di playtest). Prossimi (confermati dall'utente): [17 — Forno e frigo](milestones/17-forno-e-frigo.md), [18 — Spogliatoio e stanchezza](milestones/18-spogliatoio-e-stanchezza.md), [19 — Guardia e capo reparto](milestones/19-guardia-e-capo-reparto.md). 07–16 in attesa di playtest.
+[17 — Forno e frigo](milestones/17-forno-e-frigo.md) (implementato, in attesa di playtest). Prossimi (confermati dall'utente): [18 — Spogliatoio e stanchezza](milestones/18-spogliatoio-e-stanchezza.md), [19 — Guardia e capo reparto](milestones/19-guardia-e-capo-reparto.md). 07–17 in attesa di playtest.
 
 ## Last action
 
-Milestone planning: 17 forno e frigo, 18 spogliatoio e stanchezza, 19 guardia e capo reparto (ordine confermato dall'utente). Prima: Milestone 16: audio tutto sintetizzato (Web Audio + voce del telefono), muzak, effetti, annunci comici, tasto Audio. `npm test` 84/84, browser 13/13. Prima: Milestone 15: cliente furbetto (salta la fila o scappa senza pagare), tocco 👮 per beccarlo (paga, +rep), toast "Beccato!". Fogli Gemini `furbetto.jpg` 3×3 e `beccato.jpg`. `npm test` 80/80, browser 12/12. Prima: Milestone 14: carrelli abbandonati (il magazziniere li porta via, tocco 🛒), ispezione sanitaria al giorno 3 (multa per macchia o bonus). Obiettivo soldi livello 1 → €3500. `npm test` 74/74, browser 12/12. Prima: Milestone 13: stanza banco salumi, bancone con affettatrice, banconiere (quarto ruolo) con la sua fila; Salumi solo al banco. Fogli Gemini `bancone.jpg`, `banconiere.jpg`. `npm test` 69/69, browser 12/12. Prima: Milestone 12: macchie di yogurt (`src/sim/dirt.ts`), cestino, addetto pulizie (terzo ruolo), icona spugna da toccare; fogli Gemini `pulizie.jpg` e `sporco.jpg`. `npm test` 64/64, browser 12/12. Prima: Milestone planning (11 salvataggio e menu, 12 sporco e pulizie, 13 banco salumi, confermati dall'utente). Milestone 11: `src/sim/save.ts`, salvataggio automatico in localStorage, menu iniziale Continua/Nuova partita, briefing con gli obiettivi; `?manual&save` per i test browser. `npm test` 57/57, browser 12/12.
+Milestone 17: stanza Panetteria col forno (il banconiere sforna il pane a infornate, profumo che attira clienti), frigo per i Latticini; foglio Gemini `forno.jpg` 2×2. Pane 5 €. `npm test` 89/89, browser 13/13. Prima: Milestone planning: 17 forno e frigo, 18 spogliatoio e stanchezza, 19 guardia e capo reparto (ordine confermato dall'utente). Prima: Milestone 16: audio tutto sintetizzato (Web Audio + voce del telefono), muzak, effetti, annunci comici, tasto Audio. `npm test` 84/84, browser 13/13. Prima: Milestone 15: cliente furbetto (salta la fila o scappa senza pagare), tocco 👮 per beccarlo (paga, +rep), toast "Beccato!". Fogli Gemini `furbetto.jpg` 3×3 e `beccato.jpg`. `npm test` 80/80, browser 12/12. Prima: Milestone 14: carrelli abbandonati (il magazziniere li porta via, tocco 🛒), ispezione sanitaria al giorno 3 (multa per macchia o bonus). Obiettivo soldi livello 1 → €3500. `npm test` 74/74, browser 12/12. Prima: Milestone 13: stanza banco salumi, bancone con affettatrice, banconiere (quarto ruolo) con la sua fila; Salumi solo al banco. Fogli Gemini `bancone.jpg`, `banconiere.jpg`. `npm test` 69/69, browser 12/12. Prima: Milestone 12: macchie di yogurt (`src/sim/dirt.ts`), cestino, addetto pulizie (terzo ruolo), icona spugna da toccare; fogli Gemini `pulizie.jpg` e `sporco.jpg`. `npm test` 64/64, browser 12/12. Prima: Milestone planning (11 salvataggio e menu, 12 sporco e pulizie, 13 banco salumi, confermati dall'utente). Milestone 11: `src/sim/save.ts`, salvataggio automatico in localStorage, menu iniziale Continua/Nuova partita, briefing con gli obiettivi; `?manual&save` per i test browser. `npm test` 57/57, browser 12/12.
 
 ## Next step
 
-Milestone 17 (forno e frigo: fogli Gemini forno, frigo, banconiere al forno). Playtest dell'utente 07–16 quando può.
+Milestone 18 (spogliatoio e stanchezza: foglio Gemini spogliatoio). Playtest dell'utente 07–17 quando può.
 
 ## Blockers
 

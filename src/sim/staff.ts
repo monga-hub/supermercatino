@@ -116,7 +116,7 @@ function updateStocker(s: GameState, st: Staff, w: Walkable) {
         const taken = new Set(s.staff.map((o) => o.job?.shelfId));
         // ponytail: idle stockers re-search every tick; fine while shelves are few
         const open = s.objects.filter((o) =>
-            o.category && o.stock! < SHELF_CAPACITY && s.warehouse[o.category!] > 0 && !taken.has(o.id));
+            o.category && o.type !== 'forno' && o.stock! < SHELF_CAPACITY && s.warehouse[o.category!] > 0 && !taken.has(o.id));
         s.restockQueue = s.restockQueue.filter((id) => s.objects.some((o) => o.id === id && o.stock! < SHELF_CAPACITY));
         const shelf = s.restockQueue.map((id) => open.find((o) => o.id === id)).find(Boolean)
             ?? open.find((o) => o.stock! < AUTO_RESTOCK_BELOW);

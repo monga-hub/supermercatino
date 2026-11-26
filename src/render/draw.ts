@@ -16,6 +16,7 @@ export const ROOM_FLOOR: Record<RoomType, [number, number]> = {
     magazzino: [0x8d7b62, 0x7f6e57],
     area_casse: [0xf1e4c8, 0x4f7f6a],
     banco_salumi: [0xe6cf9f, 0x8c5a3c], // cotto e legno
+    panetteria: [0xf3dcae, 0xc98b4a], // farina e crosta
 };
 export const CATEGORY_COLOR: Record<string, number> = {
     Pasta: 0xe8c547,
@@ -31,6 +32,8 @@ const OBJECT_LOOK: Record<ObjectType, { h: number; color: number; k: number }> =
     cassa: { h: 20, color: 0x9aa3ad, k: 0.75 },
     cestino: { h: 12, color: 0x3f7d3a, k: 0.35 },
     bancone: { h: 22, color: 0xa86b3c, k: 0.85 },
+    forno: { h: 30, color: 0xa04a2a, k: 0.85 },
+    frigo: { h: 32, color: 0xdfe8f0, k: 0.8 },
 };
 
 export const shade = (c: number, f: number) =>
@@ -70,7 +73,7 @@ export function box(g: G, x: number, y: number, h: number, color: number, k = 0.
 }
 
 const objectFrame = (o: Pick<ShopObject, 'type' | 'category' | 'stock' | 'rot'>) =>
-    o.type === 'cassa' ? SPRITES.cassa : o.type === 'cestino' ? SPRITES.cestino : o.type === 'bancone' ? (o.stock ? SPRITES.bancone : SPRITES.banconeVuoto) : o.type === 'porta' ? 'porta_l' : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
+    o.type === 'cassa' ? SPRITES.cassa : o.type === 'cestino' ? SPRITES.cestino : o.type === 'bancone' ? (o.stock ? SPRITES.bancone : SPRITES.banconeVuoto) : o.type === 'forno' ? (o.stock ? SPRITES.forno : SPRITES.fornoVuoto) : o.type === 'frigo' ? (o.stock ? SPRITES.frigo : SPRITES.frigoVuoto) : o.type === 'porta' ? 'porta_l' : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
 
 export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock' | 'rot'>, alpha = 1, put: Put = noPut, depth = 0) {
     const p = gridToIso(o.x, o.y);

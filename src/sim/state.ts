@@ -3,6 +3,7 @@ import { GRID_W, GRID_H, STEP_MS, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC,
 import { closeDay } from './day.ts';
 import { updateCustomers } from './customers.ts';
 import { updateStaff, refillCandidates } from './staff.ts';
+import { bake } from './bakery.ts';
 import type { Cell } from './path.ts';
 import type { Spill } from './dirt.ts';
 
@@ -14,7 +15,7 @@ export type Category = (typeof CATEGORIES)[number];
 
 export type Room = { id: number; type: RoomType; x: number; y: number; w: number; h: number };
 /** rot: shelves and tills have two orientations (1 = turned 90°, drawn mirrored). */
-export type ShopObject = { id: number; type: ObjectType; x: number; y: number; category?: Category; stock?: number; rot?: 0 | 1 };
+export type ShopObject = { id: number; type: ObjectType; x: number; y: number; category?: Category; stock?: number; rot?: 0 | 1; /** oven: game s towards the next batch */ bake?: number };
 
 export type Role = keyof typeof ROLES;
 export type Trait = keyof typeof TRAITS;
@@ -95,6 +96,8 @@ export type GameState = {
     cartQueue: number[];
     /** Furbetti caught with a tap / run off with the goods (the HUD announces each). */
     furbetti: { caught: number; escaped: number };
+    /** Game seconds of fresh-bread smell left (milestone 17): more arrivals. */
+    scent: number;
     /** Outcome of the level's health inspection, once it happened. */
     inspection: { fine: number; rep: number } | null;
     /** 0–100: drives arrivals. */
@@ -146,6 +149,7 @@ export function createState(): GameState {
         cartQueue: [],
         inspection: null,
         furbetti: { caught: 0, escaped: 0 },
+        scent: 0,
         reputation: REP_START,
         servedTotal: 0,
         happyBears: 0,
@@ -166,6 +170,7 @@ export function tick(s: GameState): void {
     s.clockSec += (GAME_MIN_PER_SEC * 60 * STEP_MS) / 1000;
     if (s.clockSec >= DAY_CLOSE_MIN * 60) return closeDay(s);
     updateStaff(s);
+    bake(s);
     updateCustomers(s);
 }
 
