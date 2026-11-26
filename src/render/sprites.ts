@@ -1,18 +1,40 @@
-// Frame names in public/assets/kit.json (built by tools/kit.py from art/sheets/).
-import type { Category } from '../sim/state.ts';
+// Frame names in public/assets/kit.json (built by tools/kit.py from art/sheets/), and which one a character shows.
+import type { Category, Customer, GameState, Staff } from '../sim/state.ts';
 
 export const SPRITES = {
     porta: 'porta',
     cassa: 'cassa',
     scaffale: 'scaffale',
     shelf: (c: Category) => `scaffale_${c}`,
-    cliente: 'cliente',
-    clienteArrabbiato: 'cliente_arrabbiato',
-    cassiere: 'cassiere',
-    cassiereSeduto: 'cassiere_seduto',
-    magazziniere: 'magazziniere',
-    magazziniereScatolone: 'magazziniere_scatolone',
 };
+
+/** Every character frame personFrame() can return (tests/assets.test.ts checks they exist). */
+const walk = (n: string) => [0, 1, 2].map((i) => `${n}_${i}`);
+export const PEOPLE_FRAMES = [
+    ...walk('cliente_walk'), ...walk('cliente_angry'), 'cliente_idle', 'cliente_pay',
+    ...walk('cassiere_walk'), 'cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1',
+    ...walk('magazziniere_walk'), ...walk('magazziniere_carry'),
+];
 
 /** kit.png frames are stored at 2x (tools/kit.py RES). */
 export const KIT_SCALE = 0.5;
+
+// Walk cycle locked to position (no sliding feet, frozen when paused): STRIDE frames per cell, poses 0-1-2-1.
+const STRIDE = 4;
+const CYCLE = [0, 1, 2, 1];
+const step = (p: { x: number; y: number }) => CYCLE[Math.floor((p.x + p.y) * STRIDE) % CYCLE.length];
+/** Game seconds per scan pose while a customer pays (GAME_MIN_PER_SEC 3: ~0.3 s real at 1x). */
+const SCAN_SEC = 54;
+
+/** Character frame for the sim state. Pure: tests/sprites.test.ts. */
+export function personFrame(s: GameState, p: Customer | Staff): string {
+    if (!('role' in p)) {
+        if (p.state === 'queueing') return 'cliente_idle';
+        if (p.state === 'paying' || p.state === 'ready') return 'cliente_pay';
+        return `cliente_${p.state === 'leaving_angry' ? 'angry' : 'walk'}_${step(p)}`;
+    }
+    if (p.role === 'magazziniere') return `magazziniere_${p.job?.units ? 'carry' : 'walk'}_${step(p)}`;
+    if (p.state !== 'at_till') return `cassiere_walk_${step(p)}`;
+    const busy = s.customers.some((c) => c.state === 'paying' && c.goal?.kind === 'till' && c.goal.id === p.tillId);
+    return busy ? `cassiere_scan_${Math.floor(s.clockSec / SCAN_SEC) % 2}` : 'cassiere_seduto';
+}

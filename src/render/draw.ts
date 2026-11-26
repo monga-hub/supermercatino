@@ -1,7 +1,7 @@
 // Drawing: painted sprites from the kit atlas (milestone 07); flat iso boxes as fallback when a frame is missing.
 import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
-import { SPRITES } from './sprites.ts';
+import { SPRITES, personFrame } from './sprites.ts';
 import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role, Category } from '../sim/state.ts';
 
 type G = GameObjects.Graphics;
@@ -87,10 +87,10 @@ const goesLeft = (a: { x: number; y: number }, to?: { x: number; y: number }) =>
 /** Feet of a person standing at fractional cell (x, y): the centre of the diamond. */
 const feet = (x: number, y: number) => { const p = gridToIso(x, y); return { x: p.x, y: p.y + TILE_H / 2 }; };
 
-export function drawCustomer(g: G, over: G, c: Customer, put: Put = noPut, depth = 0) {
+export function drawCustomer(g: G, over: G, s: GameState, c: Customer, put: Put = noPut, depth = 0) {
     const angry = c.state === 'leaving_angry';
     const f = feet(c.x, c.y);
-    const drawn = put(angry ? SPRITES.clienteArrabbiato : SPRITES.cliente, f.x, f.y + 2, depth, goesLeft(c, c.path[0]));
+    const drawn = put(personFrame(s, c), f.x, f.y + 2, depth, goesLeft(c, c.path[0]));
     if (!drawn) box(g, c.x, c.y, CUSTOMER_H, angry ? CUSTOMER_ANGRY : CUSTOMER, 0.35);
     if (c.state === 'leaving' || angry) return;
     // patience bar over the head
@@ -111,12 +111,10 @@ const SEAT_OFFSET = 0.45;
 /** Seated cashier sprite: screen px from the till's cell centre, behind the register, facing the customers. */
 const SEAT_PX = { x: 17, y: -6 };
 
-export function drawStaff(g: G, st: Staff, put: Put = noPut, depth = 0) {
+export function drawStaff(g: G, s: GameState, st: Staff, put: Put = noPut, depth = 0) {
     const o = st.state === 'at_till' ? SEAT_OFFSET : 0;
     const f = feet(st.x - o, st.y - o);
-    const frame = st.role === 'cassiere'
-        ? (st.state === 'at_till' ? SPRITES.cassiereSeduto : SPRITES.cassiere)
-        : (st.job?.units ? SPRITES.magazziniereScatolone : SPRITES.magazziniere);
+    const frame = personFrame(s, st);
     const seated = st.state === 'at_till';
     const at = seated ? feet(st.x, st.y) : f;
     if (seated ? put(frame, at.x + SEAT_PX.x, at.y + SEAT_PX.y, depth, true) : put(frame, f.x, f.y + 2, depth, goesLeft(st, st.path[0]))) return;
@@ -163,12 +161,12 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
     over.clear();
     const items: { d: number; draw: (depth: number) => void }[] = [
         ...s.objects.map((o) => ({ d: o.x + o.y, draw: (z: number) => drawObject(g, o, 1, put, z) })),
-        ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: (z: number) => drawCustomer(g, over, c, put, z) })),
+        ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: (z: number) => drawCustomer(g, over, s, c, put, z) })),
         ...crates(s).map((c) => ({ d: c.x + c.y - 0.01, draw: () => {
             box(g, c.x, c.y, c.h, CRATE, 0.6);
             box(g, c.x, c.y, c.h + 2, CATEGORY_COLOR[c.cat], 0.3);
         } })),
-        ...s.staff.map((st) => ({ d: st.x + st.y + (st.state === 'at_till' ? -2 * SEAT_OFFSET : 0.02), draw: (z: number) => drawStaff(g, st, put, z) })),
+        ...s.staff.map((st) => ({ d: st.x + st.y + (st.state === 'at_till' ? -2 * SEAT_OFFSET : 0.02), draw: (z: number) => drawStaff(g, s, st, put, z) })),
     ];
     for (const it of items.sort((a, b) => a.d - b.d)) it.draw(1 + it.d);
 }

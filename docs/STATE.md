@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[07 — Sprite dipinti](milestones/07-sprite-dipinti.md) (implementato, in attesa di playtest). Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md). 01–06 e 05b chiusi.
+[07b — Animazioni personaggi](milestones/07b-animazioni-personaggi.md) (implementato, in attesa di playtest). 07 implementato. Poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md); pareti nel backlog.
 
 ## Last action
 
-Milestone 07 implementata: fogli Gemini `art/sheets/arredi.jpg` (scaffale vuoto + 6 categorie, cassa, porta) e `personaggi.jpg` (cliente calma/arrabbiata, cassiere seduto/in piedi, magazziniere a mani vuote/con scatolone); `tools/kit.py` scontorna e impacchetta `public/assets/kit.png/json`; `draw.ts` disegna gli sprite (blocchi come riserva). `npm test` 37/37, browser 10/10.
+Milestone 07b: fogli Gemini per personaggio (`art/sheets/cliente.jpg`, `cassiere.jpg`, `magazziniere.jpg`), `personFrame()` in `src/render/sprites.ts` sceglie la posa dallo stato (camminata agganciata alla posizione, coda, paga, arrabbiata, cassiera che batte, magazziniere con scatolone). `npm test` 41/41, browser 10/10.
 
 ## Next step
 
-Playtest dell'utente sul telefono per chiudere il 07, poi [08 — Rifiniture rapide](milestones/08-rifiniture-rapide.md).
+Playtest dell'utente (07 + 07b) sul telefono, poi 08 o pareti.
 
 ## Blockers
 
