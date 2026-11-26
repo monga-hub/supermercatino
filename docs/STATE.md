@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-nessuno — `docs/milestones/` ancora vuota
+[01 — Il negozio esiste](milestones/01-il-negozio-esiste.md) (planned). Poi 02 Costruisci il negozio, 03 Primo cliente paga.
 
 ## Last action
 
-Scaffold: template ufficiale `phaserjs/template-vite-ts` variante Minimal (Phaser 4.0.0, Vite 6, TS 5.7). L'installer `npm create @phaserjs/game@latest` si bloccava al download su Node 24 (connessione a phaser.io senza seguire il redirect, CPU 100%); stesso zip scaricato da codeload GitHub e applicato a mano l'overlay "Minimal" del pacchetto installer v1.3.2. Aggiunti Playwright, `scripts/browser-test.mjs` (smoke), script `test`/`test:browser`, `.claude/launch.json`, `AGENTS.md`, `CLAUDE.md`. Smoke test verde: canvas renderizzato, zero errori console. `git init` fatto, nessun commit ancora.
+Scaffold: template ufficiale `phaserjs/template-vite-ts` variante Minimal (Phaser 4.0.0, Vite 6, TS 5.7). L'installer `npm create @phaserjs/game@latest` si bloccava al download su Node 24 (connessione a phaser.io senza seguire il redirect, CPU 100%); stesso zip scaricato da codeload GitHub e applicato a mano l'overlay "Minimal" del pacchetto installer v1.3.2. Aggiunti Playwright, `scripts/browser-test.mjs` (smoke), script `test`/`test:browser`, `.claude/launch.json`, `AGENTS.md`, `CLAUDE.md`. Smoke test verde: canvas renderizzato, zero errori console. Commit dello scaffold + AGENTS. Poi milestone planning: scritti milestone 01–03 e `docs/backlog.md`; grafica placeholder fino al 03 (gameplan aggiornato).
 
 ## Next step
 
-Milestone planning (sub-pipeline make-game): proporre i primi 1–3 milestone partendo da `docs/gameplan.md`. Candidato naturale per il 01: griglia iso + camera (pan/zoom mouse+touch) + stato sim con `tick`, `render_game_to_text()` e `advanceTime()`.
+Milestone 01, pipeline development step 3: scrivere i test rossi `tests/sim.test.ts` (stato serializzabile, orologio/velocità, rollover giorno, niente import Phaser) e verificare che `node --test` esegua i `.ts`.
 
 ## Blockers
 
