@@ -44,3 +44,8 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 - `giovane.jpg` — ragazzo di 20 anni anni '80, giacca a vento turchese, jeans stonewashed, cuffie del walkman al collo.
 - `ponzone.jpg` — Signor Ponzone: signore pomposo e panciuto, baffi arricciati, gessato blu doppiopetto, catena d'oro, naso all'insù; arrabbiato viola in faccia col pugno alzato; paga con una banconota grossa.
 - `orso.jpg` — grande orso bruno simpatico in piedi, sciarpa rossa, cestino di vimini; arrabbiato ringhia coi denti; paga con una moneta d'oro.
+
+## Sporco e pulizie (milestone 12) — chat nuova per foglio
+
+- `pulizie.jpg` 3×2 (testa comune dei personaggi) — addetta pulizie di mezza età, permanente riccia grigio-castana, grembiule azzurro col colletto bianco, guanti gialli, zoccoli bianchi, mocio. Riga 1 camminata col mocio dritto ×3; riga 2 passa il mocio ×3 (sinistra, centro, destra, bolle di sapone).
+- `sporco.jpg` 3×2 (testa comune degli arredi) — pozza di yogurt bianco col vasetto rovesciato, schizzo di yogurt alla fragola, pozza di latte (tutte schiacciate come decalcomanie sul pavimento); cestino verde anni '80 su palo; icona tonda crema col bordo marrone e una spugna gialla con le bolle; cartello giallo "pavimento bagnato" senza scritte.

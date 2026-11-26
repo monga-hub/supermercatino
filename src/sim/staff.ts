@@ -3,6 +3,7 @@ import { ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPE
 import { rand, pick } from './rng.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import type { GameState, Role, Trait, Staff, ShopObject } from './state.ts';
+import { updateCleaner } from './dirt.ts';
 
 /** Top up the candidate list to CANDIDATES_PER_ROLE per role. */
 export function refillCandidates(s: GameState) {
@@ -135,6 +136,7 @@ export function rerouteStaff(s: GameState) {
         // ponytail: snap to the nearest cell and drop the errand (goods go back to the warehouse); re-plan from scratch
         Object.assign(st, { x: Math.round(st.x), y: Math.round(st.y), path: [], state: 'idle' });
         if (st.role === 'cassiere') st.tillId = null;
+        else if (st.role === 'pulizie') st.clean = undefined;
         else if (st.job) {
             s.warehouse[st.job.category] += st.job.units;
             st.job = null;
@@ -147,6 +149,7 @@ export function updateStaff(s: GameState) {
     const w = walkableFor(s);
     for (const st of s.staff) {
         if (st.role === 'cassiere') updateCashier(s, st, w);
+        else if (st.role === 'pulizie') updateCleaner(s, st, w);
         else updateStocker(s, st, w);
     }
 }

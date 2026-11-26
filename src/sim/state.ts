@@ -4,6 +4,7 @@ import { closeDay } from './day.ts';
 import { updateCustomers } from './customers.ts';
 import { updateStaff, refillCandidates } from './staff.ts';
 import type { Cell } from './path.ts';
+import type { Spill } from './dirt.ts';
 
 export type Speed = (typeof SPEEDS)[number];
 
@@ -18,7 +19,7 @@ export type ShopObject = { id: number; type: ObjectType; x: number; y: number; c
 export type Role = keyof typeof ROLES;
 export type Trait = keyof typeof TRAITS;
 export type Candidate = { id: number; role: Role; name: string; trait: Trait; wage: number };
-export type StaffState = 'arriving' | 'idle' | 'at_till' | 'fetching' | 'delivering';
+export type StaffState = 'arriving' | 'idle' | 'at_till' | 'fetching' | 'delivering' | 'cleaning';
 export type Staff = Candidate & {
     state: StaffState;
     x: number;
@@ -28,6 +29,8 @@ export type Staff = Candidate & {
     tillId: number | null;
     /** Stocker trip: shelf to refill, units in hand (0 while fetching). */
     job: { shelfId: number; category: Category; units: number } | null;
+    /** Cleaner: spill being walked to / mopped, seconds of mopping left. */
+    clean?: { spillId: number; timer: number };
 };
 
 export type CustomerState = 'shopping' | 'queueing' | 'paying' | 'ready' | 'leaving' | 'leaving_angry';
@@ -79,6 +82,9 @@ export type GameState = {
     warehouse: Record<Category, number>;
     /** Shelf ids tapped for restocking, served first (FIFO). */
     restockQueue: number[];
+    /** Yogurt on the floor (milestone 12); spill ids tapped for cleaning, served first. */
+    spills: Spill[];
+    cleanQueue: number[];
     /** 0–100: drives arrivals. */
     reputation: number;
     servedTotal: number;
@@ -122,6 +128,8 @@ export function createState(): GameState {
         staff: [],
         warehouse: Object.fromEntries(CATEGORIES.map((c) => [c, 0])) as Record<Category, number>,
         restockQueue: [],
+        spills: [],
+        cleanQueue: [],
         reputation: REP_START,
         servedTotal: 0,
         happyBears: 0,

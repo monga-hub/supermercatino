@@ -2,13 +2,14 @@
 // or leaving_angry when patience runs out). Pure, deterministic (seeded RNG in state).
 import {
     STEP_MS, GAME_MIN_PER_SEC, CATEGORIES, PRICES, CUSTOMER_TYPES, CUSTOMER_SPEED, BEAR_HAPPY, BEAR_BONUS_MONEY, BEAR_BONUS_REP,
-    PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS, AUTO_COLLECT_SEC,
+    SPILL_DRAIN, PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS, AUTO_COLLECT_SEC,
     DAY_CLOSE_MIN, LAST_ARRIVAL_MIN, REP_SERVED, REP_LOST,
 } from './config.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
 import { cashierAt } from './staff.ts';
 import { spawnEveryMin } from './day.ts';
+import { maybeSpill, spillNear } from './dirt.ts';
 import type { GameState, Customer, CustomerKind, Category, ShopObject } from './state.ts';
 
 const STEP_S = STEP_MS / 1000;
@@ -246,6 +247,7 @@ export function updateCustomers(s: GameState) {
         const type = CUSTOMER_TYPES[c.kind];
         if (c.state === 'queueing') c.patience -= PATIENCE_QUEUE_DRAIN * type.drain * STEP_S;
         else if (c.path.length && !away) c.patience -= PATIENCE_WALK_DRAIN * type.drain * STEP_S;
+        if (!away && c.state !== 'paying' && c.state !== 'ready' && spillNear(s, c.x, c.y)) c.patience -= SPILL_DRAIN * type.drain * STEP_S;
         if (c.patience <= 0 && !away && c.state !== 'paying' && c.state !== 'ready') {
             leave(s, c, w, true);
             continue;
@@ -267,8 +269,11 @@ export function updateCustomers(s: GameState) {
             if (c.path.length) walk(c, CUSTOMER_SPEED * type.speed); // moving up the line
             continue;
         }
-        if (c.path.length) walk(c, CUSTOMER_SPEED * type.speed);
-        else arrive(s, c, w);
+        if (c.path.length) {
+            const left = c.path.length;
+            walk(c, CUSTOMER_SPEED * type.speed);
+            if (c.path.length < left) maybeSpill(s, c); // stepped onto a new cell
+        } else arrive(s, c, w);
     }
     s.customers = s.customers.filter((c) => !Number.isNaN(c.x));
     lineUp(s, w); // after moving: whoever just reached a till already has their place in line

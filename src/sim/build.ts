@@ -1,6 +1,6 @@
 // Build commands. Commands are plain data so UI, tests and agents share one entry point.
 import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_CAPACITY, ORDER_UNITS, UNIT_COST, TIP } from './config.ts';
-import { readyAt, checkout, rerouteCustomers } from './customers.ts';
+import { readyAt, checkout, rerouteCustomers, walkableFor } from './customers.ts';
 import { nextDay } from './day.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
 import { hire, fire, rerouteStaff } from './staff.ts';
@@ -15,6 +15,7 @@ export type Command =
     | { type: 'order'; category: string }
     | { type: 'restock'; shelfId: number }
     | { type: 'collect'; tillId: number }
+    | { type: 'clean'; spillId: number }
     | { type: 'continue' };
 
 export type Result = { ok: true; cost: number } | { ok: false; reason: string };
@@ -69,6 +70,11 @@ export function check(s: GameState, c: Command): Result {
         if (!s.warehouse[o.category!]) return fail(`Niente ${o.category} in magazzino`);
         return { ok: true, cost: 0 };
     }
+    if (c.type === 'clean') {
+        if (!s.spills.some((p) => p.id === c.spillId)) return fail('Niente da pulire');
+        if (s.cleanQueue.includes(c.spillId) || s.staff.some((st) => st.clean?.spillId === c.spillId)) return fail('Già in arrivo');
+        return s.staff.some((st) => st.role === 'pulizie') ? { ok: true, cost: 0 } : fail('Serve un addetto pulizie');
+    }
     if (c.type === 'continue') return s.summary && !s.outcome ? { ok: true, cost: 0 } : fail('Niente da continuare');
     if (c.type === 'collect') return readyAt(s, c.tillId) ? { ok: true, cost: 0 } : fail('Nessun conto da incassare');
     if (c.type === 'order') {
@@ -117,6 +123,8 @@ export function apply(s: GameState, c: Command): Result {
         checkout(s, readyAt(s, c.tillId)!, TIP);
     } else if (c.type === 'continue') {
         nextDay(s);
+    } else if (c.type === 'clean') {
+        s.cleanQueue.push(c.spillId);
     } else if (c.type === 'order') {
         s.warehouse[c.category as Category] += ORDER_UNITS;
         s.goodsToday += r.cost;
@@ -126,6 +134,8 @@ export function apply(s: GameState, c: Command): Result {
         else s.rooms.splice(s.rooms.indexOf(roomAt(s, c.x, c.y)!), 1);
     }
     if (c.type === 'buildRoom' || c.type === 'placeObject' || c.type === 'demolish') {
+        const w = walkableFor(s);
+        s.spills = s.spills.filter((p) => w(p.x, p.y)); // under a new object or a demolished room: gone
         rerouteCustomers(s);
         rerouteStaff(s);
     }

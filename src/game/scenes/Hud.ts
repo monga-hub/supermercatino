@@ -14,7 +14,7 @@ const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 
 type Btn = { t: GameObjects.Text; active: () => boolean; bg: string; fg?: string };
 
-const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'senza cassa', at_till: 'alla cassa', fetching: 'va in magazzino', delivering: 'porta la merce' };
+const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'in attesa', cleaning: 'pulisce', at_till: 'alla cassa', fetching: 'va in magazzino', delivering: 'porta la merce' };
 
 // Overlay scene: own camera, so it doesn't zoom/pan with the shop.
 export class Hud extends Scene {
@@ -92,6 +92,7 @@ export class Hud extends Scene {
             this.button(OBJECTS.porta.label, toggle({ kind: 'object', object: 'porta' }), isObj('porta')),
             this.button(OBJECTS.scaffale.label, () => this.setTool(isObj('scaffale')() ? null : { kind: 'object', object: 'scaffale', category: CATEGORIES[0] }), isObj('scaffale')),
             this.button(OBJECTS.cassa.label, toggle({ kind: 'object', object: 'cassa' }), isObj('cassa')),
+            this.button(OBJECTS.cestino.label, toggle({ kind: 'object', object: 'cestino' }), isObj('cestino')),
             this.button('Ruota', toggle({ kind: 'rotate' }), () => this.tool?.kind === 'rotate', '#6b5a8e'),
             this.button('Demolisci', toggle({ kind: 'demolish' }), () => this.tool?.kind === 'demolish', '#4a4a4a'),
         ];

@@ -37,6 +37,7 @@ export const OBJECTS = {
     porta: { label: 'Porta', cost: 200, room: 'sala_vendita' },
     scaffale: { label: 'Scaffale', cost: 150, room: 'sala_vendita' },
     cassa: { label: 'Cassa', cost: 400, room: 'area_casse' },
+    cestino: { label: 'Cestino', cost: 60, room: 'sala_vendita' },
 } as const;
 
 // --- Customers (milestone 03). "per second" = real second at 1x.
@@ -54,7 +55,7 @@ export const PRICES = { Pasta: 4, Latticini: 6, Salumi: 12, Pane: 3, Frutta: 5, 
  */
 export const CUSTOMER_TYPES = {
     signora: { label: 'Signora', weight: 40, speed: 1, drain: 1, list: [1, 3], pay: 1 },
-    mamma: { label: 'Mamma col bambino', weight: 18, speed: 0.8, drain: 1.2, list: [2, 4], pay: 1 },
+    mamma: { label: 'Mamma col bambino', weight: 18, speed: 0.8, drain: 1.2, list: [2, 4], pay: 1, spill: 2.5 },
     vecchietta: { label: 'Vecchietta', weight: 18, speed: 0.6, drain: 0.6, list: [1, 2], pay: 1 },
     giovane: { label: 'Giovane', weight: 15, speed: 1.4, drain: 1.3, list: [1, 2], pay: 1 },
     ponzone: { label: 'Signor Ponzone', weight: 7, speed: 0.9, drain: 1.5, list: [2, 3], pay: 1.5 },
@@ -85,8 +86,8 @@ export const RNG_SEED = 12345;
 
 // --- Staff (milestone 04)
 
-/** Staff roles. Later milestones add pulizie, banconiere. */
-export const ROLES = { cassiere: { label: 'Cassiere' }, magazziniere: { label: 'Magazziniere' } } as const;
+/** Staff roles. A later milestone adds banconiere. */
+export const ROLES = { cassiere: { label: 'Cassiere' }, magazziniere: { label: 'Magazziniere' }, pulizie: { label: 'Addetto pulizie' } } as const;
 
 /** Candidates on offer for each role at any time. */
 export const CANDIDATES_PER_ROLE = 3;
@@ -153,3 +154,18 @@ export const BAD_DAYS = 2;
 
 /** Level 1: days available and goals to reach at a closing (money, reputation %, customers served in total). */
 export const LEVEL = { days: 5, goals: { money: 4000, reputation: 70, served: 350 } } as const;
+
+// --- Dirt (milestone 12)
+
+/** Chance a walking customer spills something on each cell they step on (times the type's `spill`, default 1). */
+export const SPILL_CHANCE = 0.02;
+/** Within this many cells (any direction) of a bin, spills happen half as often. */
+export const BIN_RADIUS = 2;
+/** At most this many spills in the shop. */
+export const SPILL_MAX = 8;
+/** Patience lost per second by a customer on or next to a spill. */
+export const SPILL_DRAIN = 6;
+/** Reputation lost per spill still on the floor at closing. */
+export const SPILL_REP = 1;
+/** Seconds of mopping per spill (divided by the trait's speed). */
+export const CLEAN_SEC = 3;

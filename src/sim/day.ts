@@ -1,7 +1,7 @@
 // Opening hours, day end, reputation and level outcome (milestone 06). Pure, deterministic.
 import {
     DAY_OPEN_MIN, DAILY_RENT, SPAWN_EVERY_MIN_AT_0, SPAWN_EVERY_MIN_AT_100, BANKRUPT_BELOW, BAD_DAYS,
-    REP_MIN, LEVEL,
+    REP_MIN, LEVEL, SPILL_REP,
 } from './config.ts';
 import { checkout } from './customers.ts';
 import type { GameState } from './state.ts';
@@ -13,6 +13,7 @@ export const spawnEveryMin = (rep: number) => SPAWN_EVERY_MIN_AT_0 + ((SPAWN_EVE
 export function closeDay(s: GameState) {
     for (const c of [...s.customers]) if (c.state === 'paying' || c.state === 'ready') checkout(s, c, 0);
     s.customers = [];
+    s.reputation = Math.max(0, s.reputation - SPILL_REP * s.spills.length); // dirt left on the floor
     const wages = s.staff.reduce((sum, st) => sum + st.wage, 0);
     s.money -= wages + DAILY_RENT;
     s.redDays = s.money < BANKRUPT_BELOW ? s.redDays + 1 : 0;

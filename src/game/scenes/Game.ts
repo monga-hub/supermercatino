@@ -10,8 +10,8 @@ import { KIT_SCALE } from '../../render/sprites.ts';
 import type { Hud } from './Hud.ts';
 
 const ZOOM_MIN = 0.4;
-/** Tap icons float just above the shelf (80 px) / till (51 px) sprite. */
-const ICON_LIFT = { shelf: 86, till: 58 };
+/** Tap icons float just above the shelf (80 px) / till (51 px) sprite, low over a spill (by key prefix). */
+const ICON_LIFT: Record<string, number> = { s: 86, t: 58, p: 24 };
 const ZOOM_MAX = 2.5;
 const TAP_SLOP = 10; // px a pointer may move and still count as a tap
 const OK = 0x4caf50;
@@ -135,7 +135,14 @@ export class Game extends Scene {
             }
             if (o.type === 'cassa' && readyAt(s, o.id)) want.push({ key: `t${o.id}`, x: o.x, y: o.y, frame: 'icona_soldi', cmd: { type: 'collect', tillId: o.id } });
         }
-        for (const t of this.icons.values()) t.setVisible(false);
+        for (const p of s.spills) {
+            const busy = s.cleanQueue.includes(p.id) || s.staff.some((st) => st.clean?.spillId === p.id);
+            if (!busy) want.push({ key: `p${p.id}`, x: p.x, y: p.y, frame: 'icona_pulisci', cmd: { type: 'clean', spillId: p.id } });
+        }
+        for (const [k, t] of this.icons) {
+            if (want.some((w) => w.key === k)) t.setVisible(false);
+            else (t.destroy(), this.icons.delete(k)); // spill cleaned: drop its icon
+        }
         const scale = 1 / Math.min(1, this.cameras.main.zoom); // keep icons finger-sized when zoomed out
         for (const w of want) {
             let t = this.icons.get(w.key);
@@ -145,8 +152,8 @@ export class Game extends Scene {
             }
             const p = gridToIso(w.x, w.y);
             const bob = w.cmd ? Math.sin(time / 180) * 3 : 0;
-            const lift = w.key[0] === 's' ? ICON_LIFT.shelf : ICON_LIFT.till;
-            t.setFrame(w.frame).setOrigin(0.5, 1).setPosition(p.x, p.y + TILE_H / 2 - lift + bob).setScale(scale * KIT_SCALE).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
+            const lift = ICON_LIFT[w.key[0]];
+            t.setFrame(w.frame).setOrigin(0.5, 1).setPosition(p.x, p.y + TILE_H / 2 - lift + bob).setScale(scale * KIT_SCALE * (w.key[0] === 'p' ? 0.75 : 1)).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
         }
     }
 

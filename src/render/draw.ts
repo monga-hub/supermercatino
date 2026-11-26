@@ -1,7 +1,7 @@
 // Drawing: painted sprites from the kit atlas (milestone 07); flat iso boxes as fallback when a frame is missing.
 import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
-import { SPRITES, personFrame } from './sprites.ts';
+import { SPRITES, SPILL_FRAMES, personFrame } from './sprites.ts';
 import { walls, doorEdge, type Edge } from './walls.ts';
 import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role, Category } from '../sim/state.ts';
 
@@ -28,6 +28,7 @@ const OBJECT_LOOK: Record<ObjectType, { h: number; color: number; k: number }> =
     porta: { h: 4, color: 0x3f7d3a, k: 0.9 },
     scaffale: { h: 30, color: 0xb0a090, k: 0.8 },
     cassa: { h: 20, color: 0x9aa3ad, k: 0.75 },
+    cestino: { h: 12, color: 0x3f7d3a, k: 0.35 },
 };
 
 export const shade = (c: number, f: number) =>
@@ -67,7 +68,7 @@ export function box(g: G, x: number, y: number, h: number, color: number, k = 0.
 }
 
 const objectFrame = (o: Pick<ShopObject, 'type' | 'category' | 'stock' | 'rot'>) =>
-    o.type === 'cassa' ? SPRITES.cassa : o.type === 'porta' ? 'porta_l' : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
+    o.type === 'cassa' ? SPRITES.cassa : o.type === 'cestino' ? SPRITES.cestino : o.type === 'porta' ? 'porta_l' : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
 
 export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock' | 'rot'>, alpha = 1, put: Put = noPut, depth = 0) {
     const p = gridToIso(o.x, o.y);
@@ -105,7 +106,7 @@ export function drawCustomer(g: G, over: G, s: GameState, c: Customer, put: Put 
     g.fillRect(p.x - 12, top, 24 * v, 4);
 }
 
-export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazziniere: 0x2e7d5b };
+export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazziniere: 0x2e7d5b, pulizie: 0x3b82c4 };
 
 /** A seated cashier is drawn half a cell behind the till, so the till doesn't hide them. */
 const SEAT_OFFSET = 0.45;
@@ -183,6 +184,12 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
             const front = edge === 'fr' || edge === 'fl';
             return { d: o.x + o.y + (front ? 0.6 : -0.5), draw: (z: number) => panel(put, 'porta', o.x, o.y, edge, z) || drawObject(g, o) };
         }),
+        ...s.spills.map((p) => ({ d: p.x + p.y - 0.45, draw: (z: number) => {
+            const f = feet(p.x, p.y);
+            if (put(SPILL_FRAMES[p.id % SPILL_FRAMES.length], f.x, f.y + TILE_H / 4, z)) return;
+            g.fillStyle(0xf6f1e4, 0.95); // fallback: a white puddle
+            g.fillEllipse(f.x, f.y, TILE_W * 0.4, TILE_H * 0.4);
+        } })),
         ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: (z: number) => drawCustomer(g, over, s, c, put, z) })),
         ...crates(s).map((c) => ({ d: c.x + c.y - 0.01, draw: () => {
             box(g, c.x, c.y, c.h, CRATE, 0.6);

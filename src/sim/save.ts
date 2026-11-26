@@ -12,6 +12,7 @@ export function loadGame(text: string | null): GameState | null {
     try {
         const d = JSON.parse(text ?? '');
         const s = d?.v === VERSION && d.s;
+        if (s && typeof s === 'object' && s.rooms) Object.assign(s, { spills: s.spills ?? [], cleanQueue: s.cleanQueue ?? [] }); // milestone 11 saves: no dirt yet
         return s && typeof s === 'object' && Object.keys(createState()).every((k) => k in s) ? s : null;
     } catch {
         return null;

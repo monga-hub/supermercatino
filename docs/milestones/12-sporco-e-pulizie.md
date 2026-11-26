@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+implemented — in attesa del playtest dell'utente
 
 ## Objective
 
@@ -28,11 +28,11 @@ Il passo "Reagisci" del gameplan: i clienti ogni tanto rovesciano lo yogurt, lo 
 
 ## Acceptance criteria
 
-- [ ] I clienti lasciano macchie; vicino a un cestino ne lasciano meno — test: `tests/dirt.test.ts`
-- [ ] Passare vicino a una macchia fa perdere pazienza — test: `tests/dirt.test.ts`
-- [ ] L'addetto pulisce le macchie, prima quelle toccate — test: `tests/dirt.test.ts`
-- [ ] Frame di addetto, macchie, cestino e icona nel kit — test: `tests/assets.test.ts`
-- [ ] Bilanciamento: senza pulizie si fatica, con un addetto si vince ancora — `output/balance.ts`
+- [x] I clienti lasciano macchie; vicino a un cestino ne lasciano meno — test: `tests/dirt.test.ts`
+- [x] Passare vicino a una macchia fa perdere pazienza — test: `tests/dirt.test.ts`
+- [x] L'addetto pulisce le macchie, prima quelle toccate — test: `tests/dirt.test.ts`
+- [x] Frame di addetto, macchie, cestino e icona nel kit — test: `tests/assets.test.ts`
+- [x] Bilanciamento: senza pulizie si fatica, con un addetto si vince ancora — `output/balance.ts` (2 casse e tocchi: senza addetto si perde a tempo scaduto, con l'addetto si vince al giorno 4)
 - [ ] Lo sporco si vede e pulire dà soddisfazione — verified by user playtest
 
 ## Exit condition
@@ -45,3 +45,8 @@ L'utente vede comparire lo yogurt per terra e i clienti arrabbiarsi; assume l'ad
 - Regressione: `npm test && npm run test:browser && npx tsc --noEmit`.
 
 ## Notes
+
+- Sim in `src/sim/dirt.ts`; numeri in `config.ts` (SPILL_*, BIN_RADIUS, CLEAN_SEC). Le macchie restano la notte. Niente macchie sullo zerbino.
+- Fogli Gemini `art/sheets/pulizie.jpg` (addetta col mocio) e `art/sheets/sporco.jpg` (3 macchie, cestino, icona spugna, cartello "pavimento bagnato" non ancora usato).
+- I salvataggi del milestone 11 si caricano ancora (senza macchie).
+- Screenshot: `output/shots-12.mjs`.

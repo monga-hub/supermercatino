@@ -5,6 +5,7 @@ import { CUSTOMER_TYPES } from '../sim/config.ts';
 export const SPRITES = {
     cassa: 'cassa',
     scaffale: 'scaffale',
+    cestino: 'cestino',
     shelf: (c: Category) => `scaffale_${c}`,
 };
 
@@ -14,13 +15,17 @@ export const PEOPLE_FRAMES = [
     ...Object.keys(CUSTOMER_TYPES).flatMap((k) => [...walk(`${k}_walk`), ...walk(`${k}_angry`), `${k}_idle`, `${k}_pay`]),
     ...walk('cassiere_walk'), 'cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1',
     ...walk('magazziniere_walk'), ...walk('magazziniere_carry'),
+    ...walk('pulizie_walk'), ...walk('pulizie_mop'),
 ];
+
+/** Yogurt spills on the floor, picked by spill id (milestone 12). */
+export const SPILL_FRAMES = ['macchia_0', 'macchia_1', 'macchia_2'];
 
 /** Wall and door panels, one per back-edge orientation (tools/kit.py WALLS). */
 export const WALL_FRAMES = ['muro', 'muro_poster', 'porta'].flatMap((n) => [`${n}_l`, `${n}_r`]);
 
 /** Tap icon badges (Game.drawIcons). */
-export const ICON_FRAMES = ['icona_restock', 'icona_arrivo', 'icona_soldi'];
+export const ICON_FRAMES = ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_pulisci'];
 
 /** kit.png frames are stored at 2x (tools/kit.py RES). */
 export const KIT_SCALE = 0.5;
@@ -39,6 +44,7 @@ export function personFrame(s: GameState, p: Customer | Staff): string {
         if (p.state === 'paying' || p.state === 'ready') return `${p.kind}_pay`;
         return `${p.kind}_${p.state === 'leaving_angry' ? 'angry' : 'walk'}_${step(p)}`;
     }
+    if (p.role === 'pulizie') return p.state === 'cleaning' ? `pulizie_mop_${CYCLE[Math.floor(s.clockSec / SCAN_SEC) % CYCLE.length]}` : `pulizie_walk_${step(p)}`;
     if (p.role === 'magazziniere') return `magazziniere_${p.job?.units ? 'carry' : 'walk'}_${step(p)}`;
     if (p.state !== 'at_till') return `cassiere_walk_${step(p)}`;
     const busy = s.customers.some((c) => c.state === 'paying' && c.goal?.kind === 'till' && c.goal.id === p.tillId);

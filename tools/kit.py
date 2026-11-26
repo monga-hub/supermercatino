@@ -23,6 +23,8 @@ SHEETS = [
     ('cassiere.jpg', 3, 2, ('h', 46), WALK('cassiere') + ['cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1']),
     ('icone.jpg', 3, 2, ('w', 0.66), ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_felice', 'icona_arrabbiato', 'icona_cestino']),
     ('magazziniere.jpg', 3, 2, ('h', 46), WALK('magazziniere') + ['magazziniere_carry_0', 'magazziniere_carry_1', 'magazziniere_carry_2']),
+    ('pulizie.jpg', 3, 2, ('h', 46), WALK('pulizie') + ['pulizie_mop_0', 'pulizie_mop_1', 'pulizie_mop_2']),
+    ('sporco.jpg', 3, 2, ('w', 0.8), ['macchia_0', 'macchia_1', 'macchia_2', ('cestino', 0.3), ('icona_pulisci', 0.66), ('cartello_bagnato', 0.4)]),
 ]
 
 def run(mask):

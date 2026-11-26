@@ -4,7 +4,7 @@
 
 ## Last updated
 
-2026-11-26 by Claude / make-game milestone 11
+2026-11-26 by Claude / make-game milestone 12
 
 ## Current phase
 
@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[11 — Salvataggio e menu](milestones/11-salvataggio-e-menu.md) (implementato, in attesa di playtest). Prossimi: [12 — Sporco e pulizie](milestones/12-sporco-e-pulizie.md), [13 — Banco salumi](milestones/13-banco-salumi.md). 07, 07b, 08, 09, 10 in attesa di playtest.
+[12 — Sporco e pulizie](milestones/12-sporco-e-pulizie.md) (implementato, in attesa di playtest). Prossimo: [13 — Banco salumi](milestones/13-banco-salumi.md). 07, 07b, 08, 09, 10, 11 in attesa di playtest.
 
 ## Last action
 
-Milestone planning (11 salvataggio e menu, 12 sporco e pulizie, 13 banco salumi, confermati dall'utente). Milestone 11: `src/sim/save.ts`, salvataggio automatico in localStorage, menu iniziale Continua/Nuova partita, briefing con gli obiettivi; `?manual&save` per i test browser. `npm test` 57/57, browser 12/12.
+Milestone 12: macchie di yogurt (`src/sim/dirt.ts`), cestino, addetto pulizie (terzo ruolo), icona spugna da toccare; fogli Gemini `pulizie.jpg` e `sporco.jpg`. `npm test` 64/64, browser 12/12. Prima: Milestone planning (11 salvataggio e menu, 12 sporco e pulizie, 13 banco salumi, confermati dall'utente). Milestone 11: `src/sim/save.ts`, salvataggio automatico in localStorage, menu iniziale Continua/Nuova partita, briefing con gli obiettivi; `?manual&save` per i test browser. `npm test` 57/57, browser 12/12.
 
 ## Next step
 
-Playtest dell'utente (07, 07b, 08, 09, 10, 11) sul telefono, poi milestone 12 (fogli Gemini per addetto pulizie, macchie, cestino, icona).
+Playtest dell'utente (07–12) sul telefono, poi milestone 13 (banco salumi: fogli Gemini per bancone, affettatrice, banconiere).
 
 ## Blockers
 
