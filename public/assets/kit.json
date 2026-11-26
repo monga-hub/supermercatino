@@ -1,0 +1,188 @@
+{
+ "frames": {
+  "scaffale": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 128,
+    "h": 160
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 160
+   }
+  },
+  "scaffale_Pasta": {
+   "frame": {
+    "x": 130,
+    "y": 0,
+    "w": 128,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 128,
+    "h": 160
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 160
+   }
+  },
+  "scaffale_Latticini": {
+   "frame": {
+    "x": 260,
+    "y": 0,
+    "w": 128,
+    "h": 160
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 128,
+    "h": 160
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 160
+   }
+  },
+  "scaffale_Salumi": {
+   "frame": {
+    "x": 390,
+    "y": 0,
+    "w": 128,
+    "h": 158
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 128,
+    "h": 158
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 158
+   }
+  },
+  "scaffale_Pane": {
+   "frame": {
+    "x": 520,
+    "y": 0,
+    "w": 128,
+    "h": 158
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 128,
+    "h": 158
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 158
+   }
+  },
+  "scaffale_Frutta": {
+   "frame": {
+    "x": 650,
+    "y": 0,
+    "w": 128,
+    "h": 158
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 128,
+    "h": 158
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 158
+   }
+  },
+  "scaffale_Detersivi": {
+   "frame": {
+    "x": 780,
+    "y": 0,
+    "w": 128,
+    "h": 156
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 128,
+    "h": 156
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 156
+   }
+  },
+  "cassa": {
+   "frame": {
+    "x": 0,
+    "y": 162,
+    "w": 128,
+    "h": 102
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 128,
+    "h": 102
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 102
+   }
+  },
+  "porta": {
+   "frame": {
+    "x": 130,
+    "y": 162,
+    "w": 90,
+    "h": 135
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 90,
+    "h": 135
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 90,
+    "h": 135
+   }
+  }
+ },
+ "meta": {
+  "image": "kit.png",
+  "scale": 2
+ }
+}

@@ -1,9 +1,13 @@
-// Placeholder drawing: flat iso tiles and boxes. Replaced by AI sprites after milestone 03.
+// Drawing: painted sprites from the kit atlas (milestone 07); flat iso boxes as fallback when a frame is missing.
 import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
+import { SPRITES } from './sprites.ts';
 import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role, Category } from '../sim/state.ts';
 
 type G = GameObjects.Graphics;
+/** Draws atlas frame bottom-centred at (px, py); false if the frame is missing (caller falls back to boxes). */
+export type Put = (frame: string, px: number, py: number, depth: number, flip?: boolean) => boolean;
+const noPut: Put = () => false;
 
 const LOT = [0x5b5048, 0x544a42]; // cemento
 export const ROOM_FLOOR: Record<RoomType, [number, number]> = {
@@ -61,7 +65,12 @@ export function box(g: G, x: number, y: number, h: number, color: number, k = 0.
     poly(g, [...t.top, ...t.right, ...t.bottom, ...t.left]);
 }
 
-export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock'>, alpha = 1) {
+const objectFrame = (o: Pick<ShopObject, 'type' | 'category' | 'stock'>) =>
+    o.type !== 'scaffale' ? SPRITES[o.type] : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
+
+export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock'>, alpha = 1, put: Put = noPut, depth = 0) {
+    const p = gridToIso(o.x, o.y);
+    if (put(objectFrame(o), p.x, p.y + TILE_H, depth)) return; // stands on the cell's bottom vertex
     const look = OBJECT_LOOK[o.type];
     box(g, o.x, o.y, look.h, look.color, look.k, alpha);
     // merce in cima; sparisce quando lo scaffale è vuoto
@@ -72,11 +81,22 @@ const CUSTOMER = 0x3d6fb5;
 const CUSTOMER_ANGRY = 0xd64541;
 const CUSTOMER_H = 22;
 
-export function drawCustomer(g: G, c: Customer) {
-    box(g, c.x, c.y, CUSTOMER_H, c.state === 'leaving_angry' ? CUSTOMER_ANGRY : CUSTOMER, 0.35);
+/** Characters face bottom-left; mirror them while walking towards screen right. */
+const facesRight = (a: { x: number; y: number }, to?: { x: number; y: number }) => !!to && to.x - a.x - (to.y - a.y) > 0.01;
+
+/** Feet of a person standing at fractional cell (x, y): the centre of the diamond. */
+const feet = (x: number, y: number) => { const p = gridToIso(x, y); return { x: p.x, y: p.y + TILE_H / 2 }; };
+
+export function drawCustomer(g: G, over: G, c: Customer, put: Put = noPut, depth = 0) {
+    const angry = c.state === 'leaving_angry';
+    const f = feet(c.x, c.y);
+    const drawn = put(angry ? SPRITES.clienteArrabbiato : SPRITES.cliente, f.x, f.y + 2, depth, facesRight(c, c.path[0]));
+    if (!drawn) box(g, c.x, c.y, CUSTOMER_H, angry ? CUSTOMER_ANGRY : CUSTOMER, 0.35);
+    if (c.state === 'leaving' || angry) return;
     // patience bar over the head
     const p = gridToIso(c.x, c.y);
-    const top = p.y + TILE_H / 2 - CUSTOMER_H - 14;
+    const top = p.y + TILE_H / 2 - (drawn ? 52 : CUSTOMER_H + 14);
+    g = over;
     const v = Math.max(0, c.patience) / 100;
     g.fillStyle(0x000000, 0.6);
     g.fillRect(p.x - 13, top - 1, 26, 6);
@@ -89,8 +109,13 @@ export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazzinie
 /** A seated cashier is drawn half a cell behind the till, so the till doesn't hide them. */
 const SEAT_OFFSET = 0.45;
 
-export function drawStaff(g: G, st: Staff) {
+export function drawStaff(g: G, st: Staff, put: Put = noPut, depth = 0) {
     const o = st.state === 'at_till' ? SEAT_OFFSET : 0;
+    const f = feet(st.x - o, st.y - o);
+    const frame = st.role === 'cassiere'
+        ? (st.state === 'at_till' ? SPRITES.cassiereSeduto : SPRITES.cassiere)
+        : (st.job?.units ? SPRITES.magazziniereScatolone : SPRITES.magazziniere);
+    if (put(frame, f.x, f.y + 2, depth, facesRight(st, st.path[0]))) return;
     box(g, st.x - o, st.y - o, 24, ROLE_COLOR[st.role], 0.38);
     box(g, st.x - o, st.y - o, 28, 0xf4efe6, 0.24); // berretto bianco
     if (st.job?.units) box(g, st.x + 0.15, st.y + 0.15, 16, CRATE, 0.3); // scatolone in mano
@@ -125,17 +150,21 @@ export function drawFloor(g: G, s: GameState) {
     }
 }
 
-/** Things layer: objects and customers, back-to-front so nearer ones cover farther ones. Redraw every frame. */
-export function drawThings(g: G, s: GameState) {
+/**
+ * Things layer, redrawn every frame. Sprites get depth 1 + (x + y), so nearer ones cover farther ones.
+ * `g` (under the sprites) holds fallback boxes and warehouse crates; `over` (above) holds patience bars.
+ */
+export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
     g.clear();
-    const items: { d: number; draw: () => void }[] = [
-        ...s.objects.map((o) => ({ d: o.x + o.y, draw: () => drawObject(g, o) })),
-        ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: () => drawCustomer(g, c) })),
+    over.clear();
+    const items: { d: number; draw: (depth: number) => void }[] = [
+        ...s.objects.map((o) => ({ d: o.x + o.y, draw: (z: number) => drawObject(g, o, 1, put, z) })),
+        ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: (z: number) => drawCustomer(g, over, c, put, z) })),
         ...crates(s).map((c) => ({ d: c.x + c.y - 0.01, draw: () => {
             box(g, c.x, c.y, c.h, CRATE, 0.6);
             box(g, c.x, c.y, c.h + 2, CATEGORY_COLOR[c.cat], 0.3);
         } })),
-        ...s.staff.map((st) => ({ d: st.x + st.y + (st.state === 'at_till' ? -2 * SEAT_OFFSET : 0.02), draw: () => drawStaff(g, st) })),
+        ...s.staff.map((st) => ({ d: st.x + st.y + (st.state === 'at_till' ? -2 * SEAT_OFFSET : 0.02), draw: (z: number) => drawStaff(g, st, put, z) })),
     ];
-    for (const it of items.sort((a, b) => a.d - b.d)) it.draw();
+    for (const it of items.sort((a, b) => a.d - b.d)) it.draw(1 + it.d);
 }

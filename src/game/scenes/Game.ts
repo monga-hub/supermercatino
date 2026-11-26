@@ -4,7 +4,8 @@ import { apply, check, type Command } from '../../sim/build.ts';
 import { STEP_MS, TAP_ICON_BELOW } from '../../sim/config.ts';
 import { readyAt } from '../../sim/customers.ts';
 import { gridToIso, cellAt, TILE_H } from '../../render/iso.ts';
-import { drawFloor, drawThings, drawObject, tile } from '../../render/draw.ts';
+import { drawFloor, drawThings, drawObject, tile, type Put } from '../../render/draw.ts';
+import { KIT_SCALE } from '../../render/sprites.ts';
 import type { Hud } from './Hud.ts';
 
 const ZOOM_MIN = 0.4;
@@ -28,6 +29,10 @@ export class Game extends Scene {
     acc = 0;
     floor: GameObjects.Graphics;
     things: GameObjects.Graphics;
+    over: GameObjects.Graphics;
+    /** Pooled atlas images, reused every frame by put(). */
+    sprites: GameObjects.Image[] = [];
+    used = 0;
     preview: GameObjects.Graphics;
     pinch: { d: number; mx: number; my: number } | null = null;
     pinched = false; // a pinch happened during this touch: its pointerup must not build
@@ -44,6 +49,17 @@ export class Game extends Scene {
         return this.registry.get('tool') ?? null;
     }
 
+    preload() {
+        this.load.atlas('kit', 'assets/kit.png', 'assets/kit.json');
+    }
+
+    put: Put = (frame, x, y, depth, flip = false) => {
+        if (!this.textures.get('kit').has(frame)) return false;
+        const im = (this.sprites[this.used++] ??= this.add.image(0, 0, 'kit').setOrigin(0.5, 1).setScale(KIT_SCALE));
+        im.setFrame(frame).setPosition(x, y).setDepth(depth).setFlipX(flip).setVisible(true);
+        return true;
+    };
+
     create() {
         this.sim = createState();
         this.registry.set('sim', this.sim);
@@ -51,6 +67,7 @@ export class Game extends Scene {
         this.floor = this.add.graphics();
         this.preview = this.add.graphics();
         this.things = this.add.graphics();
+        this.over = this.add.graphics().setDepth(9000);
         drawFloor(this.floor, this.sim);
         this.setupCamera();
         this.setupInput();
@@ -72,7 +89,9 @@ export class Game extends Scene {
                 this.acc -= STEP_MS;
             }
         }
-        drawThings(this.things, this.sim);
+        this.used = 0;
+        drawThings(this.things, this.over, this.sim, this.put);
+        for (let i = this.used; i < this.sprites.length; i++) this.sprites[i].setVisible(false);
         this.drawIcons(_time);
     }
 
@@ -92,7 +111,7 @@ export class Game extends Scene {
         for (const w of want) {
             let t = this.icons.get(w.key);
             if (!t) {
-                t = this.add.text(0, 0, '', { fontSize: 26, backgroundColor: '#fff3d6', padding: { x: 5, y: 3 } }).setOrigin(0.5, 1).setDepth(10);
+                t = this.add.text(0, 0, '', { fontSize: 26, backgroundColor: '#fff3d6', padding: { x: 5, y: 3 } }).setOrigin(0.5, 1).setDepth(9500);
                 this.icons.set(w.key, t);
             }
             const p = gridToIso(w.x, w.y);
@@ -124,7 +143,7 @@ export class Game extends Scene {
         drawFloor(this.floor, this.sim);
     }
 
-        run(cmd: Command) {
+    run(cmd: Command) {
         const r = apply(this.sim, cmd);
         if (r.ok) drawFloor(this.floor, this.sim);
         else this.game.events.emit('toast', r.reason);
