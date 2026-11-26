@@ -40,7 +40,7 @@ Chiudere il primo loop giocabile: costruisco → i clienti entrano, comprano, fa
 - [x] Con lo scaffale della sua categoria vuoto o assente la pazienza cala; a zero esce `leaving_angry` senza pagare — test: `tests/customers.test.ts::empty shelf makes customer leave angry`
 - [x] La fila serve un cliente alla volta in ordine di arrivo — test: `tests/customers.test.ts::queue is FIFO`
 - [x] Stessa seed + stessi comandi → stesso stato dopo N tick (determinismo) — test: `tests/customers.test.ts::deterministic with seed`
-- [x] Nel browser, dopo `advanceTime` di un'ora di gioco su un negozio costruito via comandi, `render_game_to_text()` mostra clienti serviti > 0 e soldi aumentati — test: `scripts/browser-test.mjs::customers buy and pay`
+- [x] Nel browser, dopo `advanceTime` di un'ora di gioco su un negozio costruito via comandi, `render_game_to_text()` mostra clienti serviti > 0 e soldi aumentati — test: `scripts/browser-test.mjs::hired cashier serves` (dal 04 serve un cassiere)
 - [x] Movimento dei clienti leggibile, barra pazienza visibile da zoom medio — verified by user playtest
 
 ## Exit condition

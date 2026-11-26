@@ -1,40 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createState, advance, tick, type GameState } from '../src/sim/state.ts';
-import { apply } from '../src/sim/build.ts';
+import { advance, tick } from '../src/sim/state.ts';
 import { spawnCustomer } from '../src/sim/customers.ts';
+import { shop, noArrivals, runOut } from './helpers.ts';
 import { PRICES, SHELF_STOCK } from '../src/sim/config.ts';
-
-/** Sales floor x3..8 y3..7, door on its right edge, Pasta shelf; checkout area below (y8..9) with a till. */
-function shop({ door = true, till = true } = {}): GameState {
-    const s = createState();
-    const ok = (c: Parameters<typeof apply>[1]) => assert.equal(apply(s, c).ok, true, JSON.stringify(c));
-    ok({ type: 'buildRoom', room: 'sala_vendita', x: 3, y: 3, w: 6, h: 5 });
-    ok({ type: 'placeObject', object: 'scaffale', x: 5, y: 4, category: 'Pasta' });
-    if (door) ok({ type: 'placeObject', object: 'porta', x: 8, y: 5 });
-    if (till) {
-        ok({ type: 'buildRoom', room: 'area_casse', x: 3, y: 8, w: 3, h: 2 });
-        ok({ type: 'placeObject', object: 'cassa', x: 4, y: 9 });
-    }
-    return s;
-}
-
-/** Stop automatic arrivals so a test controls exactly who is in the shop. */
-const noArrivals = (s: GameState) => (s.spawnAcc = -1e9);
-
-/** Tick until no customers are left (or a safety cap), recording each customer's state changes. */
-function runOut(s: GameState, maxTicks = 20_000) {
-    const seen = new Map<number, string[]>();
-    for (let i = 0; i < maxTicks && s.customers.length; i++) {
-        tick(s);
-        for (const c of s.customers) {
-            const h = seen.get(c.id) ?? [];
-            if (h.at(-1) !== c.state) h.push(c.state);
-            seen.set(c.id, h);
-        }
-    }
-    return seen;
-}
 
 test('spawn only with door and reachable till', () => {
     for (const opts of [{ door: false }, { till: false }]) {

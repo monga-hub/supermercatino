@@ -2,22 +2,15 @@
 // or leaving_angry when patience runs out). Pure, deterministic (seeded RNG in state).
 import {
     STEP_MS, GAME_MIN_PER_SEC, CATEGORIES, PRICES, SPAWN_EVERY_MIN, LIST_MIN, LIST_MAX, CUSTOMER_SPEED,
-    PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC,
+    PATIENCE_START, PATIENCE_QUEUE_DRAIN, PATIENCE_WALK_DRAIN, PATIENCE_MISSING, PAY_SEC, TRAITS,
 } from './config.ts';
-import { findPath, type Cell } from './path.ts';
+import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
+import { rand } from './rng.ts';
+import { cashierAt } from './staff.ts';
 import type { GameState, Customer, Category, ShopObject } from './state.ts';
 
 const STEP_S = STEP_MS / 1000;
 const GAME_SEC_PER_STEP = GAME_MIN_PER_SEC * 60 * STEP_S;
-type Walkable = (x: number, y: number) => boolean;
-
-/** mulberry32: next float in [0, 1) from the state's seed. */
-function rand(s: GameState) {
-    let t = (s.rng = (s.rng + 0x6d2b79f5) | 0);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-}
 
 /** Customers walk on sales floor and checkout cells; objects block, except the door. */
 export function walkableFor(s: GameState): Walkable {
@@ -30,26 +23,17 @@ export function walkableFor(s: GameState): Walkable {
     return (x, y) => open.has(`${x},${y}`);
 }
 
-/** Shortest path to any walkable cell next to object `o`. */
-function pathToObject(w: Walkable, from: Cell, o: ShopObject): Cell[] | null {
-    let best: Cell[] | null = null;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-        const p = findPath(w, from, { x: o.x + dx, y: o.y + dy });
-        if (p && (!best || p.length < best.length)) best = p;
-    }
-    return best;
-}
-
 const door = (s: GameState) => s.objects.find((o) => o.type === 'porta');
 
-/** Reachable till with the shortest queue (then shortest walk). */
+/** Reachable till: staffed first, then shortest queue, then shortest walk. */
 function pickTill(s: GameState, w: Walkable, from: Cell) {
-    let best: { till: ShopObject; path: Cell[]; queue: number } | null = null;
+    let best: { till: ShopObject; path: Cell[]; score: number } | null = null;
     for (const till of s.objects.filter((o) => o.type === 'cassa')) {
         const path = pathToObject(w, from, till);
         if (!path) continue;
         const queue = s.customers.filter((c) => c.goal?.kind === 'till' && c.goal.id === till.id).length;
-        if (!best || queue < best.queue || (queue === best.queue && path.length < best.path.length)) best = { till, path, queue };
+        const score = (cashierAt(s, till) ? 0 : 1e6) + queue * 1e3 + path.length;
+        if (!best || score < best.score) best = { till, path, score };
     }
     return best;
 }
@@ -127,30 +111,17 @@ function arrive(s: GameState, c: Customer, w: Walkable) {
     c.x = Number.NaN; // reached the door: gone
 }
 
-function walk(c: Customer) {
-    const step = CUSTOMER_SPEED * STEP_S;
-    const n = c.path[0];
-    const dx = n.x - c.x, dy = n.y - c.y;
-    const d = Math.hypot(dx, dy);
-    if (d <= step) {
-        c.x = n.x;
-        c.y = n.y;
-        c.path.shift();
-    } else {
-        c.x += (dx / d) * step;
-        c.y += (dy / d) * step;
-    }
-}
-
-/** Front of each till's queue starts paying when the till is free. */
+/** At each staffed till, the front of the queue starts paying when the till is free. */
 function serveTills(s: GameState) {
     for (const till of s.objects.filter((o) => o.type === 'cassa')) {
+        const cashier = cashierAt(s, till);
+        if (!cashier) continue;
         const here = s.customers.filter((c) => c.goal?.kind === 'till' && c.goal.id === till.id);
         if (here.some((c) => c.state === 'paying')) continue;
         const front = here.filter((c) => c.state === 'queueing').sort((a, b) => a.queuedAt - b.queuedAt)[0];
         if (front) {
             front.state = 'paying';
-            front.timer = PAY_SEC;
+            front.timer = PAY_SEC / TRAITS[cashier.trait].speed;
         }
     }
 }
@@ -177,13 +148,16 @@ export function updateCustomers(s: GameState) {
             c.timer -= STEP_S;
             if (c.timer <= 0) {
                 s.money += c.basket.reduce((sum, cat) => sum + PRICES[cat], 0);
+                const till = s.objects.find((o) => c.goal?.kind === 'till' && o.id === c.goal.id);
+                const cashier = till && cashierAt(s, till);
+                if (cashier) c.patience = Math.min(PATIENCE_START, c.patience + TRAITS[cashier.trait].patienceBonus);
                 s.servedToday++;
                 leave(s, c, w, false);
             }
             continue;
         }
         if (c.state === 'queueing') continue;
-        if (c.path.length) walk(c);
+        if (c.path.length) walk(c, CUSTOMER_SPEED);
         else arrive(s, c, w);
     }
     s.customers = s.customers.filter((c) => !Number.isNaN(c.x));

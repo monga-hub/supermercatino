@@ -32,10 +32,10 @@ Nessun'altra dipendenza prevista. Pathfinding A* su griglia scritto in casa (pic
 ```
 src/
   game/       # entry Phaser (main.ts) + scenes/ (Game, Hud)
-  sim/        # TS puro, niente Phaser: state.ts (stato, tick), config.ts, build.ts (comandi), path.ts (A*), customers.ts
+  sim/        # TS puro, niente Phaser: state.ts (stato, tick), config.ts, build.ts (comandi), path.ts (A*, walk), customers.ts, staff.ts, rng.ts
   render/     # iso.ts (griglia↔iso), draw.ts (disegno placeholder: tile, box, colori)
 public/assets # sprite dipinti, audio
-tests/      # node --test (sim)
+tests/      # node --test (sim); helpers.ts = negozio di prova condiviso
 scripts/    # browser-test.mjs (Playwright)
 docs/
 ```

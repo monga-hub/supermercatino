@@ -1,7 +1,7 @@
 // Placeholder drawing: flat iso tiles and boxes. Replaced by AI sprites after milestone 03.
 import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
-import type { GameState, RoomType, ObjectType, ShopObject, Customer } from '../sim/state.ts';
+import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role } from '../sim/state.ts';
 
 type G = GameObjects.Graphics;
 
@@ -84,6 +84,17 @@ export function drawCustomer(g: G, c: Customer) {
     g.fillRect(p.x - 12, top, 24 * v, 4);
 }
 
+export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b };
+
+/** A seated cashier is drawn half a cell behind the till, so the till doesn't hide them. */
+const SEAT_OFFSET = 0.45;
+
+export function drawStaff(g: G, st: Staff) {
+    const o = st.state === 'at_till' ? SEAT_OFFSET : 0;
+    box(g, st.x - o, st.y - o, 24, ROLE_COLOR[st.role], 0.38);
+    box(g, st.x - o, st.y - o, 28, 0xf4efe6, 0.24); // berretto bianco
+}
+
 /** Floor layer: lot and rooms. Redraw only when the layout changes. */
 export function drawFloor(g: G, s: GameState) {
     g.clear();
@@ -106,6 +117,7 @@ export function drawThings(g: G, s: GameState) {
     const items: { d: number; draw: () => void }[] = [
         ...s.objects.map((o) => ({ d: o.x + o.y, draw: () => drawObject(g, o) })),
         ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: () => drawCustomer(g, c) })),
+        ...s.staff.map((st) => ({ d: st.x + st.y + (st.state === 'at_till' ? -2 * SEAT_OFFSET : 0.02), draw: () => drawStaff(g, st) })),
     ];
     for (const it of items.sort((a, b) => a.d - b.d)) it.draw();
 }

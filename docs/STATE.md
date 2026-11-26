@@ -4,7 +4,7 @@
 
 ## Last updated
 
-2026-11-26 by Claude / make-game milestone 03
+2026-11-26 by Claude / make-game milestone 04
 
 ## Current phase
 
@@ -12,15 +12,15 @@ development (scaffold completato)
 
 ## Current milestone
 
-[04 — Assumi il cassiere](milestones/04-assumi-il-cassiere.md) (in-progress). Poi 05 Rifornisci gli scaffali, 06 Fine giornata e obiettivi; sprite AI dopo il 06.
+[04 — Assumi il cassiere](milestones/04-assumi-il-cassiere.md) (in-progress, AC automatiche verdi). Poi 05 Rifornisci gli scaffali, 06 Fine giornata e obiettivi; sprite AI dopo il 06.
 
 ## Last action
 
-Milestone 03 chiuso (utente passato al punto successivo). Milestone planning: scritti 04, 05, 06; backlog aggiornato (staff, rifornimento, economia, reputazione, obiettivi promossi); sprite AI spostati dopo il 06 (gameplan aggiornato).
+Milestone 04 implementato: candidati generati dalla seed (3 per ruolo, tratti Normale/Svelto/Chiacchierone), comandi `hire`/`fire`, cassiere che entra e si siede alla cassa, casse che servono solo con cassiere, velocità di pagamento per tratto, stipendi a fine giornata; pannello Staff nell'HUD. Test: `npm test` 23/23, `npm run test:browser` 6/6.
 
 ## Next step
 
-Milestone 04: test rossi in `tests/staff.test.ts`, poi sistema candidati/staff e cassiere.
+Playtest utente del 04 da telefono (pannello Staff, assumere/licenziare). Se ok: 04 → done e si parte col 05 (Rifornisci gli scaffali): test rossi `tests/restock.test.ts`.
 
 ## Blockers
 

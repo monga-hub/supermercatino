@@ -98,7 +98,7 @@ await check('build with mouse', async () => {
     await p2.close();
 });
 
-await check('customers buy and pay', async () => {
+await check('hired cashier serves', async () => {
     const p3 = await browser.newPage({ viewport: { width: 800, height: 600 } });
     await p3.goto(new URL('?manual', base).href);
     await p3.waitForFunction(() => typeof window.render_game_to_text === 'function');
@@ -116,6 +116,9 @@ await check('customers buy and pay', async () => {
         expect(r.ok, `setup failed: ${JSON.stringify(c)} ${JSON.stringify(r)}`);
     }
     const st = async () => JSON.parse(await p3.evaluate(() => window.render_game_to_text()));
+    const cand = (await st()).candidates.find((c) => c.role === 'cassiere');
+    const h = await run({ type: 'hire', candidateId: cand.id });
+    expect(h.ok, `hire failed: ${JSON.stringify(h)}`);
     const m0 = (await st()).money;
     await p3.evaluate(() => window.advanceTime(20000)); // one game hour at 1x
     const s1 = await st();

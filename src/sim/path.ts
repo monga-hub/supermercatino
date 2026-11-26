@@ -1,4 +1,5 @@
 // A* on a 4-connected grid. Pure, no Phaser.
+import { STEP_MS } from './config.ts';
 export type Cell = { x: number; y: number };
 
 const key = (x: number, y: number) => `${x},${y}`;
@@ -42,4 +43,32 @@ export function findPath(walkable: (x: number, y: number) => boolean, from: Cell
         }
     }
     return null;
+}
+
+export type Walkable = (x: number, y: number) => boolean;
+
+/** Shortest path to any walkable cell next to an object at (o.x, o.y). */
+export function pathToObject(w: Walkable, from: Cell, o: Cell): Cell[] | null {
+    let best: Cell[] | null = null;
+    for (const [dx, dy] of DIRS) {
+        const p = findPath(w, from, { x: o.x + dx, y: o.y + dy });
+        if (p && (!best || p.length < best.length)) best = p;
+    }
+    return best;
+}
+
+/** Move one fixed step along `e.path` at `cellsPerSec`; snaps and pops on arrival at each cell. */
+export function walk(e: Cell & { path: Cell[] }, cellsPerSec: number) {
+    const step = (cellsPerSec * STEP_MS) / 1000;
+    const n = e.path[0];
+    const dx = n.x - e.x, dy = n.y - e.y;
+    const d = Math.hypot(dx, dy);
+    if (d <= step) {
+        e.x = n.x;
+        e.y = n.y;
+        e.path.shift();
+    } else {
+        e.x += (dx / d) * step;
+        e.y += (dy / d) * step;
+    }
 }

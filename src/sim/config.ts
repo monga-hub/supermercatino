@@ -70,3 +70,26 @@ export const PAY_SEC = 2;
 
 /** Seed of the sim's random generator (shopping lists). */
 export const RNG_SEED = 12345;
+
+// --- Staff (milestone 04)
+
+/** Staff roles. Later milestones add magazziniere, pulizie, banconiere. */
+export const ROLES = { cassiere: { label: 'Cassiere' } } as const;
+
+/** Candidates on offer for each role at any time. */
+export const CANDIDATES_PER_ROLE = 3;
+
+/** Traits: work speed multiplier and base wage (€/day). Chiacchierone gives paying customers patience back. */
+export const TRAITS = {
+    normale: { label: 'Normale', desc: 'fa il suo', speed: 1, wage: 60, patienceBonus: 0 },
+    svelto: { label: 'Svelto', desc: 'serve in fretta, costa di più', speed: 1.5, wage: 90, patienceBonus: 0 },
+    chiacchierone: { label: 'Chiacchierone', desc: 'lento, ma mette di buonumore', speed: 0.7, wage: 45, patienceBonus: 30 },
+} as const;
+
+/** Wage spread around the trait's base (± €). */
+export const WAGE_SPREAD = 5;
+
+export const STAFF_NAMES = ['Pina', 'Gino', 'Rosa', 'Tonino', 'Carla', 'Beppe', 'Lucia', 'Franco', 'Assunta', 'Mimmo', 'Teresa', 'Salvo'] as const;
+
+/** Staff walking speed, cells per second. */
+export const STAFF_SPEED = 2.5;

@@ -2,7 +2,7 @@
 
 ## Status
 
-in-progress
+in-progress — automated AC green; waiting for user playtest (Staff panel on phone)
 
 ## Objective
 
@@ -14,7 +14,7 @@ Introdurre lo staff, secondo verbo del loop ("Assumi"). Il giocatore sceglie da 
 - Comandi: `{ type: 'hire', candidateId }` e `{ type: 'fire', staffId }`. Assumere rimpiazza il candidato con uno nuovo. Si può fare anche in pausa.
 - Cassiere: entra dalla porta, va alla cassa libera più vicina, ci resta (`state: 'at_till'`). Una cassa senza cassiere non serve: i clienti in fila aspettano e perdono pazienza.
 - Velocità del cassiere = tempo di pagamento (`PAY_SEC / speed`).
-- Tratti v1: *Svelto* (più veloce), *Chiacchierone* (più lento ma chi paga recupera un po' di pazienza... per l'uscita contenta, conta per la reputazione nel 06), *Normale*. Numeri in `config.ts`.
+- Tratti v1: *Svelto* (più veloce), *Chiacchierone* (più lento ed economico, ma chi paga da lui recupera pazienza ed esce più contento: conterà per la reputazione nel 06), *Normale*. Numeri in `config.ts`.
 - Stipendi: a fine giornata la cassa paga la somma degli stipendi (anticipo dell'economia giornaliera del 06).
 - Staff camminano su sala vendita, area casse e magazzino.
 - UI: pulsante **Staff** nell'HUD che apre un pannello: candidati (nome, ruolo, stipendio, tratto, *Assumi*) e staff assunto (*Licenzia*). Su telefono il pannello copre lo schermo e si chiude.
@@ -33,13 +33,13 @@ Introdurre lo staff, secondo verbo del loop ("Assumi"). Il giocatore sceglie da 
 
 ## Acceptance criteria
 
-- [ ] I candidati sono generati in modo deterministico dalla seed: 3 per ruolo, campi validi — test: `tests/staff.test.ts::candidates are seeded and valid`
-- [ ] `hire` sposta il candidato nello staff e lo rimpiazza; `fire` lo rimuove; id inesistenti → errore senza cambiare lo stato — test: `tests/staff.test.ts::hire and fire`
-- [ ] Senza cassiere la cassa non serve: il cliente aspetta e alla fine esce arrabbiato senza pagare — test: `tests/staff.test.ts::unstaffed till does not serve`
-- [ ] Il cassiere entra, raggiunge la cassa e da lì i clienti pagano — test: `tests/staff.test.ts::cashier walks to till and serves`
-- [ ] Un cassiere più veloce serve in meno tick — test: `tests/staff.test.ts::faster cashier serves faster`
-- [ ] A fine giornata gli stipendi vengono scalati dalla cassa — test: `tests/staff.test.ts::wages paid at day end`
-- [ ] Nel browser, assumere un cassiere via `dispatch` in un negozio costruito porta clienti serviti dopo un'ora di gioco — test: `scripts/browser-test.mjs::hired cashier serves`
+- [x] I candidati sono generati in modo deterministico dalla seed: 3 per ruolo, campi validi — test: `tests/staff.test.ts::candidates are seeded and valid`
+- [x] `hire` sposta il candidato nello staff e lo rimpiazza; `fire` lo rimuove; id inesistenti → errore senza cambiare lo stato — test: `tests/staff.test.ts::hire and fire`
+- [x] Senza cassiere la cassa non serve: il cliente aspetta e alla fine esce arrabbiato senza pagare — test: `tests/staff.test.ts::unstaffed till does not serve`
+- [x] Il cassiere entra, raggiunge la cassa e da lì i clienti pagano — test: `tests/staff.test.ts::cashier walks to till and serves`
+- [x] Un cassiere più veloce serve in meno tick — test: `tests/staff.test.ts::faster cashier serves faster`
+- [x] A fine giornata gli stipendi vengono scalati dalla cassa — test: `tests/staff.test.ts::wages paid at day end`
+- [x] Nel browser, assumere un cassiere via `dispatch` in un negozio costruito porta clienti serviti dopo un'ora di gioco — test: `scripts/browser-test.mjs::hired cashier serves`
 - [ ] Pannello Staff leggibile e usabile su desktop e telefono — verified by user playtest
 
 ## Exit condition
@@ -55,4 +55,9 @@ L'utente costruisce il negozio, apre il pannello Staff, assume un cassiere → l
 
 ## Notes
 
+- Implementazione: `src/sim/staff.ts` (candidati, `hire`/`fire`, comportamento per ruolo), comandi `hire`/`fire` in `src/sim/build.ts`, RNG condiviso in `src/sim/rng.ts`, `pathToObject`/`walk` spostati in `src/sim/path.ts`.
+- Il cassiere si siede sulla cella della cassa (stato `at_till`); nel disegno sta mezzo passo dietro, così la cassa non lo copre. I clienti scelgono prima le casse con cassiere, poi la fila più corta.
+- Chiacchierone: chi paga da lui recupera 30 di pazienza (oggi si vede solo nella barra; conterà per la reputazione nel 06).
+- Licenziare è immediato (sparisce); un cassiere senza casse libere resta `idle` dove si trova.
+- I test usano `tests/helpers.ts` (negozio di prova, assunzione, `untilTicks`, `runOut`).
 - Il sistema candidati/staff deve accogliere i ruoli futuri (Magazziniere nel 05) senza riscritture: ruolo come stringa, comportamento per ruolo in una funzione.

@@ -1,6 +1,7 @@
 // Pure simulation: no Phaser. The whole game is one JSON-serializable object.
-import { GRID_W, GRID_H, STEP_MS, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC, SPEEDS, START_MONEY, ROOMS, OBJECTS, CATEGORIES, RNG_SEED } from './config.ts';
+import { GRID_W, GRID_H, STEP_MS, DAY_OPEN_MIN, DAY_CLOSE_MIN, GAME_MIN_PER_SEC, SPEEDS, START_MONEY, ROOMS, OBJECTS, CATEGORIES, RNG_SEED, ROLES, TRAITS } from './config.ts';
 import { updateCustomers } from './customers.ts';
+import { updateStaff, refillCandidates } from './staff.ts';
 import type { Cell } from './path.ts';
 
 export type Speed = (typeof SPEEDS)[number];
@@ -11,6 +12,19 @@ export type Category = (typeof CATEGORIES)[number];
 
 export type Room = { id: number; type: RoomType; x: number; y: number; w: number; h: number };
 export type ShopObject = { id: number; type: ObjectType; x: number; y: number; category?: Category; stock?: number };
+
+export type Role = keyof typeof ROLES;
+export type Trait = keyof typeof TRAITS;
+export type Candidate = { id: number; role: Role; name: string; trait: Trait; wage: number };
+export type StaffState = 'arriving' | 'idle' | 'at_till';
+export type Staff = Candidate & {
+    state: StaffState;
+    x: number;
+    y: number;
+    path: Cell[];
+    /** Till this cashier works at (walking there or seated). */
+    tillId: number | null;
+};
 
 export type CustomerState = 'shopping' | 'queueing' | 'paying' | 'leaving' | 'leaving_angry';
 export type Customer = {
@@ -53,10 +67,12 @@ export type GameState = {
     queueSeq: number;
     /** mulberry32 state. */
     rng: number;
+    candidates: Candidate[];
+    staff: Staff[];
 };
 
 export function createState(): GameState {
-    return {
+    const s: GameState = {
         grid: { w: GRID_W, h: GRID_H },
         day: 1,
         clockSec: DAY_OPEN_MIN * 60,
@@ -72,7 +88,11 @@ export function createState(): GameState {
         spawnAcc: 0,
         queueSeq: 0,
         rng: RNG_SEED,
+        candidates: [],
+        staff: [],
     };
+    refillCandidates(s);
+    return s;
 }
 
 /** One fixed step of game time. Speed is applied by running more steps, not bigger ones. */
@@ -83,7 +103,9 @@ export function tick(s: GameState): void {
         s.clockSec = DAY_OPEN_MIN * 60;
         s.servedToday = 0;
         s.lostToday = 0;
+        s.money -= s.staff.reduce((sum, st) => sum + st.wage, 0); // wages
     }
+    updateStaff(s);
     updateCustomers(s);
 }
 

@@ -1,11 +1,14 @@
 // Build commands. Commands are plain data so UI, tests and agents share one entry point.
 import { ROOMS, OBJECTS, CATEGORIES, DEMOLISH_REFUND, SHELF_STOCK } from './config.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
+import { hire, fire } from './staff.ts';
 
 export type Command =
     | { type: 'buildRoom'; room: RoomType; x: number; y: number; w: number; h: number }
     | { type: 'placeObject'; object: ObjectType; x: number; y: number; category?: string }
-    | { type: 'demolish'; x: number; y: number };
+    | { type: 'demolish'; x: number; y: number }
+    | { type: 'hire'; candidateId: number }
+    | { type: 'fire'; staffId: number };
 
 export type Result = { ok: true; cost: number } | { ok: false; reason: string };
 
@@ -44,6 +47,8 @@ export function check(s: GameState, c: Command): Result {
         }
         return afford(s, def.cost);
     }
+    if (c.type === 'hire') return s.candidates.some((x) => x.id === c.candidateId) ? { ok: true, cost: 0 } : fail('Candidato non trovato');
+    if (c.type === 'fire') return s.staff.some((x) => x.id === c.staffId) ? { ok: true, cost: 0 } : fail('Dipendente non trovato');
     // demolish
     const obj = objectAt(s, c.x, c.y);
     if (obj) return { ok: true, cost: -Math.floor(OBJECTS[obj.type].cost * DEMOLISH_REFUND) };
@@ -71,6 +76,10 @@ export function apply(s: GameState, c: Command): Result {
             o.stock = SHELF_STOCK;
         }
         s.objects.push(o);
+    } else if (c.type === 'hire') {
+        hire(s, c.candidateId);
+    } else if (c.type === 'fire') {
+        fire(s, c.staffId);
     } else {
         const obj = objectAt(s, c.x, c.y);
         if (obj) s.objects.splice(s.objects.indexOf(obj), 1);

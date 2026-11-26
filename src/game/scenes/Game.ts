@@ -116,7 +116,7 @@ export class Game extends Scene {
         } else if (cmd.type === 'placeObject') {
             tile(g, cmd.x, cmd.y, color, 0.45);
             drawObject(g, { type: cmd.object, x: cmd.x, y: cmd.y, category: cmd.category as Category }, 0.6);
-        } else {
+        } else if (cmd.type === 'demolish') {
             tile(g, cmd.x, cmd.y, BAD, 0.5);
         }
     }
