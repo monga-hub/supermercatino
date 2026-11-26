@@ -16,7 +16,7 @@ development (scaffold completato)
 
 ## Last action
 
-Milestone 01 implementato: sim pura (`src/sim/state.ts`, `config.ts`) con orologio in secondi interi, pausa e 1x/2x/3x, cambio giorno a chiusura; conversione iso (`src/render/iso.ts`); scene `Game` (pavimento a scacchi, drag/rotella/pinch) e `Hud` (orologio + pulsanti, tasti spazio/1/2/3); hook `render_game_to_text`/`advanceTime`; `?manual` per test deterministici. Test: `npm test` 5/5, `npm run test:browser` 3/3 su dev e su build di produzione. Preparato `.github/workflows/deploy.yml` per GitHub Pages.
+Milestone 01 implementato: sim pura (`src/sim/state.ts`, `config.ts`) con orologio in secondi interi, pausa e 1x/2x/3x, cambio giorno a chiusura; conversione iso (`src/render/iso.ts`); scene `Game` (pavimento a scacchi, drag/rotella/pinch) e `Hud` (orologio + pulsanti, tasti spazio/1/2/3); hook `render_game_to_text`/`advanceTime`; `?manual` per test deterministici. Test: `npm test` 5/5, `npm run test:browser` 3/3 su dev e su build di produzione. GitHub Pages attivo: https://monga-hub.github.io/supermercatino/ (deploy a ogni push su main; controlli browser verdi anche sul sito pubblicato).
 
 ## Next step
 

@@ -12,7 +12,7 @@ const page = await browser.newPage();
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 page.on('pageerror', (e) => errors.push(e.message));
 
-await page.goto(new URL('/?manual', base).href);
+await page.goto(new URL('?manual', base).href);
 await page.waitForSelector('#game-container canvas', { timeout: 10000 });
 await page.waitForFunction(() => typeof window.render_game_to_text === 'function', null, { timeout: 10000 });
 
