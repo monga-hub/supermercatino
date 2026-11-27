@@ -259,6 +259,20 @@ export class Hud extends Scene {
     }
 
     /** Flow buttons left-to-right, wrapping; returns the height used. */
+    /** Same width for a set of buttons (playtest: equal buttons): the widest one's, at most `cap`. */
+    sameWidth(ts: GameObjects.Text[], cap = Infinity) {
+        for (const t of ts) t.setFixedSize(0, 0);
+        const w = Math.min(cap, Math.max(0, ...ts.map((t) => t.width)));
+        for (const t of ts) t.setFixedSize(w, 0).setAlign('center');
+    }
+
+    /** Same width for the shown bar buttons; `oneRow`: only if they still fit across the screen (else each its own). */
+    sameRow(btns: Btn[], W: number, oneRow = false, gap = 6) {
+        const shown = btns.filter((b) => !b.show || b.show()).map((b) => b.t);
+        this.sameWidth(shown, W - 20);
+        if (oneRow && shown.length * ((shown[0]?.width ?? 0) + gap) - gap > W - 20) for (const t of shown) t.setFixedSize(0, 0);
+    }
+
     flow(btns: Btn[], top: number, maxW: number, gap = 6) {
         let x = 10, y = top, rowH = 0;
         for (const b of btns) {
@@ -301,18 +315,21 @@ export class Hud extends Scene {
         const groupBtns = this.groups.map((g) => g.btn);
         groupBtns[0].t.setText(this.sim?.level === 0 ? 'Costruisci' : 'Arredi');
         for (const b of groupBtns) b.t.setFontSize(W < 420 ? 14 : 15); // five groups on a narrow phone
+        this.sameRow(groupBtns, W, true);
         const gH = this.flow(groupBtns, 0, W);
         let top = H - 8 - gH;
         this.flow(groupBtns, top, W);
         for (const g of this.groups) for (const b of g.items) this.vis(b, false);
         const items = this.groups.find((g) => g.key === this.open)?.items ?? [];
         if (items.length) {
+            this.sameRow(items, W);
             const h = this.flow(items, 0, W);
             top -= 6 + h;
             this.flow(items, top, W);
         }
         const showCats = this.tool?.kind === 'object' && this.tool.object === 'scaffale';
         if (showCats) {
+            this.sameRow(this.catBtns, W);
             const h = this.flow(this.catBtns, 0, W);
             top -= 6 + h;
             this.flow(this.catBtns, top, W);
@@ -404,10 +421,11 @@ export class Hud extends Scene {
         let tabsH = 0;
         if (this.panelKind === 'staff') {
             let tx = x0 + 12, ty = y0 + 44;
-            for (const r of roles) {
-                const on = r === this.staffTab;
-                const t = this.add.text(0, 0, ROLE_TAB[r], { ...TEXT, fontSize: 14, color: DARK, padding: { x: 9, y: 5 } })
-                    .setInteractive({ useHandCursor: true }).on('pointerdown', () => { this.staffTab = r; this.panelScroll = 0; this.openPanel(); });
+            const tabs = roles.map((r) => this.add.text(0, 0, ROLE_TAB[r], { ...TEXT, fontSize: 14, color: DARK, padding: { x: 9, y: 5 } })
+                .setInteractive({ useHandCursor: true }).on('pointerdown', () => { this.staffTab = r; this.panelScroll = 0; this.openPanel(); }));
+            this.sameWidth(tabs, w - 24);
+            for (const [i, r] of roles.entries()) {
+                const on = r === this.staffTab, t = tabs[i];
                 if (tx + t.width > x0 + w - 12) { tx = x0 + 12; ty += t.height + 8; }
                 t.setPosition(tx, ty);
                 tx += t.width + 6;
@@ -424,7 +442,7 @@ export class Hud extends Scene {
             const subT = this.add.text(x0 + 12, y + 22, sub, { ...small, wordWrap: { width: w - 140 } });
             body.add(subT);
             const b = this.add
-                .text(x0 + w - 12, y + 6, label, { ...TEXT, fontSize: 16, color: inkOn(face), padding: { x: 10, y: 6 } })
+                .text(x0 + w - 12, y + 6, label, { ...TEXT, fontSize: 16, color: inkOn(face), padding: { x: 10, y: 6 }, fixedWidth: 96, align: 'center' })
                 .setOrigin(1, 0)
                 .setInteractive({ useHandCursor: true })
                 .on('pointerdown', () => {
@@ -688,6 +706,7 @@ export class Hud extends Scene {
             .setOrigin(0.5, 0)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', b.fn));
+        this.sameWidth(btns, two ? w / 2 - 24 : w - 32);
         const rows = two ? Math.ceil(btns.length / 2) : btns.length;
         const btnsH = rows * ((btns[0]?.height ?? 0) + 10) - 10;
         const bodyH = body.length ? 10 + bodyT.height : 0;
@@ -765,7 +784,7 @@ export class Hud extends Scene {
         c.add(this.add.text(px, y, `💶 €${st.wage} al giorno   📍 ${STAFF_STATE[st.state]}`, { ...TEXT, fontSize: 14, wordWrap: { width: w - 36 } }));
         const by = y0 + h - 60;
         const mk = (label: string, face: number, fn: () => void, x: number) => {
-            const t = this.add.text(x, by, label, { ...TEXT, fontSize: 18, color: LIGHT, padding: { x: 16, y: 9 } }).setOrigin(0.5, 0)
+            const t = this.add.text(x, by, label, { ...TEXT, fontSize: 18, color: LIGHT, padding: { x: 16, y: 9 }, fixedWidth: Math.min(150, w * 0.4), align: 'center' }).setOrigin(0.5, 0)
                 .setInteractive({ useHandCursor: true }).on('pointerdown', fn);
             c.add([this.pill(t, face), t]);
             this.sheetBtns.push(t);
