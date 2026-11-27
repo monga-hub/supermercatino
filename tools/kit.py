@@ -15,6 +15,9 @@ RES = 2  # frames stored at 2x, drawn at 0.5 scale: sharp when zoomed in
 #             pieces (same unit, other states) take the same scale and anchor;
 #   ('h', px): the whole sheet scaled so its first piece is px tall, anchored on each cell's centre line
 #             (characters: walk frames don't jitter sideways, seated/reaching poses keep their relative size).
+# Frame rebuilt from another cell with the legs below `hem` (fraction of the cell height) mirrored around the hips:
+# the signora's three walk frames all have the right leg forward, so her walk never alternated (playtest 2026-11-27).
+SWAP_LEGS = {'signora_walk_2': (0, 0.752)}
 SEATED = 1.3  # seated cashiers drawn bigger, to match the two-cell counter (playtest 2026-11-27)
 STATES = lambda b: [b, f'{b}_mezzo', f'{b}_vuoto']
 WALK = lambda n: [f'{n}_walk_0', f'{n}_walk_1', f'{n}_walk_2']
@@ -88,6 +91,13 @@ def unline(img, cols):
             if dark[x]: out[:, max(0, x - 3):x + 4] = 255
     return Image.fromarray(out.astype(np.uint8))
 
+def swap_legs(cell, hem):
+    a = np.array(cell); y = round(hem * a.shape[0])
+    xs = np.nonzero(a[y].min(1) < 235)[0]; xc = (xs.min() + xs.max()) / 2  # hips
+    legs = np.full_like(a[y:], 255); src = np.round(2 * xc - np.arange(a.shape[1])).astype(int); ok = (src >= 0) & (src < a.shape[1])
+    legs[:, ok] = a[y:, src[ok]]; a[y:] = legs
+    return Image.fromarray(a)
+
 def pieces():
     """Yields (name, image, anchor_x) for every piece of every sheet."""
     for sheet, cols, rows, (kind, v), names in SHEETS:
@@ -100,7 +110,8 @@ def pieces():
         for i, name in enumerate(names):
             if not name: continue
             name, w = name if isinstance(name, tuple) else (name, None)  # 'w': own width; 'h': size multiplier
-            p, left = cutout(img.crop(((i % cols) * cw, (i // cols) * ch, (i % cols + 1) * cw, (i // cols + 1) * ch)))
+            cell = lambda j: img.crop(((j % cols) * cw, (j // cols) * ch, (j % cols + 1) * cw, (j // cols + 1) * ch))
+            p, left = cutout(swap_legs(cell(SWAP_LEGS[name][0]), SWAP_LEGS[name][1]) if name in SWAP_LEGS else cell(i))
             if kind == 'w': f = k = (w or v) * TILE_W * RES / p.width; ax = 0.5
             elif kind == 'foot':
                 if f is None:

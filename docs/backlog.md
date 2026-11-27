@@ -174,3 +174,4 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 - [x] Camminata (playtest 2026-11-27): la mamma camminava all'indietro (disegno rivolto a sinistra, specchiati in `tools/kit.py` `FACES_LEFT`); su e giù e ondeggio da un piede all'altro (`walkBob`, `walkSway` in `src/render/sprites.ts`). Fatto subito, senza milestone.
 - [ ] Personaggi visti di spalle quando camminano verso il fondo (in alto sullo schermo): ora mostrano sempre la faccia. Servono fogli Gemini nuovi con la vista da dietro, e fotogrammi delle gambe più diversi tra loro.
   - Source: playtest 2026-11-27
+- [x] Signora con la gamba destra sempre avanti (playtest 2026-11-27): terzo fotogramma ricostruito con le gambe specchiate (`SWAP_LEGS` in `tools/kit.py`). Altri personaggi con lo stesso difetto: da controllare al playtest.
