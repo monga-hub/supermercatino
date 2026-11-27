@@ -41,6 +41,8 @@ export class Hud extends Scene {
     speedBtns: Btn[] = [];
     groups: Group[] = [];
     catBtns: Btn[] = [];
+    /** Move, rotate, remove: over the object being edited after a long press. */
+    editBtns: Btn[] = [];
     /** Group whose items row is open. */
     open: string | null = null;
     panel: GameObjects.Container | null = null;
@@ -152,6 +154,25 @@ export class Hud extends Scene {
                 this.button('Audio', () => audio.setMuted(!audio.muted), () => !audio.muted, GROUP_BG, undefined, undefined, undefined, 15),
             ]),
         ];
+        const game = () => this.game_;
+        const at = () => {
+            const o = game().edit && this.sim.objects.find((x) => x.id === game().edit!.id);
+            return o ? { x: o.x, y: o.y } : null;
+        };
+        this.editBtns = [
+            this.button('✋', () => {
+                const e = game().edit;
+                if (!e) return;
+                e.moving = !e.moving;
+                if (e.moving) this.showToast('Tocca dove vuoi metterlo');
+            }, () => !!game().edit?.moving, GROUP_BG, undefined, undefined, undefined, 24),
+            this.button('🔄', () => { const c = at(); if (c) this.run({ type: 'rotate', ...c }); }, () => false, GROUP_BG, undefined, undefined, undefined, 24),
+            this.button('🗑', () => {
+                const c = at();
+                if (c && this.run({ type: 'demolish', ...c }).ok) game().edit = null;
+            }, () => false, '#8e2a1f', undefined, undefined, undefined, 24),
+        ];
+        for (const b of this.editBtns) b.t.setDepth(6);
         for (const g of this.groups) g.btn.t.setPadding(g.btn.icon ? 8 + g.btn.icon.displayWidth + 4 : 8, 7, 8, 7); // tighter: the group bar fits a phone
         const special: string[] = Object.values(ONLY_IN);
         this.catBtns = CATEGORIES.filter((c) => !special.includes(c)).map((cat) => // salumi, pane, latticini: their own counter
@@ -168,6 +189,7 @@ export class Hud extends Scene {
             this.setTool(null);
             this.closePanel();
             this.open = null;
+            this.game_.edit = null;
             this.layout();
         });
 
@@ -178,7 +200,7 @@ export class Hud extends Scene {
             this.bubbleKey = '';
             if (this.panel) this.openPanel();
         });
-        window.hudButtons = () => [...this.speedBtns, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns]
+        window.hudButtons = () => [...this.speedBtns, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns, ...this.editBtns]
             .filter((b) => b.t.visible)
             .map((b) => ({ label: b.t.text, x: b.t.x + b.t.width / 2, y: b.t.y + b.t.height / 2, w: b.t.width, active: b.active() }));
         window.hudText = () => (this.children.list as GameObjects.Text[]).concat(...this.children.list.flatMap((c) => (c as GameObjects.Container).list ?? []) as GameObjects.Text[])
@@ -597,6 +619,25 @@ export class Hud extends Scene {
         c.add([bg, titleT, bodyT, ...btns]);
     }
 
+    /** The three edit buttons in a row just above the edited object. */
+    placeEditBtns(blocked: boolean) {
+        const game = this.game_;
+        const o = game.edit && this.sim.objects.find((x) => x.id === game.edit!.id);
+        for (const b of this.editBtns) this.vis(b, !!o && !blocked);
+        if (!o || blocked) return;
+        const cam = game.cameras.main;
+        const p = gridToIso(o.x, o.y);
+        const sx = ((p.x - cam.worldView.x) * cam.zoom) / DPR;
+        const sy = ((p.y + TILE_H / 2 - 70 - cam.worldView.y) * cam.zoom) / DPR; // above a shelf's top
+        const w = this.editBtns.reduce((a, b) => a + b.t.width + 8, -8);
+        let x = Math.max(6, Math.min(this.W - 6 - w, sx - w / 2));
+        const y = Math.max(this.topH + 4, sy - this.editBtns[0].t.height);
+        for (const b of this.editBtns) {
+            b.t.setPosition(x, y);
+            x += b.t.width + 8;
+        }
+    }
+
     /** Tool last laid out for: the goods row shows with the shelf tool. */
     toolKey = '';
 
@@ -614,7 +655,8 @@ export class Hud extends Scene {
             this.layout();
         }
         this.drawBars();
-        for (const b of [...this.speedBtns, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns]) {
+        this.placeEditBtns(blockedNow(this));
+        for (const b of [...this.speedBtns, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns, ...this.editBtns]) {
             const on = b.active();
             b.t.setBackgroundColor(on ? BTN_ACTIVE_BG : b.bg);
             b.t.setColor(on ? DARK : (b.fg ?? LIGHT));
@@ -630,3 +672,5 @@ export class Hud extends Scene {
         this.updateArrow(time, blocked);
     }
 }
+
+const blockedNow = (h: Hud) => !!(h.registry.get('menu') || h.sim.summary || h.sim.outcome || h.panel);

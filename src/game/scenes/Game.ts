@@ -1,6 +1,6 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { createState, tick, advance, type GameState, type RoomType, type ObjectType, type Category } from '../../sim/state.ts';
-import { apply, check, type Command } from '../../sim/build.ts';
+import { apply, check, objectAt, type Command } from '../../sim/build.ts';
 import { STEP_MS, TAP_ICON_BELOW, BEAR_BONUS_MONEY, BEAR_BONUS_REP, INSPECTION_DAY } from '../../sim/config.ts';
 import { readyAt, tricking } from '../../sim/customers.ts';
 import { tired } from '../../sim/staff.ts';
@@ -22,6 +22,7 @@ const ICON_LIFT: Record<string, number> = { s: 86, t: 58, p: 24, c: 50, f: 66, w
 const ICON_SCALE: Record<string, number> = { p: 0.75, w: 0.6, v: 0.6 };
 const ZOOM_MAX = 2.5;
 const TAP_SLOP = 10; // px a pointer may move and still count as a tap
+const LONG_MS = 450; // hold this long on an object to edit it (milestone 21)
 const OK = 0x4caf50;
 const BAD = 0xe53935;
 
@@ -62,6 +63,12 @@ export class Game extends Scene {
     /** Campaign levels won (milestone 20), kept apart from the save. */
     progress: Progress = { won: [], seen: [] };
     saveAt = 0;
+    /** Object being edited after a long press (UI only); moving: the next tap on a cell moves it there. */
+    edit: { id: number; moving: boolean } | null = null;
+    /** The press that may become a long press, and whether the current one already did. */
+    press: { t: number } | null = null;
+    longFired = false;
+    sel: GameObjects.Graphics;
 
     constructor() {
         super('Game');
@@ -91,6 +98,7 @@ export class Game extends Scene {
         this.preview = this.add.graphics();
         this.things = this.add.graphics();
         this.over = this.add.graphics().setDepth(9000);
+        this.sel = this.add.graphics().setDepth(8999);
         drawFloor(this.floor, this.sim);
         this.setupCamera();
         this.setupInput();
@@ -139,6 +147,8 @@ export class Game extends Scene {
             this.saveAt = _time + 3000;
             this.store();
         }
+        this.checkLongPress();
+        this.drawSelection();
         this.used = 0;
         drawThings(this.things, this.over, this.sim, this.put);
         for (let i = this.used; i < this.sprites.length; i++) this.sprites[i].setVisible(false);
@@ -158,6 +168,26 @@ export class Game extends Scene {
         if (s.furbetti.caught > this.seen.caught) this.game.events.emit('toast', 'Beccato! Il furbetto paga tutto');
         if (s.furbetti.escaped > this.seen.escaped) this.game.events.emit('toast', 'Il furbetto è scappato senza pagare!');
         this.seen = { day: s.day, inspection: !!i, ...s.furbetti };
+    }
+
+    /** Held still on an object with no tool: edit it (move, rotate, remove). */
+    checkLongPress() {
+        const p = this.input.activePointer;
+        if (!this.press || !p.isDown || this.pinched || this.tool || p.getDistance() > TAP_SLOP * DPR) return;
+        if (this.time.now - this.press.t < LONG_MS) return;
+        this.press = null;
+        const c = this.downCell(p);
+        const o = objectAt(this.sim, c.x, c.y);
+        if (!o) return;
+        this.longFired = true;
+        this.edit = { id: o.id, moving: false };
+    }
+
+    drawSelection() {
+        const g = this.sel.clear();
+        const o = this.edit && this.sim.objects.find((x) => x.id === this.edit!.id);
+        if (this.edit && !o) this.edit = null; // removed
+        if (o) tile(g, o.x, o.y, 0xffd23f, this.edit!.moving ? 0.35 + 0.25 * Math.sin(this.time.now / 120) : 0.55);
     }
 
     /** Painted badges: restock over shelves running low (delivery once on their way), money over tills with a bill ready. */
@@ -246,6 +276,7 @@ export class Game extends Scene {
         this.heard = snap(s);
         this.registry.set('sim', this.sim);
         this.registry.set('tool', null);
+        this.edit = null;
         for (const t of this.icons.values()) t.destroy();
         this.icons.clear();
         drawFloor(this.floor, this.sim);
@@ -375,14 +406,24 @@ export class Game extends Scene {
             if (this.tool && !p.wasTouch) this.drawPreview(p); // hover preview, mouse only
         });
 
+        this.input.on('pointerdown', () => (this.press = { t: this.time.now }));
         this.input.on('pointerup', (p: Input.Pointer) => {
             const wasPinch = this.pinched;
+            this.press = null;
             if (downPointers().length === 0) {
                 this.pinch = null;
                 this.pinched = false;
             }
+            if (this.longFired) return void (this.longFired = false); // the long press opened the editor
             if (wasPinch || !p.leftButtonReleased() || hud.onPanel(p.downX, p.downY)) return;
             const isTap = p.getDistance() <= TAP_SLOP * DPR;
+            if (isTap && this.edit) {
+                const o = this.sim.objects.find((x) => x.id === this.edit!.id)!;
+                const c = this.cellOf(p);
+                if (!this.edit.moving) this.edit = null; // tapped elsewhere: done
+                else if (this.run({ type: 'move', x: o.x, y: o.y, toX: c.x, toY: c.y }).ok) this.edit = null;
+                return;
+            }
             const tapped = isTap && this.iconCommand(p);
             if (tapped) return void this.run(tapped);
             if (!this.tool) return;

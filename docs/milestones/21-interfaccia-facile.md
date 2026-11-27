@@ -15,6 +15,7 @@ Rendere il gioco leggibile per chi lo apre la prima volta, soprattutto sul telef
 - Guida passo passo nel livello 1: lista di passi ("Metti uno scaffale di Pasta", "Metti la cassa", "Assumi un cassiere", "Premi 1x", "Tocca 💰"); freccia/evidenziatura sul tasto o sulla cella del passo corrente; il passo si spunta da solo quando la sim lo vede fatto.
 - Fumetto "Novità" la prima volta che compare in partita una meccanica del livello (prima icona 📦, prima macchia, primo furbetto...): una frase, si chiude con un tocco; ricordato nei progressi.
 - Testi nitidi sul telefono (risoluzione del testo Phaser = devicePixelRatio).
+- **Pressione lunga su un arredo** (richiesta utente 2026-11-27): tre icone sopra l'oggetto, ✋ sposta (poi tocca la cella), 🔄 gira, 🗑 togli (rimborso a metà). Spostare è gratis e segue le regole del piazzamento.
 - Messaggi di errore più chiari dove servono (es. "Lo scaffale va nella sala vendita (pavimento giallo)").
 - **Il mondo riempie lo schermo** (confronto con Theme Hospital, 2026-11-27): HUD in alto su una riga (giorno, ora, €, velocità) con icone al posto delle parole; Audio e Staff fuori dalla fila delle velocità; stats e obiettivi nelle barre; la camera del livello riempie lo spazio libero tra HUD e barra, niente vuoto marrone sopra e sotto.
 - **Tasti con icone**: frame del kit (scaffale, cassa, persona, cassa di merce, martello) al posto delle sole parole.
@@ -38,6 +39,8 @@ Rendere il gioco leggibile per chi lo apre la prima volta, soprattutto sul telef
 - [x] Barre obiettivi in alto coerenti con la sim — test: `scripts/browser-test.mjs` (`render_game_to_text`)
 - [x] Su telefono verticale e orizzontale la barra sta su una riga e niente si sovrappone — screenshot Playwright a 390×844 e 844×390
 - [x] A 390×844 il negozio del livello 1 occupa tutta la larghezza e l'HUD in alto è una riga più le barre (72 px) — screenshot Playwright `output/21-test-390x844.png`. Metà dell'altezza non si può: il rombo isometrico è largo il doppio che alto, in verticale lo limita la larghezza; il vuoto sopra e sotto lo riempie l'esterno del 21b.
+- [x] Spostare un arredo lo tiene uguale (merce, scorte) e gratis, con le regole del piazzamento; cassiere e fila seguono la cassa spostata — test: `tests/edit.test.ts`
+- [x] Pressione lunga apre le tre icone; sposta, gira e togli funzionano col dito — test: `scripts/browser-test.mjs`
 - [ ] Un giocatore nuovo finisce il livello 1 seguendo solo la guida — verified by user playtest
 
 ## Exit condition
@@ -59,4 +62,4 @@ L'utente fa giocare il livello 1 a qualcuno che non l'ha mai visto: segue le fre
   - Pina (`signora_idle`) parla in un fumetto sopra la barra (accanto in orizzontale); freccia gialla sul tasto, sulla stanza o sull'icona del passo. Le novità coperte dalla guida (💰, 📦) si segnano viste.
   - Testo nitido: canvas a `devicePixelRatio` (max 3) con `zoom 1/DPR` (`src/game/dpr.ts`, `main.ts`); la camera dell'HUD zooma di DPR, quindi il layout resta in px CSS.
   - Hook nuovi per i test: `hudButtons()`, `hudText()`.
-
+  - Pressione lunga (450 ms, senza strumento) su un oggetto: `Game.edit`, cella evidenziata in giallo; comando sim `move` (check = piazzamento gratis senza l'oggetto). Novità 'edit' la prima volta che c'è un arredo.

@@ -331,6 +331,48 @@ await check('campaign: a win opens the next level, the free shop after level 3',
 });
 await ps.close();
 
+await check('long press on an object: move, rotate, remove', async () => {
+    const pl = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    await pl.goto(new URL('?manual', base).href);
+    await pl.waitForFunction(() => typeof window.hudButtons === 'function');
+    await pl.waitForTimeout(200);
+    const st = async () => JSON.parse(await pl.evaluate(() => window.render_game_to_text()));
+    const run = (c) => pl.evaluate((x) => window.dispatch(x), c);
+    expect((await run({ type: 'buildRoom', room: 'sala_vendita', x: 8, y: 8, w: 4, h: 4 })).ok, 'room');
+    expect((await run({ type: 'placeObject', object: 'scaffale', x: 9, y: 9, category: 'Pasta' })).ok, 'shelf');
+    const at = (x, y) => pl.evaluate(([a, b]) => window.cellToScreen(a, b), [x, y]);
+    const frames = () => pl.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    const hold = async (x, y) => {
+        const p = await at(x, y);
+        await pl.mouse.move(p.x, p.y);
+        await pl.mouse.down();
+        await pl.waitForTimeout(700);
+        await pl.mouse.up();
+        await frames();
+    };
+    const tap = async (label) => {
+        const b = (await pl.evaluate(() => window.hudButtons())).find((x) => x.label === label);
+        expect(b, `no ${label}: ${JSON.stringify(await pl.evaluate(() => window.hudButtons().map((x) => x.label)))}`);
+        await pl.mouse.click(b.x, b.y);
+        await frames();
+    };
+    await hold(9, 9);
+    await tap('🔄');
+    expect((await st()).objects[0].rot === 1, 'not rotated');
+    const money = (await st()).money;
+    await tap('✋');
+    const to = await at(10, 10);
+    await pl.mouse.click(to.x, to.y);
+    await frames();
+    const s1 = await st();
+    expect(s1.objects[0].x === 10 && s1.objects[0].y === 10 && s1.money === money, `not moved: ${JSON.stringify(s1.objects)}`);
+    expect(!(await pl.evaluate(() => window.hudButtons())).some((b) => b.label === '✋'), 'editor still open after the move');
+    await hold(10, 10);
+    await tap('🗑');
+    expect((await st()).objects.length === 0, 'not removed');
+    await pl.close();
+});
+
 // milestone 21: grouped bottom bar on a phone, upright and sideways
 for (const [w, h] of [[390, 844], [844, 390]]) await check(`phone ${w}x${h}: grouped bar on one row, level items only, goal bars`, async () => {
     const pp = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });

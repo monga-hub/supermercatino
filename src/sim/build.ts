@@ -13,6 +13,7 @@ export type Command =
     | { type: 'placeObject'; object: ObjectType; x: number; y: number; category?: string }
     | { type: 'demolish'; x: number; y: number }
     | { type: 'rotate'; x: number; y: number }
+    | { type: 'move'; x: number; y: number; toX: number; toY: number }
     | { type: 'hire'; candidateId: number }
     | { type: 'fire'; staffId: number }
     | { type: 'order'; category: string }
@@ -68,6 +69,15 @@ export function check(s: GameState, c: Command): Result {
         const o = objectAt(s, c.x, c.y);
         if (!o) return fail('Niente da ruotare');
         return o.type === 'porta' ? fail('La porta si gira da sola') : { ok: true, cost: 0 };
+    }
+    if (c.type === 'move') {
+        const o = objectAt(s, c.x, c.y);
+        if (!o) return fail('Niente da spostare');
+        if (o.type === 'porta' && s.level) return fail('La porta resta dov\'è');
+        if (c.toX === c.x && c.toY === c.y) return fail('È già qui');
+        // same rules as placing it there, for free, as if it had left its cell
+        const r = check({ ...s, money: Infinity, objects: s.objects.filter((x) => x !== o) }, { type: 'placeObject', object: o.type, x: c.toX, y: c.toY, category: o.category });
+        return r.ok ? { ok: true, cost: 0 } : r;
     }
     if (c.type === 'hire') return s.candidates.some((x) => x.id === c.candidateId) ? { ok: true, cost: 0 } : fail('Candidato non trovato');
     if (c.type === 'restock') {
@@ -137,6 +147,12 @@ export function apply(s: GameState, c: Command): Result {
     } else if (c.type === 'rotate') {
         const o = objectAt(s, c.x, c.y)!;
         o.rot = o.rot ? 0 : 1;
+    } else if (c.type === 'move') {
+        const o = objectAt(s, c.x, c.y)!;
+        Object.assign(o, { x: c.toX, y: c.toY });
+        // whoever works or queues at a moved till starts over from there
+        for (const st of s.staff) if (st.tillId === o.id) Object.assign(st, { state: 'idle', tillId: null, path: [] });
+        for (const cu of s.customers) if (cu.goal?.kind === 'till' && cu.goal.id === o.id && ['queueing', 'paying', 'ready'].includes(cu.state)) cu.state = 'shopping';
     } else if (c.type === 'hire') {
         hire(s, c.candidateId);
     } else if (c.type === 'fire') {
@@ -161,7 +177,7 @@ export function apply(s: GameState, c: Command): Result {
         if (obj) s.objects.splice(s.objects.indexOf(obj), 1);
         else s.rooms.splice(s.rooms.indexOf(roomAt(s, c.x, c.y)!), 1);
     }
-    if (c.type === 'buildRoom' || c.type === 'placeObject' || c.type === 'demolish') {
+    if (c.type === 'buildRoom' || c.type === 'placeObject' || c.type === 'demolish' || c.type === 'move') {
         const w = walkableFor(s);
         s.spills = s.spills.filter((p) => w(p.x, p.y)); // under a new object or a demolished room: gone
         s.carts = s.carts.filter((c) => roomAt(s, c.x, c.y) && !objectAt(s, c.x, c.y));
