@@ -33,6 +33,8 @@ SHEETS = [
     ('forno.jpg', 2, 2, ('w', 1.0), ['forno', 'forno_vuoto', ('frigo', 0.7), ('frigo_vuoto', 0.7)]),
     ('spogliatoio.jpg', 3, 1, ('w', 0.66), [('armadietti', 1.0), 'icona_pausa', 'icona_stanco']),
     ('beccato.jpg', 1, 1, ('w', 0.66), ['icona_beccato']),
+    ('esterno.jpg', 3, 3, ('w', 1.0), [('albero', 1.4), ('cipresso', 0.6), ('cespuglio', 0.9), ('lampione', 0.24), ('panchina', 0.9), ('fioriera', 0.8), ('auto_rossa', 1.5), ('ape', 1.2), ('auto_bianca', 1.5)]),
+    ('interni.jpg', 3, 2, ('w', 0.5), [('pianta', 0.5), ('piantina', 0.4), ('estintore', 0.3), ('ceste', 0.45), ('scopa', 0.45), ('pomodoro', 0.45)]),
     ('magazzino.jpg', 3, 2, ('w', 0.9), ['merce_Pasta', 'merce_Latticini', 'merce_Salumi', 'merce_Pane', 'merce_Frutta', 'merce_Detersivi']),
     ('sporco.jpg', 3, 2, ('w', 0.8), ['macchia_0', 'macchia_1', 'macchia_2', ('cestino', 0.3), ('icona_pulisci', 0.66), ('cartello_bagnato', 0.4)]),
 ]

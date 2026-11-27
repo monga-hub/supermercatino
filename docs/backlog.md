@@ -88,6 +88,11 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 
 ## Polish & juice
 
+- [ ] Vetrine, finestre e tenda a righe sulla facciata; clienti che arrivano a piedi dal marciapiede invece di comparire sulla porta.
+  - Source: milestone 21b, 2026-11-27
+  - Rough size: M · Rough value: M
+  - Notes: servono pezzi di muro Gemini con la finestra (l/r) e un tratto di cammino fuori dal lotto (solo grafica o sim?).
+
 - [ ] Più folla — Theme Hospital ha decine di personaggi piccoli in coda, guardarli è metà del divertimento; da noi pochi clienti grandi. Più clienti (più lenti a spendere?) o camera più lontana.
   - Source: confronto Theme Hospital, 2026-11-27
   - Rough size: M · Rough value: M

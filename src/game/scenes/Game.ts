@@ -7,7 +7,9 @@ import { tired } from '../../sim/staff.ts';
 import { saveGame, loadGame, SAVE_KEY } from '../../sim/save.ts';
 import { loadProgress, winLevel, PROGRESS_KEY, type Progress } from '../../sim/levels.ts';
 import { gridToIso, cellAt, TILE_H, TILE_W } from '../../render/iso.ts';
-import { drawFloor, drawThings, drawObject, tile, type Put } from '../../render/draw.ts';
+import { drawFloor, drawThings, drawObject, tile, putProp, GROUND, type Put } from '../../render/draw.ts';
+import { carAt } from '../../render/scenery.ts';
+import { LEVELS } from '../../sim/levels.ts';
 import { KIT_SCALE } from '../../render/sprites.ts';
 import type { Hud } from './Hud.ts';
 import { snap, cues, type Snap } from '../../audio/cues.ts';
@@ -100,6 +102,7 @@ export class Game extends Scene {
         this.over = this.add.graphics().setDepth(9000);
         this.sel = this.add.graphics().setDepth(8999);
         drawFloor(this.floor, this.sim);
+        this.drawSign();
         this.setupCamera();
         this.setupInput();
         this.registry.events.on('changedata-tool', () => this.preview.clear());
@@ -151,6 +154,8 @@ export class Game extends Scene {
         this.drawSelection();
         this.used = 0;
         drawThings(this.things, this.over, this.sim, this.put);
+        const car = carAt(this.sim, _time);
+        if (car) putProp(this.put, car, 1 + car.x + car.y);
         for (let i = this.used; i < this.sprites.length; i++) this.sprites[i].setVisible(false);
         this.drawIcons(_time);
     }
@@ -280,13 +285,30 @@ export class Game extends Scene {
         for (const t of this.icons.values()) t.destroy();
         this.icons.clear();
         drawFloor(this.floor, this.sim);
+        this.drawSign();
         this.frameLot();
+    }
+
+    /** Shop sign over the door: the level's name (milestone 21b). */
+    sign: GameObjects.Text | null = null;
+    drawSign() {
+        this.sign?.destroy();
+        this.sign = null;
+        const d = this.sim.objects.find((o) => o.type === 'porta');
+        if (!d) return;
+        const p = gridToIso(d.x, d.y);
+        const name = LEVELS[this.sim.level - 1]?.name ?? 'Il Supermercatino';
+        this.sign = this.add.text(p.x + TILE_W / 4, p.y + TILE_H - 62, name, {
+            fontFamily: 'Georgia, serif', fontStyle: 'bold', fontSize: 9, color: '#fff3d6', backgroundColor: '#8e2a1f',
+            padding: { x: 4, y: 2 }, resolution: DPR * 3,
+        }).setOrigin(0.5, 1).setDepth(1 + d.x + d.y + 0.7);
     }
 
     run(cmd: Command) {
         const r = apply(this.sim, cmd);
         if (r.ok) {
             drawFloor(this.floor, this.sim);
+            this.drawSign();
             this.store();
         }
         else this.game.events.emit('toast', r.reason);
@@ -358,7 +380,7 @@ export class Game extends Scene {
 
     setupCamera() {
         const cam = this.cameras.main;
-        cam.setBackgroundColor('#2b1d16');
+        cam.setBackgroundColor(GROUND.grass[1]); // milestone 21b: the town goes on forever
         this.frameLot();
         let w = cam.width;
         this.scale.on('resize', () => cam.width !== w && ((w = cam.width), this.frameLot())); // turned sideways: refit (not when the address bar hides)

@@ -3,6 +3,7 @@ import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
 import { SPRITES, SPILL_FRAMES, personFrame } from './sprites.ts';
 import { walls, doorEdge, type Edge } from './walls.ts';
+import { terrain, props, decor, MARGIN, type Ground, type Prop } from './scenery.ts';
 import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role, Category } from '../sim/state.ts';
 
 type G = GameObjects.Graphics;
@@ -10,14 +11,20 @@ type G = GameObjects.Graphics;
 export type Put = (frame: string, px: number, py: number, depth: number, flip?: boolean) => boolean;
 const noPut: Put = () => false;
 
-const LOT = [0x5b5048, 0x544a42]; // cemento
+const LOT = [0xa39684, 0x998c7a]; // piazzale in pietra (milestone 21b; was dark cement)
 export const ROOM_FLOOR: Record<RoomType, [number, number]> = {
     sala_vendita: [0xf1e4c8, 0xb5523b], // linoleum crema/mattone
-    magazzino: [0x8d7b62, 0x7f6e57],
+    magazzino: [0xc9bda4, 0xb8ab90], // cemento chiaro (milestone 21b)
     area_casse: [0xf1e4c8, 0x4f7f6a],
     banco_salumi: [0xe6cf9f, 0x8c5a3c], // cotto e legno
     panetteria: [0xf3dcae, 0xc98b4a], // farina e crosta
     spogliatoio: [0xb8c4c8, 0x8a9aa0], // piastrelle grigie
+};
+/** Ground around the lot (milestone 21b); the camera background is GRASS[1], so nothing is ever empty. */
+export const GROUND: Record<Ground, [number, number]> = {
+    grass: [0x6f9a4a, 0x67914a],
+    sidewalk: [0xc8c0b0, 0xbdb5a4],
+    road: [0x4a4a4e, 0x47474b],
 };
 export const CATEGORY_COLOR: Record<string, number> = {
     Pasta: 0xe8c547,
@@ -149,6 +156,19 @@ function crates(s: GameState) {
     return cats.slice(0, cells.length).map((cat, i) => ({ ...cells[i], cat, h: 8 + Math.min(24, s.warehouse[cat]) }));
 }
 
+/** Street props depend only on the lot size: computed once per size. */
+let propsKey = '', propsList: Prop[] = [];
+function streetProps(s: GameState) {
+    const k = `${s.grid.w},${s.grid.h}`;
+    if (k !== propsKey) (propsKey = k), (propsList = props(s));
+    return propsList;
+}
+/** A prop standing on its cell like furniture (fractional cells for cars). */
+export const putProp = (put: Put, d: Prop, z: number) => {
+    const p = gridToIso(d.x, d.y);
+    return put(d.frame, p.x, p.y + TILE_H, z);
+};
+
 /** Floor layer: lot and rooms. Redraw only when the layout changes. */
 export function drawFloor(g: G, s: GameState) {
     g.clear();
@@ -162,6 +182,17 @@ export function drawFloor(g: G, s: GameState) {
             const pal = type ? ROOM_FLOOR[type] : LOT;
             tile(g, x, y, pal[(x + y) % 2]);
         }
+    }
+    for (let x = -MARGIN; x < s.grid.w + MARGIN; x++)
+        for (let y = -MARGIN; y < s.grid.h + MARGIN; y++) {
+            const k = terrain(s, x, y);
+            if (k) tile(g, x, y, GROUND[k][(x + y) % 2 ? 1 : 0]);
+        }
+    // dashed centre line between the two lanes
+    g.fillStyle(0xf1e4c8, 0.9);
+    for (let y = -MARGIN; y < s.grid.h + MARGIN; y += 2) {
+        const a = gridToIso(s.grid.w + 2, y + 0.2), b = gridToIso(s.grid.w + 2, y + 0.8);
+        poly(g, [a.x, a.y - 1.5, b.x, b.y - 1.5, b.x, b.y + 1.5, a.x, a.y + 1.5]);
     }
     for (const o of s.objects) if (o.type === 'porta') box(g, o.x, o.y, 1, 0xa33a2c, 0.7); // doormat
 }
@@ -205,6 +236,7 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
             g.fillEllipse(f.x, f.y, TILE_W * 0.4, TILE_H * 0.4);
         } })),
         ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: (z: number) => drawCustomer(g, over, s, c, put, z) })),
+        ...[...streetProps(s), ...decor(s)].map((d) => ({ d: d.x + d.y, draw: (z: number) => putProp(put, d, z) })),
         ...crates(s).map((c) => ({ d: c.x + c.y - 0.01, draw: (z: number) => {
             const p = gridToIso(c.x, c.y);
             if (put(SPRITES.stock(c.cat), p.x, p.y + TILE_H, z)) return; // a pallet of that goods

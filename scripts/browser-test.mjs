@@ -427,7 +427,21 @@ for (const [w, h] of [[390, 844], [844, 390]]) await check(`phone ${w}x${h}: gro
     expect(texts.includes(`${eur(s1.money)} / ${eur(1500)}`), `money bar: ${texts}`);
     expect(texts.includes(`Serviti ${s1.servedTotal} / 80`) && texts.includes(`Rep ${s1.reputation}% / 55%`), `goal bars: ${texts}`);
     expect(texts.some((x) => x.startsWith('Metti un altro scaffale')), `guide did not move on: ${texts}`);
-    await pp.screenshot({ path: `output/21-test-${w}x${h}.png` });
+    const shot = await pp.screenshot({ path: `output/21-test-${w}x${h}.png` });
+    // milestone 21b: no empty background left in the frame (the old dark brown #2b1d16)
+    const empty = await pp.evaluate(async (src) => {
+        const img = new Image();
+        img.src = src;
+        await img.decode();
+        const c = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+        const g = c.getContext('2d');
+        g.drawImage(img, 0, 0);
+        const d = g.getImageData(0, 0, c.width, c.height).data;
+        let n = 0;
+        for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - 43) + Math.abs(d[i + 1] - 29) + Math.abs(d[i + 2] - 22) < 12) n++;
+        return n / (d.length / 4);
+    }, 'data:image/png;base64,' + shot.toString('base64'));
+    expect(empty < 0.002, `empty background: ${(empty * 100).toFixed(2)}% of the screen`);
     await pp.close();
 });
 

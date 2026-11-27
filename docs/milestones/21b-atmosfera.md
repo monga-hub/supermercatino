@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+implemented (in attesa di playtest)
 
 ## Objective
 
@@ -29,10 +29,10 @@ Far sembrare il negozio un posto vero dentro una città, come l'ospedale di Them
 
 ## Acceptance criteria
 
-- [ ] Ogni livello ha strada e marciapiede sul lato della porta e nessuna cella di sfondo vuoto nell'inquadratura — screenshot Playwright 390×844 e 844×390
-- [ ] Le decorazioni non bloccano celle: arredi, clienti e staff passano come prima — test: `tests/levels.test.ts`
-- [ ] I muri non coprono nessun arredo o personaggio dentro le stanze — screenshot Playwright
-- [ ] Frame nuovi nel kit — test: `tests/assets.test.ts`
+- [x] Ogni livello ha strada e marciapiede sul lato della porta e nessuna cella di sfondo vuoto nell'inquadratura — `tests/scenery.test.ts` + screenshot Playwright 390×844 e 844×390 (conta i pixel del vecchio sfondo)
+- [x] Le decorazioni non bloccano celle: arredi, clienti e staff passano come prima — test: `tests/scenery.test.ts`
+- [x] I muri non coprono nessun arredo o personaggio dentro le stanze — solo muri sul retro (già da 09, `tests/walls.test.ts`), screenshot Playwright
+- [x] Frame nuovi nel kit — test: `tests/scenery.test.ts`, `tests/assets.test.ts`
 - [ ] Guardando il livello 1 sembra una bottega in una via italiana anni '80 — verified by user playtest
 
 ## Exit condition
@@ -47,3 +47,11 @@ L'utente apre il livello 1 sul telefono e vede una bottega su una strada, con in
 ## Notes
 
 - Nasce dal confronto con Theme Hospital del 2026-11-27 (punti 2, 3, 5). I punti 1, 6, 7, 8 sono nel 21; il punto 4 (folla) è nel backlog.
+- Implementazione (`src/render/scenery.ts`, puro):
+  - `terrain`: fuori dal lotto prato; lungo il lato +x (dove guardano tutte le porte della campagna) marciapiede, due corsie con la linea tratteggiata, marciapiede. Disegnato per 24 celle intorno; oltre, lo sfondo della camera è dello stesso verde, quindi non resta mai vuoto.
+  - `props`: lampioni, fioriere e panchine sui marciapiedi (davanti al negozio solo fioriere), alberi, cipressi e cespugli sul prato con un hash fisso, lontani dalla facciata. `carAt`: ogni 16 s una macchina (127 rossa, Ape, Panda bianca) passa sulla corsia vicina.
+  - `decor`: negli angoli delle stanze piante, estintore, sagoma del pomodoro (sala), ceste (casse), scopa e secchio (magazzino); spariscono dove metti un arredo.
+  - Insegna col nome del livello sopra la porta (testo Phaser nel mondo, "Il Supermercatino" nel Negozio libero). Piazzale del lotto in pietra chiara, pavimento del magazzino in cemento chiaro.
+  - Fogli Gemini in chat nuove: `esterno.jpg` 3×3, `interni.jpg` 3×2.
+- Non fatto, nel backlog: vetrine e finestre sui muri (servono pezzi di muro nuovi), tenda a righe, clienti che arrivano camminando dal marciapiede (oggi compaiono sulla porta).
+
