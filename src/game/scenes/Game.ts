@@ -12,7 +12,9 @@ import { KIT_SCALE } from '../../render/sprites.ts';
 import type { Hud } from './Hud.ts';
 import { snap, cues, type Snap } from '../../audio/cues.ts';
 import { play } from '../../audio/synth.ts';
+import { DPR } from '../dpr.ts';
 
+// zooms are in CSS px per world px; the camera's own zoom is DPR times that (main.ts)
 const ZOOM_MIN = 0.4;
 /** Tap icons float just above the shelf (80 px) / till (51 px) sprite, low over a spill (by key prefix). */
 const ICON_LIFT: Record<string, number> = { s: 86, t: 58, p: 24, c: 50, f: 66, w: 62, v: 44 };
@@ -58,7 +60,7 @@ export class Game extends Scene {
     /** The game found in localStorage at startup ("Continua"), if any. */
     saved: GameState | null = null;
     /** Campaign levels won (milestone 20), kept apart from the save. */
-    progress: Progress = { won: [] };
+    progress: Progress = { won: [], seen: [] };
     saveAt = 0;
 
     constructor() {
@@ -108,7 +110,7 @@ export class Game extends Scene {
         window.cellToScreen = (x, y, lift = 0) => {
             const cam = this.cameras.main;
             const p = gridToIso(x, y);
-            return { x: (p.x - cam.worldView.x) * cam.zoom, y: (p.y + TILE_H / 2 - lift - cam.worldView.y) * cam.zoom, zoom: cam.zoom };
+            return { x: ((p.x - cam.worldView.x) * cam.zoom) / DPR, y: ((p.y + TILE_H / 2 - lift - cam.worldView.y) * cam.zoom) / DPR, zoom: cam.zoom / DPR };
         };
     }
 
@@ -190,7 +192,7 @@ export class Game extends Scene {
             if (want.some((w) => w.key === k)) t.setVisible(false);
             else (t.destroy(), this.icons.delete(k)); // spill cleaned: drop its icon
         }
-        const scale = 1 / Math.min(1, this.cameras.main.zoom); // keep icons finger-sized when zoomed out
+        const scale = 1 / Math.min(1, this.cameras.main.zoom / DPR); // keep icons finger-sized when zoomed out
         for (const w of want) {
             let t = this.icons.get(w.key);
             if (!t) {
@@ -307,23 +309,28 @@ export class Game extends Scene {
     frameLot() {
         const cam = this.cameras.main;
         const { w, h } = this.sim.grid;
-        const top = 130, bottom = 110; // ponytail: HUD bar heights on a phone; measure from Hud if its layout changes
-        const fitOf = (bw: number, bh: number) => Math.min(cam.width / (((bw + bh) * TILE_W) / 2 + 16), (cam.height - top - bottom) / (((bw + bh) * TILE_H) / 2 + 16));
+        const wide = cam.width / DPR >= 700, low = cam.height / DPR < 500;
+        // ponytail: HUD heights in CSS px (Hud.layout: top row + goal bars; bottom bar + Pina's bubble); measure from Hud if its layout changes
+        const top = (wide ? 40 : 72) * DPR, bottom = (low ? 60 : 140) * DPR;
+        const WALL = 64; // world px the back walls rise above the floor diamond
+        const fitOf = (bw: number, bh: number) => Math.min(cam.width / (((bw + bh) * TILE_W) / 2 + 8), (cam.height - top - bottom) / (((bw + bh) * TILE_H) / 2 + WALL + 8));
         const fit = fitOf(w, h);
-        this.zoomMin = Math.min(ZOOM_MIN, fit);
+        this.zoomMin = Math.min(ZOOM_MIN * DPR, fit);
         // campaign (milestone 20): frame the pre-built shop, not the empty lot around it
         const rs = this.sim.level ? this.sim.rooms : [];
         const x0 = Math.min(...rs.map((r) => r.x)), y0 = Math.min(...rs.map((r) => r.y));
         const box = rs.length ? { x: x0, y: y0, w: Math.max(...rs.map((r) => r.x + r.w)) - x0, h: Math.max(...rs.map((r) => r.y + r.h)) - y0 } : { x: 0, y: 0, w, h };
-        cam.setZoom(Math.max(this.zoomMin, Math.min(rs.length ? 2 : 1, fitOf(box.w, box.h))));
+        cam.setZoom(Math.max(this.zoomMin, Math.min((rs.length ? 2 : 1) * DPR, fitOf(box.w, box.h))));
         const c = gridToIso(box.x + box.w / 2, box.y + box.h / 2); // centre of the framed diamond
-        cam.centerOn(c.x, c.y - (top - bottom) / 2 / cam.zoom);
+        cam.centerOn(c.x, c.y - WALL / 2 - (top - bottom) / 2 / cam.zoom);
     }
 
     setupCamera() {
         const cam = this.cameras.main;
         cam.setBackgroundColor('#2b1d16');
         this.frameLot();
+        let w = cam.width;
+        this.scale.on('resize', () => cam.width !== w && ((w = cam.width), this.frameLot())); // turned sideways: refit (not when the address bar hides)
         this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => this.zoomBy(dy > 0 ? 0.9 : 1.1));
     }
 
@@ -375,7 +382,7 @@ export class Game extends Scene {
                 this.pinched = false;
             }
             if (wasPinch || !p.leftButtonReleased() || hud.onPanel(p.downX, p.downY)) return;
-            const isTap = p.getDistance() <= TAP_SLOP;
+            const isTap = p.getDistance() <= TAP_SLOP * DPR;
             const tapped = isTap && this.iconCommand(p);
             if (tapped) return void this.run(tapped);
             if (!this.tool) return;
@@ -390,6 +397,6 @@ export class Game extends Scene {
 
     zoomBy(f: number) {
         const cam = this.cameras.main;
-        cam.setZoom(Math.min(ZOOM_MAX, Math.max(this.zoomMin, cam.zoom * f)));
+        cam.setZoom(Math.min(ZOOM_MAX * DPR, Math.max(this.zoomMin, cam.zoom * f)));
     }
 }

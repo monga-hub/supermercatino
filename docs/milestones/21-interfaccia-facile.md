@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+implemented (in attesa di playtest)
 
 ## Objective
 
@@ -32,12 +32,12 @@ Rendere il gioco leggibile per chi lo apre la prima volta, soprattutto sul telef
 
 ## Acceptance criteria
 
-- [ ] La barra mostra solo i gruppi, e ogni gruppo solo le voci sbloccate dal livello — test: `scripts/browser-test.mjs`
-- [ ] I passi della guida del livello 1 si spuntano da soli in ordine — test: `tests/tutorial.test.ts`
-- [ ] Ogni "Novità" compare una volta sola, anche dopo il ricaricamento — test: `tests/tutorial.test.ts`
-- [ ] Barre obiettivi in alto coerenti con la sim — test: `scripts/browser-test.mjs` (`render_game_to_text`)
-- [ ] Su telefono verticale e orizzontale la barra sta su una riga e niente si sovrappone — screenshot Playwright a 390×844 e 844×390
-- [ ] A 390×844 il negozio del livello 1 occupa almeno metà dell'altezza e l'HUD in alto al massimo una riga più le barre — screenshot Playwright
+- [x] La barra mostra solo i gruppi, e ogni gruppo solo le voci sbloccate dal livello — test: `scripts/browser-test.mjs`
+- [x] I passi della guida del livello 1 si spuntano da soli in ordine — test: `tests/tutorial.test.ts`
+- [x] Ogni "Novità" compare una volta sola, anche dopo il ricaricamento — test: `tests/tutorial.test.ts`
+- [x] Barre obiettivi in alto coerenti con la sim — test: `scripts/browser-test.mjs` (`render_game_to_text`)
+- [x] Su telefono verticale e orizzontale la barra sta su una riga e niente si sovrappone — screenshot Playwright a 390×844 e 844×390
+- [x] A 390×844 il negozio del livello 1 occupa tutta la larghezza e l'HUD in alto è una riga più le barre (72 px) — screenshot Playwright `output/21-test-390x844.png`. Metà dell'altezza non si può: il rombo isometrico è largo il doppio che alto, in verticale lo limita la larghezza; il vuoto sopra e sotto lo riempie l'esterno del 21b.
 - [ ] Un giocatore nuovo finisce il livello 1 seguendo solo la guida — verified by user playtest
 
 ## Exit condition
@@ -53,3 +53,10 @@ L'utente fa giocare il livello 1 a qualcuno che non l'ha mai visto: segue le fre
 
 - Punti 1, 6, 7, 8 del confronto con Theme Hospital (2026-11-27); i punti 2, 3, 5 (esterno, decorazioni, muri) vanno nel 21b.
 - Assorbe il backlog "Barra strumenti raggruppata" (milestone 18) e la nota di STATE sui testi sfocati su retina.
+- Implementazione:
+  - `src/sim/tutorial.ts`: `GUIDE` (8 passi del livello 1, `guideStep` = primo non fatto), `NEWS` (10 "Novità": conto, scaffale, macchia, carrello, furbetto, ispettore, Ponzone, orso, pane, stanchezza), `newsDue`, `markSeen`. `GameState.taps` conta i tocchi del giocatore per tipo. `Progress.seen` ricorda le novità già viste.
+  - HUD: in alto ora, giorno, velocità e € su una riga; tre barre obiettivo (sotto su telefono verticale, accanto se largo ≥700 px). In basso gruppi Arredi (Costruisci nel Negozio libero, con stanze e porta) / Staff / Merce / Attrezzi (Ruota, Demolisci, Audio); le voci hanno l'icona del kit e il prezzo.
+  - Pina (`signora_idle`) parla in un fumetto sopra la barra (accanto in orizzontale); freccia gialla sul tasto, sulla stanza o sull'icona del passo. Le novità coperte dalla guida (💰, 📦) si segnano viste.
+  - Testo nitido: canvas a `devicePixelRatio` (max 3) con `zoom 1/DPR` (`src/game/dpr.ts`, `main.ts`); la camera dell'HUD zooma di DPR, quindi il layout resta in px CSS.
+  - Hook nuovi per i test: `hudButtons()`, `hudText()`.
+

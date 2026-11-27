@@ -124,6 +124,7 @@ export function apply(s: GameState, c: Command): Result {
     const r = check(s, c);
     if (!r.ok) return r;
     s.money -= r.cost;
+    if (['restock', 'collect', 'clean', 'removeCart', 'catch'].includes(c.type)) s.taps[c.type] = (s.taps[c.type] ?? 0) + 1;
     if (c.type === 'buildRoom') {
         s.rooms.push({ id: s.nextId++, type: c.room, x: c.x, y: c.y, w: c.w, h: c.h });
     } else if (c.type === 'placeObject') {

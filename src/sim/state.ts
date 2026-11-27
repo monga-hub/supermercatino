@@ -110,6 +110,8 @@ export type GameState = {
     /** 0–100: drives arrivals. */
     reputation: number;
     servedTotal: number;
+    /** Player taps done, by command type (milestone 21: the level 1 guide checks them). */
+    taps: Record<string, number>;
     /** Bears that left happy (big bonus each); the HUD celebrates when it grows. */
     happyBears: number;
     /** Sales (and tips) and goods ordered today, for the day summary. */
@@ -160,6 +162,7 @@ export function createState(level = 0): GameState {
         scent: 0,
         reputation: REP_START,
         servedTotal: 0,
+        taps: {},
         happyBears: 0,
         incomeToday: 0,
         goodsToday: 0,

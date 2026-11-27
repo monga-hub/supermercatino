@@ -113,7 +113,7 @@ test('winning opens the next level; progress survives a reload; the free shop op
     assert.ok(levelOpen(p, 2) && !levelOpen(p, 3) && !freeOpen(p));
     p = loadProgress(JSON.stringify(winLevel(winLevel(p, 2), 3)));
     assert.ok(levelOpen(p, 3) && freeOpen(p));
-    assert.deepEqual(loadProgress('{broken'), { won: [] });
+    assert.deepEqual(loadProgress('{broken'), { won: [], seen: [] });
 });
 
 test('free shop is the old game; old saves load as the free shop', () => {

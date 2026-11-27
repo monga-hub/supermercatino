@@ -122,19 +122,19 @@ export function sellable(s: GameState): Category[] {
     });
 }
 
-/** Campaign progress, saved apart from the game. */
-export type Progress = { won: number[] };
+/** Campaign progress, saved apart from the game: levels won, "Novità" already shown (milestone 21). */
+export type Progress = { won: number[]; seen: string[] };
 export const PROGRESS_KEY = 'supermercatino-campagna';
 
 export function loadProgress(text: string | null): Progress {
     try {
-        const won = JSON.parse(text ?? '')?.won;
-        return { won: Array.isArray(won) ? won.filter(Number.isInteger) : [] };
+        const { won, seen } = JSON.parse(text ?? '') ?? {};
+        return { won: Array.isArray(won) ? won.filter(Number.isInteger) : [], seen: Array.isArray(seen) ? seen.filter((x) => typeof x === 'string') : [] };
     } catch {
-        return { won: [] };
+        return { won: [], seen: [] };
     }
 }
 
-export const winLevel = (p: Progress, n: number): Progress => (p.won.includes(n) ? p : { won: [...p.won, n] });
+export const winLevel = (p: Progress, n: number): Progress => (p.won.includes(n) ? p : { ...p, won: [...p.won, n] });
 export const levelOpen = (p: Progress, n: number) => n === 1 || p.won.includes(n - 1);
 export const freeOpen = (p: Progress) => p.won.includes(FREE_AFTER);

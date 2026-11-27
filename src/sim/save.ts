@@ -14,7 +14,7 @@ export function loadGame(text: string | null): GameState | null {
     try {
         const d = JSON.parse(text ?? '');
         const s = d?.v === VERSION && d.s;
-        if (s && typeof s === 'object' && s.rooms) Object.assign(s, { spills: s.spills ?? [], cleanQueue: s.cleanQueue ?? [], carts: s.carts ?? [], cartQueue: s.cartQueue ?? [], inspection: s.inspection ?? null, furbetti: s.furbetti ?? { caught: 0, escaped: 0 }, scent: s.scent ?? 0 }); // older saves: fields added in 12, 14, 15, 17
+        if (s && typeof s === 'object' && s.rooms) Object.assign(s, { spills: s.spills ?? [], cleanQueue: s.cleanQueue ?? [], carts: s.carts ?? [], cartQueue: s.cartQueue ?? [], inspection: s.inspection ?? null, furbetti: s.furbetti ?? { caught: 0, escaped: 0 }, scent: s.scent ?? 0, taps: s.taps ?? {} }); // older saves: fields added in 12, 14, 15, 17, 21
         if (s && typeof s === 'object') s.level ??= 0; // older saves: the free shop (milestone 20)
         if (s?.staff) for (const st of s.staff) st.energy ??= ENERGY_MAX; // older saves: energy added in 18
         if (s?.candidates) refillCandidates(s); // older saves: roles added in 19

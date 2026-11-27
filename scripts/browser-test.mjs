@@ -331,6 +331,64 @@ await check('campaign: a win opens the next level, the free shop after level 3',
 });
 await ps.close();
 
+// milestone 21: grouped bottom bar on a phone, upright and sideways
+for (const [w, h] of [[390, 844], [844, 390]]) await check(`phone ${w}x${h}: grouped bar on one row, level items only, goal bars`, async () => {
+    const pp = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+    pp.on('pageerror', (e) => errors.push(e.message));
+    const btns = () => pp.evaluate(() => window.hudButtons());
+    const tap = async (label) => {
+        const b = (await btns()).find((x) => x.label.startsWith(label));
+        expect(b, `no ${label} button`);
+        await pp.mouse.click(b.x, b.y);
+        await pp.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    };
+    const oneRow = async (labels) => {
+        const g = (await btns()).filter((b) => labels.includes(b.label));
+        expect(g.length === labels.length, `groups: ${JSON.stringify(g.map((b) => b.label))}`);
+        expect(g.every((b) => b.y === g[0].y), `groups on more rows: ${JSON.stringify(g)}`);
+        expect(g.every((b) => b.x + b.w / 2 <= w && b.x - b.w / 2 >= 0), `groups off screen: ${JSON.stringify(g)}`);
+    };
+    // free shop (plain ?manual): five groups
+    await pp.goto(new URL('?manual', base).href);
+    await pp.waitForFunction(() => typeof window.hudButtons === 'function');
+    await pp.waitForTimeout(200);
+    await oneRow(['Costruisci', 'Staff', 'Merce', 'Attrezzi']);
+    // level 1: no Merce, Arredi holds only the shelf and the till
+    await pp.goto(new URL('?manual&save', base).href);
+    await pp.waitForFunction(() => typeof window.menuState === 'function');
+    await pp.evaluate(() => localStorage.clear());
+    await pp.reload();
+    await pp.waitForFunction(() => typeof window.menuState === 'function');
+    await pp.waitForTimeout(200);
+    for (const [fromTop, want] of [[false, 'levels'], [true, 'briefing'], [false, null]]) {
+        const m0 = await pp.evaluate(() => window.menuState());
+        for (let i = 0; i < 100 && (await pp.evaluate(() => window.menuState())) === m0; i++) {
+            await pp.mouse.click(w / 2, fromTop ? 60 + i * 6 : h - 10 - i * 6);
+            await pp.waitForTimeout(20);
+        }
+        expect((await pp.evaluate(() => window.menuState())) === want, `menu ${want}`);
+    }
+    await oneRow(['Arredi', 'Staff', 'Attrezzi']);
+    expect(!(await btns()).some((b) => b.label === 'Merce'), 'Merce in level 1');
+    await tap('Arredi');
+    const items = (await btns()).filter((b) => b.label.includes('€')).map((b) => b.label);
+    expect(JSON.stringify(items) === JSON.stringify(['Scaffale €150', 'Cassa €400']), `level 1 items: ${items}`);
+    await tap('Scaffale');
+    const s = JSON.parse(await pp.evaluate(() => window.render_game_to_text()));
+    const sala = s.rooms.find((r) => r.type === 'sala_vendita');
+    const at = await pp.evaluate(([x, y]) => window.cellToScreen(x, y), [sala.x + 2, sala.y + 2]);
+    await pp.mouse.click(at.x, at.y);
+    const s1 = JSON.parse(await pp.evaluate(() => window.render_game_to_text()));
+    expect(s1.objects.some((o) => o.type === 'scaffale'), 'shelf not placed with a tap');
+    const texts = await pp.evaluate(() => window.hudText());
+    const eur = (n) => `€${n.toLocaleString('it-IT')}`;
+    expect(texts.includes(`${eur(s1.money)} / ${eur(1500)}`), `money bar: ${texts}`);
+    expect(texts.includes(`Serviti ${s1.servedTotal} / 80`) && texts.includes(`Rep ${s1.reputation}% / 55%`), `goal bars: ${texts}`);
+    expect(texts.some((x) => x.startsWith('Metti un altro scaffale')), `guide did not move on: ${texts}`);
+    await pp.screenshot({ path: `output/21-test-${w}x${h}.png` });
+    await pp.close();
+});
+
 await page.waitForTimeout(10000); // let the game run a while
 await check('audio starts on a tap and the mute button sticks', async () => {
     const pa = await browser.newPage({ viewport: { width: 800, height: 600 } });
@@ -342,9 +400,11 @@ await check('audio starts on a tap and the mute button sticks', async () => {
     const audio = () => pa.evaluate(() => window.audioState());
     await open();
     expect(!(await audio()).started && !(await audio()).muted, 'audio should wait for a gesture, unmuted');
-    // the Audio button is the rightmost of the top row: scan from the right until it toggles
-    for (let x = 790; x > 0 && !(await audio()).muted; x -= 10) {
-        await pa.mouse.click(x, 66);
+    // Audio is in the Attrezzi group (milestone 21)
+    for (const label of ['Attrezzi', 'Audio']) {
+        const b = (await pa.evaluate(() => window.hudButtons())).find((x) => x.label === label);
+        expect(b, `no ${label} button`);
+        await pa.mouse.click(b.x, b.y);
         await pa.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
     }
     expect((await audio()).started, 'no audio context after a tap');

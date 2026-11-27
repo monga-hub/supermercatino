@@ -13,6 +13,10 @@ interface Window {
     menuState: () => string | null;
     /** Audio mute preference and whether the context started (milestone 16). */
     audioState: () => { muted: boolean; started: boolean };
-    /** Screen point of a cell's centre, raised by `lift` world px, and the camera zoom (browser tests). */
+    /** Visible HUD buttons, centres in CSS px (milestone 21). */
+    hudButtons: () => { label: string; x: number; y: number; w: number; active: boolean }[];
+    /** Visible HUD texts, cards and bubbles included (milestone 21). */
+    hudText: () => string[];
+    /** Screen point (CSS px) of a cell's centre, raised by `lift` world px, and the zoom in CSS px (browser tests). */
     cellToScreen: (x: number, y: number, lift?: number) => { x: number; y: number; zoom: number };
 }
