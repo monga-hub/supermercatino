@@ -2,13 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { CATEGORIES } from '../src/sim/config.ts';
-import { SPRITES, PEOPLE_FRAMES, WALL_FRAMES, ICON_FRAMES, SPILL_FRAMES } from '../src/render/sprites.ts';
+import { SPRITES, PEOPLE_FRAMES, WALL_FRAMES, ICON_FRAMES, SPILL_FRAMES, SHELF_FRAMES } from '../src/render/sprites.ts';
 
 const kit = JSON.parse(readFileSync(new URL('../public/assets/kit.json', import.meta.url), 'utf8'));
 const has = (frames: string[]) => { for (const f of frames) assert.ok(kit.frames[f], `missing frame ${f}`); };
 
 test('every drawable has a frame: furniture', () => {
-    has([...WALL_FRAMES, ...ICON_FRAMES, ...SPILL_FRAMES, SPRITES.cestino, SPRITES.carrello, SPRITES.bancone, SPRITES.banconeVuoto, SPRITES.forno, SPRITES.fornoVuoto, SPRITES.frigo, SPRITES.frigoVuoto, SPRITES.armadietti, SPRITES.cassa, SPRITES.scaffale, ...CATEGORIES.map((c) => SPRITES.shelf(c)), ...CATEGORIES.map((c) => SPRITES.stock(c))]);
+    has([...WALL_FRAMES, ...ICON_FRAMES, ...SPILL_FRAMES, ...SHELF_FRAMES, SPRITES.cestino, SPRITES.carrello, SPRITES.armadietti, SPRITES.cassa, SPRITES.scaffale, ...CATEGORIES.map((c) => SPRITES.stock(c))]);
 });
 
 test('every drawable has a frame: people', () => {

@@ -1,7 +1,7 @@
 // Drawing: painted sprites from the kit atlas (milestone 07); flat iso boxes as fallback when a frame is missing.
 import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
-import { SPRITES, SPILL_FRAMES, personFrame } from './sprites.ts';
+import { SPRITES, SPILL_FRAMES, personFrame, objectFrame } from './sprites.ts';
 import { walls, doorEdge, type Edge } from './walls.ts';
 import { cashierAt } from '../sim/staff.ts';
 import { STAFF_ONLY, cellsOf } from '../sim/build.ts';
@@ -83,8 +83,6 @@ export function box(g: G, x: number, y: number, h: number, color: number, k = 0.
     poly(g, [...t.top, ...t.right, ...t.bottom, ...t.left]);
 }
 
-const objectFrame = (o: Pick<ShopObject, 'type' | 'category' | 'stock' | 'rot'>) =>
-    o.type === 'cassa' ? SPRITES.cassa : o.type === 'cestino' ? SPRITES.cestino : o.type === 'bancone' ? (o.stock ? SPRITES.bancone : SPRITES.banconeVuoto) : o.type === 'forno' ? (o.stock ? SPRITES.forno : SPRITES.fornoVuoto) : o.type === 'frigo' ? (o.stock ? SPRITES.frigo : SPRITES.frigoVuoto) : o.type === 'armadietti' ? SPRITES.armadietti : o.type === 'porta' ? 'porta_l' : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
 
 export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock' | 'rot'>, alpha = 1, put: Put = noPut, depth = 0) {
     // stands on its footprint's bottom vertex, centred across it (a till spans two cells); turned = mirrored

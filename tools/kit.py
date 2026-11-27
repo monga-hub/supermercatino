@@ -13,10 +13,14 @@ RES = 2  # frames stored at 2x, drawn at 0.5 scale: sharp when zoomed in
 #   ('h', px): the whole sheet scaled so its first piece is px tall, anchored on each cell's centre line
 #             (characters: walk frames don't jitter sideways, seated/reaching poses keep their relative size).
 SEATED = 1.3  # seated cashiers drawn bigger, to match the two-cell counter (playtest 2026-11-27)
+STATES = lambda b: [b, f'{b}_mezzo', f'{b}_vuoto']
 WALK = lambda n: [f'{n}_walk_0', f'{n}_walk_1', f'{n}_walk_2']
 SHEETS = [
-    ('arredi.jpg', 3, 3, ('w', 1.0), ['scaffale', 'scaffale_Pasta', 'scaffale_Latticini', 'scaffale_Salumi', 'scaffale_Pane',
-                                      'scaffale_Frutta', 'scaffale_Detersivi', None, None]),  # till: cassa.jpg; door: see WALLS
+    ('arredi.jpg', 3, 3, ('w', 1.0), ['scaffale', None, None, None, None, None, None, None, None]),  # goods: STATES sheets; till: cassa.jpg; door: see WALLS
+    # milestone 25: one sheet per unit, full / half / empty
+    *[(f'{sheet}.jpg', 3, 1, size, STATES(base)) for sheet, base, size in [
+        ('scaffale_pasta', 'scaffale_Pasta', ('w', 1.0)), ('scaffale_frutta', 'scaffale_Frutta', ('w', 1.0)), ('scaffale_detersivi', 'scaffale_Detersivi', ('w', 1.0)),
+        ('frigo', 'frigo', ('h', 96)), ('forno_stati', 'forno', ('w', 1.0)), ('bancone_stati', 'bancone', ('w', 1.0))]],  # fridge by height: its door opens wide
     *[(f'{sheet}.jpg', 3, 3, ('h', h), WALK(kind) + [f'{kind}_angry_0', f'{kind}_angry_1', f'{kind}_angry_2',
                                                     f'{kind}_idle', f'{kind}_pay', f'{kind}_pick'])
       for sheet, kind, h in [('cliente', 'signora', 44), ('mamma', 'mamma', 44), ('vecchietta', 'vecchietta', 38),
@@ -32,10 +36,9 @@ SHEETS = [
     ('guardia.jpg', 3, 2, ('h', 48), WALK('guardia') + ['guardia_idle', 'guardia_fischio', 'guardia_ferma']),
     ('capo.jpg', 3, 2, ('h', 46), WALK('capo') + ['capo_idle', 'capo_scrive', 'capo_indica']),
     ('pulizie.jpg', 3, 2, ('h', 46), WALK('pulizie') + ['pulizie_mop_0', 'pulizie_mop_1', 'pulizie_mop_2']),
-    ('bancone.jpg', 3, 1, ('w', 1.0), ['bancone', 'bancone_vuoto', ('pacchetto_salumi', 0.35)]),
+    ('bancone.jpg', 3, 1, ('w', 1.0), [None, None, ('pacchetto_salumi', 0.35)]),  # counter: bancone_stati.jpg
     ('banconiere.jpg', 4, 2, ('h', 48), WALK('banconiere') + ['banconiere_idle', 'banconiere_slice_0', 'banconiere_slice_1', 'banconiere_give', None]),
     ('imprevisti.jpg', 3, 1, ('w', 0.66), [('carrello', 0.6), 'icona_carrello', 'icona_ispezione']),
-    ('forno.jpg', 2, 2, ('w', 1.0), ['forno', 'forno_vuoto', ('frigo', 0.7), ('frigo_vuoto', 0.7)]),
     ('spogliatoio.jpg', 3, 1, ('w', 0.66), [('armadietti', 1.0), 'icona_pausa', 'icona_stanco']),
     ('beccato.jpg', 1, 1, ('w', 0.66), ['icona_beccato']),
     ('esterno.jpg', 3, 3, ('w', 1.0), [('albero', 1.4), ('cipresso', 0.6), ('cespuglio', 0.9), ('lampione', 0.24), ('panchina', 0.9), ('fioriera', 0.8), ('auto_rossa', 1.5), ('ape', 1.2), ('auto_bianca', 1.5)]),
@@ -69,13 +72,24 @@ def cutout(img):
     rgba = Image.fromarray(np.dstack([a, alpha]).astype(np.uint8), 'RGBA')
     return rgba.crop((cols[0], rows[0], cols[-1] + 1, rows[-1] + 1)), cols[0]
 
+def unline(img, cols):
+    """Gemini sometimes draws dark lines between the cells: whiten near-full-height dark columns around each cell border."""
+    a = np.asarray(img).astype(int)
+    dark = (a.max(2) < 120).sum(0) > img.height * 0.5
+    out = a.copy()
+    for k in range(1, cols):
+        b = k * img.width // cols
+        for x in range(max(0, b - 40), min(img.width, b + 40)):
+            if dark[x]: out[:, max(0, x - 3):x + 4] = 255
+    return Image.fromarray(out.astype(np.uint8))
+
 def pieces():
     """Yields (name, image, anchor_x) for every piece of every sheet."""
     for sheet, cols, rows, (kind, v), names in SHEETS:
         path = ROOT / 'art/sheets' / sheet
         if not path.exists():
             print('skip', sheet); continue
-        img = Image.open(path)
+        img = unline(Image.open(path).convert('RGB'), cols)
         cw, ch = img.width // cols, img.height // rows
         f = None
         for i, name in enumerate(names):
@@ -125,6 +139,9 @@ def walls():
 
 def main():
     items = list(pieces()) + walls()
+    # the full fridge's door swings open to the left: line its body (the right part) up with the closed ones
+    wm = next(p.width for n, p, _ in items if n == 'frigo_mezzo')
+    items = [(n, p, round(1 - wm / 2 / p.width, 3) if n == 'frigo' else 0.5 if n in ('frigo_mezzo', 'frigo_vuoto') else ax) for n, p, ax in items]
     W, pad, x, y, rowh, at = 1024, 2, 0, 0, 0, {}
     for name, p, _ in items:  # shelf packing, rows left to right
         if x + p.width > W: x, y, rowh = 0, y + rowh + pad, 0

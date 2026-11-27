@@ -1,6 +1,6 @@
 // Frame names in public/assets/kit.json (built by tools/kit.py from art/sheets/), and which one a character shows.
-import type { Category, Customer, GameState, Staff } from '../sim/state.ts';
-import { CUSTOMER_TYPES, GIVE_SEC, BOSS_EVERY_SEC, FEMALE_NAMES } from '../sim/config.ts';
+import type { Category, Customer, GameState, Staff, ShopObject } from '../sim/state.ts';
+import { CATEGORIES, ONLY_IN, CUSTOMER_TYPES, GIVE_SEC, BOSS_EVERY_SEC, FEMALE_NAMES } from '../sim/config.ts';
 
 export const SPRITES = {
     cassa: 'cassa',
@@ -18,6 +18,21 @@ export const SPRITES = {
     /** Warehouse pallet of a category (milestone 21). */
     stock: (c: Category) => `merce_${c}`,
 };
+
+/** Goods left at or below this: the half-empty look (milestone 25). */
+export const SHELF_HALF = 5;
+const level = (stock: number) => (stock === 0 ? '_vuoto' : stock <= SHELF_HALF ? '_mezzo' : '');
+/** Furniture holding goods: shelves by category, plus the fridge, the oven and the deli counter. */
+const STOCKED = ['bancone', 'forno', 'frigo'];
+/** Every full/half/empty frame (tests/assets.test.ts checks they exist). */
+export const SHELF_FRAMES = [...CATEGORIES.filter((c) => !Object.values(ONLY_IN).includes(c as never)).map(SPRITES.shelf), ...STOCKED].flatMap((b) => [b, `${b}_mezzo`, `${b}_vuoto`]);
+
+/** Frame for a piece of furniture. Pure: tests/sprites.test.ts. */
+export function objectFrame(o: Pick<ShopObject, 'type' | 'category' | 'stock'>): string {
+    if (STOCKED.includes(o.type)) return o.type + level(o.stock ?? 0);
+    if (o.type === 'scaffale') return o.category ? SPRITES.shelf(o.category) + level(o.stock ?? 0) : SPRITES.scaffale;
+    return o.type === 'porta' ? 'porta_l' : o.type;
+}
 
 /** Every character frame personFrame() can return (tests/assets.test.ts checks they exist). */
 const walk = (n: string) => [0, 1, 2].map((i) => `${n}_${i}`);

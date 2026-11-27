@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { tick, createState } from '../src/sim/state.ts';
 import { FEMALE_NAMES, ROLE_SEX } from '../src/sim/config.ts';
 import { spawnCustomer } from '../src/sim/customers.ts';
-import { personFrame } from '../src/render/sprites.ts';
+import { personFrame, objectFrame, SHELF_FRAMES } from '../src/render/sprites.ts';
+import type { ShopObject, Category } from '../src/sim/state.ts';
 import { shop, untilTicks, hireStaff, withWarehouse } from './helpers.ts';
 
 test('a walking customer steps through walk frames', () => {
@@ -75,4 +76,14 @@ test('cashiers and stockers come as men and women, the sprite follows the name',
     const all = createState().candidates; // free shop: every role
     assert.ok(all.some((x) => ROLE_SEX[x.role]));
     for (const c of all.filter((x) => ROLE_SEX[x.role])) assert.equal(FEMALE_NAMES.includes(c.name), ROLE_SEX[c.role] === 'f', `${c.name} as ${c.role}`);
+});
+
+test('furniture with goods shows full, half, empty (milestone 25)', () => {
+    const at = (type: ShopObject['type'], stock: number, category?: Category) => objectFrame({ type, stock, category });
+    assert.deepEqual([10, 6, 5, 1, 0].map((n) => at('scaffale', n, 'Pasta')), ['scaffale_Pasta', 'scaffale_Pasta', 'scaffale_Pasta_mezzo', 'scaffale_Pasta_mezzo', 'scaffale_Pasta_vuoto']);
+    assert.deepEqual([10, 3, 0].map((n) => at('frigo', n, 'Latticini')), ['frigo', 'frigo_mezzo', 'frigo_vuoto']);
+    assert.deepEqual([10, 3, 0].map((n) => at('forno', n, 'Pane')), ['forno', 'forno_mezzo', 'forno_vuoto']);
+    assert.deepEqual([10, 3, 0].map((n) => at('bancone', n, 'Salumi')), ['bancone', 'bancone_mezzo', 'bancone_vuoto']);
+    assert.equal(at('cassa', 0), 'cassa');
+    assert.ok(SHELF_FRAMES.includes('scaffale_Detersivi_mezzo') && SHELF_FRAMES.includes('bancone_vuoto'));
 });

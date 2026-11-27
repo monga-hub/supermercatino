@@ -85,3 +85,15 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 - `cassa.jpg` 2×1 — cassa anni '80 in iso 2:1 vista da davanti-destra: banco crema con due righe rosse, nastro nero corto dall'estremità in alto a destra a quella in basso a sinistra, registratore beige e vaschetta cromata all'estremità in basso a sinistra (lato cassiere), lampada rossa 'CASSA 1' in fondo; a destra lo sgabello rosso. La riga nera di divisione tra le metà va cancellata prima di `tools/kit.py`.
 - `cassiere_m.jpg` 3×2 (testa comune dei personaggi) — cassiere giovane, ricci scuri, baffetti, cappellino di carta, camice rosso. Riga 1 camminata ×3; riga 2 seduto sullo sgabello: mani sulle ginocchia, alza un articolo, batte i tasti.
 - `magazziniera.jpg` 3×2 — magazziniera giovane, coda di cavallo, cappellino bianco, camice verde. Riga 1 camminata ×3; riga 2 con lo scatolone ×3.
+
+## Milestone 25: mobili pieno / mezzo / vuoto
+
+Fogli 3×1, uno per mobile, tutti con lo stesso preambolo: "Sprite sheet for a 2D isometric management game set in a 1980s Italian supermarket, hand-painted digital illustration (painterly, soft visible brush strokes, NOT pixel art, not 3D render), soft light from the top-left, warm palette, pure flat white background, no ground shadows, no text, no labels, no logos, no dividing lines. Wide 3:1 image with 3 equal columns; in each column the SAME <mobile> drawn in classic 2:1 isometric view, small and centred with lots of empty white margin around it." Colonna 1 FULL, 2 HALF EMPTY, 3 EMPTY.
+
+- `scaffale_pasta.jpg`, `scaffale_detersivi.jpg` — gondola di metallo crema con strisce rosse dei prezzi, 4 ripiani, fronte verso il basso a destra.
+- `scaffale_frutta.jpg` — banco del fruttivendolo in legno a gradoni con cassette inclinate.
+- `frigo.jpg` — frigo verticale anni '80 smaltato bianco con porta di vetro (nel pieno Gemini l'ha disegnata aperta: `tools/kit.py` allinea il corpo agli altri due).
+- `forno_stati.jpg` — forno a legna in mattoni col banco del pane e i cestini di vimini (fuoco acceso, basso, spento).
+- `bancone_stati.jpg` — banco salumi in legno scuro con vetrina curva e affettatrice rossa.
+
+Gemini a volte scrive FULL / HALF EMPTY / EMPTY sopra o sotto: il ritaglio le scarta (righe separate dal mobile). Le righe nere di divisione tra le celle le cancella `unline()` in `tools/kit.py`.
