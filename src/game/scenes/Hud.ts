@@ -68,6 +68,8 @@ export class Hud extends Scene {
     catBtns: Btn[] = [];
     /** Move, rotate, remove: over the object being edited after a long press. */
     editBtns: Btn[] = [];
+    /** Turn, buy, drop: over the furniture being placed (playtest 2026-11-27). */
+    pendBtns: Btn[] = [];
     /** Group whose items row is open. */
     open: string | null = null;
     panel: GameObjects.Container | null = null;
@@ -210,7 +212,13 @@ export class Hud extends Scene {
                 if (c && this.run({ type: 'demolish', ...c }).ok) game().edit = null;
             }, () => false, RED_BG, undefined, undefined, undefined, 24),
         ];
-        for (const b of this.editBtns) b.t.setDepth(6);
+        const pend = () => game().pending;
+        this.pendBtns = [
+            this.button('🔄', () => { const p = pend(); if (p) p.rot = p.rot ? 0 : 1; }, () => false, GROUP_BG, undefined, undefined, undefined, 24),
+            this.button('✓', () => { const c = game().pendingCmd(); if (c && this.run(c).ok) game().pending = null; }, () => false, hex(C.green), LIGHT, undefined, undefined, 24),
+            this.button('✕', () => { game().pending = null; }, () => false, RED_BG, undefined, undefined, undefined, 24),
+        ];
+        for (const b of [...this.editBtns, ...this.pendBtns]) b.t.setDepth(6);
         for (const g of this.groups) g.btn.t.setPadding(g.btn.icon ? 8 + g.btn.icon.displayWidth + 4 : 8, 7, 8, 7); // tighter: the group bar fits a phone
         const special: string[] = Object.values(ONLY_IN);
         this.catBtns = CATEGORIES.filter((c) => !special.includes(c)).map((cat) => // salumi, pane, latticini: their own counter
@@ -238,7 +246,7 @@ export class Hud extends Scene {
             this.bubbleKey = '-';
             if (this.panel) this.openPanel();
         });
-        window.hudButtons = () => [...this.speedBtns, this.gear, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns, ...this.editBtns, ...[...this.cardBtns, ...this.sheetBtns, ...this.panelBtns].map((t) => ({ t, active: () => false }))]
+        window.hudButtons = () => [...this.speedBtns, this.gear, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns, ...this.editBtns, ...this.pendBtns, ...[...this.cardBtns, ...this.sheetBtns, ...this.panelBtns].map((t) => ({ t, active: () => false }))]
             .filter((b) => b.t.visible)
             .map((b) => ({ label: b.t.text, x: b.t.x + (0.5 - b.t.originX) * b.t.width, y: b.t.y + (0.5 - b.t.originY) * b.t.height + (b.t.parentContainer?.y ?? 0), w: b.t.width, active: b.active() }));
         window.hudText = () => (this.children.list as GameObjects.Text[]).concat(...this.children.list.flatMap((c) => (c as GameObjects.Container).list ?? []) as GameObjects.Text[])
@@ -587,6 +595,7 @@ export class Hud extends Scene {
         const cam = game.cameras.main;
         const toHud = (wx: number, wy: number) => ({ x: ((wx - cam.worldView.x) * cam.zoom) / DPR, y: ((wy - cam.worldView.y) * cam.zoom) / DPR });
         if (aim === 'scaffale' || aim === 'cassa') {
+            if (game.pending && this.pendBtns[1].t.visible) return top(this.pendBtns[1]); // buy it
             if (this.tool?.kind === 'object' && this.tool.object === aim) {
                 const r = this.sim.rooms.find((x) => x.type === OBJECTS[aim].room);
                 if (!r) return null;
@@ -829,14 +838,22 @@ export class Hud extends Scene {
         const o = game.edit && (game.edit.room ?? this.sim.objects.find((x) => x.id === game.edit!.id));
         const btns = game.edit?.room ? [this.editBtns[2]] : this.editBtns; // a room can only go
         for (const b of this.editBtns) this.vis(b, !!o && !blocked && btns.includes(b));
+        const pd = game.pending;
+        for (const b of this.pendBtns) this.vis(b, !!pd && !blocked);
+        if (pd && !blocked) this.rowAbove(this.pendBtns, pd.x, pd.y);
         if (!o || blocked) return;
-        const cam = game.cameras.main;
-        const p = gridToIso(o.x, o.y);
+        this.rowAbove(btns, o.x, o.y);
+    }
+
+    /** Buttons in a row just above a cell's furniture. */
+    rowAbove(btns: Btn[], cx: number, cy: number) {
+        const cam = this.game_.cameras.main;
+        const p = gridToIso(cx, cy);
         const sx = ((p.x - cam.worldView.x) * cam.zoom) / DPR;
         const sy = ((p.y + TILE_H / 2 - 70 - cam.worldView.y) * cam.zoom) / DPR; // above a shelf's top
         const w = btns.reduce((a, b) => a + b.t.width + 8, -8);
         let x = Math.max(6, Math.min(this.W - 6 - w, sx - w / 2));
-        const y = Math.max(this.topH + 4, sy - this.editBtns[0].t.height);
+        const y = Math.max(this.topH + 4, sy - btns[0].t.height);
         for (const b of btns) {
             b.t.setPosition(x, y);
             x += b.t.width + 8;
@@ -862,7 +879,7 @@ export class Hud extends Scene {
         this.drawBars();
         this.placeEditBtns(blockedNow(this));
         const ch = this.chrome.clear();
-        for (const b of [...this.speedBtns, this.gear, ...this.groups.flatMap((x) => [x.btn, ...x.items]), ...this.catBtns, ...this.editBtns]) {
+        for (const b of [...this.speedBtns, this.gear, ...this.groups.flatMap((x) => [x.btn, ...x.items]), ...this.catBtns, ...this.editBtns, ...this.pendBtns]) {
             if (!b.t.visible) continue;
             const face = b.active() ? C.gold : num(b.bg);
             bevel(ch, b.t.x, b.t.y, b.t.width, b.t.height, face);

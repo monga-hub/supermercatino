@@ -101,10 +101,19 @@ await check('build with mouse', async () => {
     const s1 = await st();
     expect(s1.rooms.length === 1 && s1.rooms[0].type === 'sala_vendita', `room not built: ${JSON.stringify(s1.rooms)}`);
     await p2.evaluate(() => window.selectTool({ kind: 'object', object: 'scaffale', category: 'Pasta' }));
-    const inside = await at(10, 10);
-    await p2.mouse.click(inside.x, inside.y);
+    // playtest 2026-11-27: a tap only puts it there to try; another tap moves it, 🔄 turns it, ✓ buys it
+    const hudTap = async (l) => { const x = (await p2.evaluate(() => window.hudButtons())).find((q) => q.label === l); expect(x, `no ${l} button`); await p2.mouse.click(x.x, x.y); await p2.waitForTimeout(50); };
+    for (const [x, y] of [[10, 10], [11, 9]]) {
+        const c = await at(x, y);
+        await p2.mouse.click(c.x, c.y);
+        await p2.waitForTimeout(50);
+    }
+    expect((await st()).objects.length === 0 && (await st()).money === s1.money, 'bought with the first tap');
+    await hudTap('🔄');
+    await hudTap('✓');
     const s2 = await st();
-    expect(s2.objects.length === 1 && s2.objects[0].category === 'Pasta', `shelf not placed: ${JSON.stringify(s2.objects)}`);
+    const o = s2.objects[0];
+    expect(s2.objects.length === 1 && o.category === 'Pasta' && o.x === 11 && o.y === 9 && o.rot === 1, `shelf not placed moved and turned: ${JSON.stringify(s2.objects)}`);
     expect(s2.money < s1.money, 'shelf not charged');
     await p2.close();
 });
@@ -454,8 +463,10 @@ for (const [w, h] of [[390, 844], [844, 390]]) await check(`phone ${w}x${h}: gro
     const sala = s.rooms.find((r) => r.type === 'sala_vendita');
     const at = await pp.evaluate(([x, y]) => window.cellToScreen(x, y), [sala.x + 2, sala.y + 2]);
     await pp.mouse.click(at.x, at.y);
+    await pp.waitForTimeout(50);
+    await tap('✓');
     const s1 = JSON.parse(await pp.evaluate(() => window.render_game_to_text()));
-    expect(s1.objects.some((o) => o.type === 'scaffale'), 'shelf not placed with a tap');
+    expect(s1.objects.some((o) => o.type === 'scaffale'), 'shelf not placed with a tap and ✓');
     const texts = await pp.evaluate(() => window.hudText());
     const eur = (n) => `€${n.toLocaleString('it-IT')}`;
     expect(texts.includes(`${eur(s1.money)} / ${eur(850)}`), `money bar: ${texts}`);

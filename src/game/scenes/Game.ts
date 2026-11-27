@@ -68,6 +68,11 @@ export class Game extends Scene {
     saveAt = 0;
     /** Object being edited after a long press (UI only); moving: the next tap on a cell moves it there. */
     edit: { id: number; moving: boolean; room?: { x: number; y: number } } | null = null; // room: free shop, only remove
+    /** Furniture being tried out before buying (UI only, playtest 2026-11-27): a tap moves it, 🔄 turns it, ✓ buys it, ✕ drops it. */
+    pending: { object: ObjectType; category?: Category; x: number; y: number; rot?: 0 | 1 } | null = null;
+    pendingCmd(): Command | null {
+        return this.pending && { type: 'placeObject', ...this.pending };
+    }
     /** The press that may become a long press, and whether the current one already did. */
     press: { t: number } | null = null;
     longFired = false;
@@ -106,7 +111,7 @@ export class Game extends Scene {
         this.drawSign();
         this.setupCamera();
         this.setupInput();
-        this.registry.events.on('changedata-tool', () => this.preview.clear());
+        this.registry.events.on('changedata-tool', () => { this.preview.clear(); this.pending = null; });
         this.saved = this.saving ? loadGame(localStorage.getItem(SAVE_KEY)) : null;
         if (this.saving) this.progress = loadProgress(localStorage.getItem(PROGRESS_KEY));
         this.registry.set('menu', this.saving ? 'start' : null);
@@ -154,7 +159,8 @@ export class Game extends Scene {
         this.checkLongPress();
         this.drawSelection();
         this.used = 0;
-        drawThings(this.things, this.over, this.sim, this.put);
+        const pd = this.pending; // drawn as if bought, to see how it stands
+        drawThings(this.things, this.over, pd ? { ...this.sim, objects: [...this.sim.objects, { id: -2, type: pd.object, x: pd.x, y: pd.y, category: pd.category, ...(pd.rot ? { rot: 1 } : {}) } as GameState['objects'][number]] } : this.sim, this.put);
         const car = carAt(this.sim, _time);
         if (car) putProp(this.put, car, 1 + car.x + car.y);
         for (let i = this.used; i < this.sprites.length; i++) this.sprites[i].setVisible(false);
@@ -192,6 +198,11 @@ export class Game extends Scene {
 
     drawSelection() {
         const g = this.sel.clear();
+        const pc = this.pendingCmd();
+        if (pc?.type === 'placeObject') {
+            const ok = check(this.sim, pc).ok;
+            for (const q of cellsOf({ type: pc.object, x: pc.x, y: pc.y, rot: pc.rot })) tile(g, q.x, q.y, ok ? OK : BAD, 0.3 + 0.15 * Math.sin(this.time.now / 150));
+        }
         const e = this.edit, r = e?.room && roomAt(this.sim, e.room.x, e.room.y);
         if (r) {
             for (let x = r.x; x < r.x + r.w; x++) for (let y = r.y; y < r.y + r.h; y++) tile(g, x, y, 0xffd23f, 0.35);
@@ -364,9 +375,10 @@ export class Game extends Scene {
             };
         }
         if (t.kind === 'object') {
-            const cmd: Command = { type: 'placeObject', object: t.object, category: t.category, ...c };
+            const rot = this.pending?.rot;
+            const cmd: Command = { type: 'placeObject', object: t.object, category: t.category, ...c, ...(rot ? { rot } : {}) };
             // a till is two cells long: tapping its far end works too
-            const down: Command = { ...cmd, y: c.y + 1 };
+            const down: Command = rot ? { ...cmd, x: c.x + 1 } : { ...cmd, y: c.y + 1 };
             return t.object === 'cassa' && !check(this.sim, cmd).ok && check(this.sim, down).ok ? down : cmd;
         }
         return { type: t.kind, ...c };
@@ -482,10 +494,11 @@ export class Game extends Scene {
             const st = isTap && !this.tool && this.staffAt(p);
             if (st) return void hud.openSheet(st.id); // the worker's card
             if (!this.tool) return;
-            if (this.tool.kind === 'room' || isTap) {
-                const cmd = this.commandFor(p);
-                if (cmd) this.run(cmd);
-            }
+            const cmd = (this.tool.kind === 'room' || isTap) && this.commandFor(p);
+            if (cmd && cmd.type === 'placeObject') {
+                if (!this.pending) this.game.events.emit('toast', 'Tocca per spostarlo, 🔄 per girarlo, ✓ per comprarlo');
+                this.pending = { object: cmd.object, category: cmd.category as Category | undefined, x: cmd.x, y: cmd.y, ...(cmd.rot ? { rot: cmd.rot } : {}) };
+            } else if (cmd) this.run(cmd);
             if (p.wasTouch) this.preview.clear();
             else this.drawPreview(p);
         });
