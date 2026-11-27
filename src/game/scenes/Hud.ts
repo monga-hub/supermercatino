@@ -10,7 +10,8 @@ import { LEVELS, FREE_AFTER, allows, goalsOf, levelOf, levelOpen, freeOpen, PROG
 import { GUIDE, NEWS, guideStep, newsDue, markSeen } from '../../sim/tutorial.ts';
 import { DPR } from '../dpr.ts';
 
-const TEXT = { fontFamily: 'Arial Black', fontSize: 22, color: '#fff3d6', stroke: '#3a2418', strokeThickness: 5, resolution: DPR };
+// Arial Black is missing on iPhone (Safari fell back to Times): Avenir Next at weight 900 looks the same there.
+const TEXT = { fontFamily: '"Arial Black", "Avenir Next", "Helvetica Neue", Arial, sans-serif', fontStyle: '900', fontSize: 22, color: '#fff3d6', stroke: '#3a2418', strokeThickness: 5, resolution: DPR };
 const LIGHT = '#fff3d6';
 const DARK = '#3a2418';
 const BTN_BG = '#7a2e1f';
