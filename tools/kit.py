@@ -44,7 +44,7 @@ SHEETS = [
     # playtest 2026-11-27: men at the till, women in the warehouse too; a straight checkout lane
     ('cassiere_m.jpg', 3, 2, ('h', 46), WALK('cassiere_m') + [('cassiere_m_seduto', SEATED), ('cassiere_m_scan_0', SEATED), ('cassiere_m_scan_1', SEATED)]),
     ('magazziniera.jpg', 3, 2, ('h', 46), WALK('magazziniera') + ['magazziniera_carry_0', 'magazziniera_carry_1', 'magazziniera_carry_2']),
-    ('cassa.jpg', 2, 1, ('foot', 1.0), ['cassa', None]),  # playtest 2026-11-27: register at the exit end, by the cashier; inside one floor tile
+    ('cassa_quadrata.jpg', 3, 1, ('foot', 0.7), [None, 'cassa', None]),  # playtest 2026-11-27: small square counter, one floor tile
     ('cassa.jpg', 2, 1, ('w', 1.0), [None, ('sgabello', 0.3)]),
     ('guardia.jpg', 3, 2, ('h', 48), WALK('guardia') + ['guardia_idle', 'guardia_fischio', 'guardia_ferma']),
     ('capo.jpg', 3, 2, ('h', 46), WALK('capo') + ['capo_idle', 'capo_scrive', 'capo_indica']),
