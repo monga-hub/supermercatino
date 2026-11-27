@@ -92,7 +92,7 @@ test('a busy tired cashier takes no new customer and goes on the break', () => {
 
 test('one break at a time per role', () => {
     const s = staffShop();
-    ok(s, { type: 'placeObject', object: 'cassa', x: 3, y: 9 });
+    ok(s, { type: 'placeObject', object: 'cassa', x: 5, y: 9 });
     const b = hireStaff(s, 'cassiere');
     untilTicks(s, () => b.state === 'at_till');
     for (const st of s.staff) st.energy = BREAK_BELOW - 1;

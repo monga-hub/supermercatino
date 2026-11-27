@@ -36,6 +36,7 @@ Secondo giro di feedback del 2026-11-27: grafica nuova per muri e cassa (una lin
 - [x] Candidati divisi per mansione con tab; verificato dagli screenshot.
 - [x] Niente muro tra sala e casse, solo attorno alle stanze dello staff (`tests/walls.test.ts`).
 - [x] Cassa rifatta (playtest): registratore all'uscita accanto al cassiere, sprite intero; alone delle icone non più tagliato a quadrato. Verificato dagli screenshot.
+- [x] La cassa occupa due caselle lungo la fila (`tests/build.test.ts` "a till takes two cells"); si può toccare l'una o l'altra per piazzarla. Verificato dallo screenshot.
 - [x] Saracinesca aperta nei varchi del magazzino (`tests/walls.test.ts`); verificato dallo screenshot.
 - [x] Scheda con vista dal vivo del lavoratore; verificato dallo screenshot, giudizio finale al playtest.
 

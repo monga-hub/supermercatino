@@ -9,7 +9,7 @@ import {
 } from './config.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
-import { crossing } from './build.ts';
+import { crossing, cellsOf } from './build.ts';
 import { cashierAt, pace, tired, wantsBreak } from './staff.ts';
 import { spawnEveryMin } from './day.ts';
 import { maybeSpill, spillNear } from './dirt.ts';
@@ -26,7 +26,7 @@ export function walkableFor(s: GameState): Walkable {
         if (r.type === 'magazzino' || r.type === 'spogliatoio') continue; // staff only
         for (let x = r.x; x < r.x + r.w; x++) for (let y = r.y; y < r.y + r.h; y++) open.add(`${x},${y}`);
     }
-    for (const o of s.objects) if (o.type !== 'porta') open.delete(`${o.x},${o.y}`);
+    for (const o of s.objects) if (o.type !== 'porta') for (const c of cellsOf(o)) open.delete(`${c.x},${c.y}`);
     for (const c of s.carts) open.delete(`${c.x},${c.y}`);
     return Object.assign((x: number, y: number) => open.has(`${x},${y}`), { cross: crossing(s) });
 }

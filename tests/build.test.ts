@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createState } from '../src/sim/state.ts';
-import { apply, check } from '../src/sim/build.ts';
+import { apply, check, objectAt } from '../src/sim/build.ts';
+import { walkableFor } from '../src/sim/customers.ts';
 import { START_MONEY, ROOMS, OBJECTS, DEMOLISH_REFUND, GRID_W } from '../src/sim/config.ts';
 import { shop } from './helpers.ts';
 
@@ -38,7 +39,7 @@ test('objects only in the right room', () => {
     assert.equal(apply(s, place('scaffale', 2, 2)).ok, false, 'missing category');
     assert.equal(apply(s, place('scaffale', 1, 1, 'Pane')).ok, false, 'cell occupied');
     assert.equal(apply(s, place('scaffale', 15, 15, 'Pane')).ok, false, 'no room there');
-    assert.equal(apply(s, place('cassa', 5, 0)).ok, true);
+    assert.equal(apply(s, place('cassa', 5, 1)).ok, true); // a till takes two cells: (5,1) and (5,0)
     assert.equal(s.objects.length, 3);
     assert.equal(s.objects[0].category, 'Pasta');
 });
@@ -105,4 +106,19 @@ test('rotate needs a shelf or a till', () => {
     const door = s.objects.find((o) => o.type === 'porta')!;
     assert.deepEqual(check(s, { type: 'rotate', x: door.x, y: door.y }), { ok: false, reason: 'La porta si gira da sola' });
     assert.deepEqual(check(s, { type: 'rotate', x: 0, y: 0 }), { ok: false, reason: 'Niente da ruotare' });
+});
+
+test('a till takes two cells along its lane (playtest 2026-11-27)', () => {
+    const s = shop({ cashier: false }); // checkout area x3..5 y8..9, till at (4,9)
+    const till = s.objects.find((o) => o.type === 'cassa')!;
+    assert.equal(objectAt(s, 4, 8), till, 'the belt end, up the lane');
+    assert.equal(walkableFor(s)(4, 8), false, 'nobody walks through the counter');
+    assert.deepEqual(check(s, { ...place('cassa', 5, 9), rot: 1 }), { ok: false, reason: 'Cella occupata' }, 'turned, its second cell is the till');
+    assert.equal(check(s, place('cassa', 3, 8)).reason, 'Cassa: va in Area casse', 'the second cell would be on the sales floor');
+    assert.equal(apply(s, { type: 'rotate', x: 4, y: 8 }).ok, true, 'tap either cell: turned it takes (3,9)');
+    assert.equal(objectAt(s, 3, 9), till);
+    assert.equal(objectAt(s, 4, 8), undefined);
+    assert.equal(apply(s, place('cassa', 5, 9)).ok, true);
+    assert.equal(check(s, { type: 'rotate', x: 5, y: 9 }).ok, false, 'turned it would sit on the other till');
+    assert.equal(check(s, { type: 'move', x: 5, y: 9, toX: 5, toY: 8 }).ok, false, 'its second cell would leave the area');
 });

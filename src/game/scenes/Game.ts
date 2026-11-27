@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { createState, tick, advance, type GameState, type RoomType, type ObjectType, type Category } from '../../sim/state.ts';
-import { apply, check, objectAt, roomAt, type Command } from '../../sim/build.ts';
+import { apply, check, objectAt, roomAt, cellsOf, type Command } from '../../sim/build.ts';
 import { STEP_MS, TAP_ICON_BELOW, BEAR_BONUS_MONEY, BEAR_BONUS_REP, INSPECTION_DAY } from '../../sim/config.ts';
 import { readyAt, tricking } from '../../sim/customers.ts';
 import { tired } from '../../sim/staff.ts';
@@ -363,7 +363,12 @@ export class Game extends Scene {
                 w: Math.abs(a.x - c.x) + 1, h: Math.abs(a.y - c.y) + 1,
             };
         }
-        if (t.kind === 'object') return { type: 'placeObject', object: t.object, category: t.category, ...c };
+        if (t.kind === 'object') {
+            const cmd: Command = { type: 'placeObject', object: t.object, category: t.category, ...c };
+            // a till is two cells long: tapping its far end works too
+            const down: Command = { ...cmd, y: c.y + 1 };
+            return t.object === 'cassa' && !check(this.sim, cmd).ok && check(this.sim, down).ok ? down : cmd;
+        }
         return { type: t.kind, ...c };
     }
 
@@ -376,7 +381,7 @@ export class Game extends Scene {
         if (cmd.type === 'buildRoom') {
             for (let x = cmd.x; x < cmd.x + cmd.w; x++) for (let y = cmd.y; y < cmd.y + cmd.h; y++) tile(g, x, y, color, 0.45);
         } else if (cmd.type === 'placeObject') {
-            tile(g, cmd.x, cmd.y, color, 0.45);
+            for (const q of cellsOf({ type: cmd.object, x: cmd.x, y: cmd.y })) tile(g, q.x, q.y, color, 0.45);
             drawObject(g, { type: cmd.object, x: cmd.x, y: cmd.y, category: cmd.category as Category }, 0.6);
         } else if (cmd.type === 'demolish' || cmd.type === 'rotate') {
             tile(g, cmd.x, cmd.y, cmd.type === 'rotate' ? color : BAD, 0.5);

@@ -10,7 +10,7 @@ const FIXED = 'In questo negozio le stanze sono già fatte';
 
 export type Command =
     | { type: 'buildRoom'; room: RoomType; x: number; y: number; w: number; h: number }
-    | { type: 'placeObject'; object: ObjectType; x: number; y: number; category?: string }
+    | { type: 'placeObject'; object: ObjectType; x: number; y: number; category?: string; rot?: 0 | 1 }
     | { type: 'demolish'; x: number; y: number }
     | { type: 'rotate'; x: number; y: number }
     | { type: 'move'; x: number; y: number; toX: number; toY: number }
@@ -31,7 +31,11 @@ const fail = (reason: string): Result => ({ ok: false, reason });
 export const roomAt = (s: GameState, x: number, y: number) =>
     s.rooms.find((r) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
 
-export const objectAt = (s: GameState, x: number, y: number) => s.objects.find((o) => o.x === x && o.y === y);
+/** Cells an object stands on: a till is a checkout lane two cells long, up the lane from (x, y) (playtest 2026-11-27). */
+export const cellsOf = (o: Pick<ShopObject, 'type' | 'x' | 'y' | 'rot'>) =>
+    o.type === 'cassa' ? [{ x: o.x, y: o.y }, o.rot ? { x: o.x - 1, y: o.y } : { x: o.x, y: o.y - 1 }] : [{ x: o.x, y: o.y }];
+
+export const objectAt = (s: GameState, x: number, y: number) => s.objects.find((o) => cellsOf(o).some((c) => c.x === x && c.y === y));
 
 /** Edge between two cells, either order. */
 export const edgeKey = (ax: number, ay: number, bx: number, by: number) => (ax + ay * 1000 < bx + by * 1000 ? `${ax},${ay}|${bx},${by}` : `${bx},${by}|${ax},${ay}`);
@@ -92,10 +96,10 @@ export function check(s: GameState, c: Command): Result {
         const def = OBJECTS[c.object];
         if (!def) return fail('Oggetto sconosciuto');
         if (!allows(s, 'objects', c.object)) return fail(`${def.label}: non c'è in questo negozio`);
-        const room = roomAt(s, c.x, c.y);
-        if (!room || room.type !== def.room) return fail(`${def.label}: va in ${ROOMS[def.room].label}`);
-        if (objectAt(s, c.x, c.y)) return fail('Cella occupata');
-        if (c.object !== 'porta' && inDoorway(s, c.x, c.y)) return fail('Lascia libero il passaggio');
+        const cells = cellsOf({ type: c.object, x: c.x, y: c.y, rot: c.rot });
+        if (cells.some((p) => roomAt(s, p.x, p.y)?.type !== def.room)) return fail(`${def.label}: va in ${ROOMS[def.room].label}`);
+        if (cells.some((p) => objectAt(s, p.x, p.y))) return fail('Cella occupata');
+        if (c.object !== 'porta' && cells.some((p) => inDoorway(s, p.x, p.y))) return fail('Lascia libero il passaggio');
         if (c.object === 'scaffale' && !CATEGORIES.includes(c.category as Category)) return fail('Scegli una categoria');
         const special = Object.entries(ONLY_IN).find(([, cat]) => cat === c.category);
         if (c.object === 'scaffale' && special) return fail(`${c.category}: ci vuole ${OBJECTS[special[0] as ObjectType].label.toLowerCase()}`);
@@ -109,7 +113,10 @@ export function check(s: GameState, c: Command): Result {
     if (c.type === 'rotate') {
         const o = objectAt(s, c.x, c.y);
         if (!o) return fail('Niente da ruotare');
-        return o.type === 'porta' ? fail('La porta si gira da sola') : { ok: true, cost: 0 };
+        if (o.type === 'porta') return fail('La porta si gira da sola');
+        // turned, it must still fit (a till swings its second cell round)
+        const r = check({ ...s, money: Infinity, objects: s.objects.filter((x) => x !== o) }, { type: 'placeObject', object: o.type, x: o.x, y: o.y, category: o.category, rot: o.rot ? 0 : 1 });
+        return r.ok ? { ok: true, cost: 0 } : r;
     }
     if (c.type === 'move') {
         const o = objectAt(s, c.x, c.y);
@@ -117,7 +124,7 @@ export function check(s: GameState, c: Command): Result {
         if (o.type === 'porta' && s.level) return fail('La porta resta dov\'è');
         if (c.toX === c.x && c.toY === c.y) return fail('È già qui');
         // same rules as placing it there, for free, as if it had left its cell
-        const r = check({ ...s, money: Infinity, objects: s.objects.filter((x) => x !== o) }, { type: 'placeObject', object: o.type, x: c.toX, y: c.toY, category: o.category });
+        const r = check({ ...s, money: Infinity, objects: s.objects.filter((x) => x !== o) }, { type: 'placeObject', object: o.type, x: c.toX, y: c.toY, category: o.category, rot: o.rot });
         return r.ok ? { ok: true, cost: 0 } : r;
     }
     if (c.type === 'hire') return s.candidates.some((x) => x.id === c.candidateId) ? { ok: true, cost: 0 } : fail('Candidato non trovato');
@@ -179,7 +186,7 @@ export function apply(s: GameState, c: Command): Result {
     if (c.type === 'buildRoom') {
         s.rooms.push({ id: s.nextId++, type: c.room, x: c.x, y: c.y, w: c.w, h: c.h });
     } else if (c.type === 'placeObject') {
-        const o: ShopObject = { id: s.nextId++, type: c.object, x: c.x, y: c.y };
+        const o: ShopObject = { id: s.nextId++, type: c.object, x: c.x, y: c.y, ...(c.rot ? { rot: 1 } : {}) };
         if (c.object === 'scaffale' || c.object in ONLY_IN) {
             o.category = ONLY_IN[c.object as keyof typeof ONLY_IN] ?? c.category as Category;
             o.stock = c.object === 'forno' ? 0 : SHELF_CAPACITY; // the oven starts cold

@@ -4,7 +4,7 @@ import { gridToIso, TILE_W, TILE_H } from './iso.ts';
 import { SPRITES, SPILL_FRAMES, personFrame } from './sprites.ts';
 import { walls, doorEdge, type Edge } from './walls.ts';
 import { cashierAt } from '../sim/staff.ts';
-import { STAFF_ONLY } from '../sim/build.ts';
+import { STAFF_ONLY, cellsOf } from '../sim/build.ts';
 import { terrain, props, decor, MARGIN, type Ground, type Prop } from './scenery.ts';
 import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role, Category } from '../sim/state.ts';
 
@@ -87,8 +87,10 @@ const objectFrame = (o: Pick<ShopObject, 'type' | 'category' | 'stock' | 'rot'>)
     o.type === 'cassa' ? SPRITES.cassa : o.type === 'cestino' ? SPRITES.cestino : o.type === 'bancone' ? (o.stock ? SPRITES.bancone : SPRITES.banconeVuoto) : o.type === 'forno' ? (o.stock ? SPRITES.forno : SPRITES.fornoVuoto) : o.type === 'frigo' ? (o.stock ? SPRITES.frigo : SPRITES.frigoVuoto) : o.type === 'armadietti' ? SPRITES.armadietti : o.type === 'porta' ? 'porta_l' : o.category && o.stock !== 0 ? SPRITES.shelf(o.category) : SPRITES.scaffale;
 
 export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock' | 'rot'>, alpha = 1, put: Put = noPut, depth = 0) {
-    const p = gridToIso(o.x, o.y);
-    if (put(objectFrame(o), p.x, p.y + TILE_H, depth, !!o.rot)) return; // stands on the cell's bottom vertex; turned = mirrored
+    // stands on its footprint's bottom vertex, centred across it (a till spans two cells); turned = mirrored
+    const cells = cellsOf(o).map((c) => gridToIso(c.x, c.y));
+    const px = cells.reduce((t, c) => t + c.x, 0) / cells.length, py = Math.max(...cells.map((c) => c.y)) + TILE_H - (o.type === 'cassa' ? TILL_LIFT : 0);
+    if (put(objectFrame(o), px, py, depth, !!o.rot)) return;
     const look = OBJECT_LOOK[o.type];
     box(g, o.x, o.y, look.h, look.color, look.k, alpha);
     // merce in cima; sparisce quando lo scaffale è vuoto
@@ -129,7 +131,13 @@ const SEAT_OFFSET = 0.45;
 /** Seated cashier sprite: screen px from the till's cell centre, behind the register, facing the customers. */
 const SEAT_PX = { x: 17, y: -6 };
 /** Cashier's stool: this far behind the checkout lane's cell (milestone 24). */
-export const LANE_SEAT = 0.5;
+export const LANE_SEAT = 0.8;
+/** The painted counter's plinth reaches a little below its footprint: lifted so the low front wall hides it. */
+const TILL_LIFT = 3;
+/** ...and this far up the lane from the register, so the register doesn't hide them. */
+const LANE_ALONG = 0.35;
+/** Seat behind a two-cell checkout lane at (x, y), turned or not. */
+const laneSeat = (x: number, y: number, turned: boolean) => feet(x - (turned ? LANE_ALONG : LANE_SEAT), y - (turned ? LANE_SEAT : LANE_ALONG));
 /** Deli man: standing behind the counter, facing the customers. */
 const DELI_PX = { x: -6, y: -20 };
 
@@ -141,7 +149,7 @@ export function drawStaff(g: G, s: GameState, st: Staff, put: Put = noPut, depth
     const at = feet(st.x, st.y);
     const turned = seated && !!s.objects.find((o) => o.id === st.tillId)?.rot; // till mirrored: seat and facing mirror too
     if (seated && st.role === 'cassiere') { // straight checkout lane: seated behind it, facing the customers' side
-        const p = feet(st.x - (turned ? 0 : LANE_SEAT), st.y - (turned ? LANE_SEAT : 0));
+        const p = laneSeat(st.x, st.y, turned);
         if (put(frame, p.x, p.y + 4, depth, turned)) return;
     }
     const seat = st.role === 'banconiere' ? DELI_PX : SEAT_PX;
@@ -235,7 +243,7 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
     const items: { d: number; draw: (depth: number) => void }[] = [
         ...walls(s).map((w) => ({ d: w.x + w.y + (w.low ? 0.6 : -0.5), draw: (z: number) => panel(put, wallFrame(w), w.x, w.y, w.side, z) })),
         ...s.objects.filter((o) => o.type === 'cassa' && !cashierAt(s, o)).map((o) => ({ d: o.x + o.y - 0.9, draw: (z: number) => { // empty stool
-            const p = feet(o.x - (o.rot ? 0 : LANE_SEAT), o.y - (o.rot ? LANE_SEAT : 0));
+            const p = laneSeat(o.x, o.y, !!o.rot);
             put('sgabello', p.x, p.y + 4, z);
         } })),
         ...s.objects.map((o) => {
