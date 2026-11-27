@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { tick, createState } from '../src/sim/state.ts';
 import { FEMALE_NAMES, ROLE_SEX } from '../src/sim/config.ts';
 import { spawnCustomer } from '../src/sim/customers.ts';
-import { personFrame, objectFrame, SHELF_FRAMES, walkBob } from '../src/render/sprites.ts';
+import { personFrame, objectFrame, SHELF_FRAMES, walkBob, walkSway } from '../src/render/sprites.ts';
 import type { ShopObject, Category } from '../src/sim/state.ts';
 import { shop, untilTicks, hireStaff, withWarehouse } from './helpers.ts';
 
@@ -23,6 +23,12 @@ test('walkers bob: feet down on contact, body up mid-step (playtest 2026-11-27)'
     assert.ok(walkBob({ x: 3, y: 4 }) < 0.01, 'foot down');
     assert.ok(walkBob({ x: 3.25, y: 4 }) >= 2, 'up mid-step');
     assert.ok(walkBob({ x: 3, y: 4.5 }) < 0.01, 'down again on the next contact');
+});
+
+test('walkers rock from one foot to the other (playtest 2026-11-27)', () => {
+    const a = walkSway({ x: 3.25, y: 4 }), b = walkSway({ x: 3.75, y: 4 });
+    assert.ok(a > 0.05 && b < -0.05, `${a} ${b}`);
+    assert.ok(Math.abs(walkSway({ x: 3, y: 4 })) < 0.01, 'upright with both feet down');
 });
 
 test('each customer type has its own frames', () => {

@@ -1,7 +1,7 @@
 // Drawing: painted sprites from the kit atlas (milestone 07); flat iso boxes as fallback when a frame is missing.
 import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
-import { SPRITES, SPILL_FRAMES, personFrame, objectFrame, walkBob } from './sprites.ts';
+import { SPRITES, SPILL_FRAMES, personFrame, objectFrame, walkBob, walkSway } from './sprites.ts';
 import { walls, doorEdge, type Edge } from './walls.ts';
 import { cashierAt } from '../sim/staff.ts';
 import { STAFF_ONLY, cellsOf } from '../sim/build.ts';
@@ -10,7 +10,7 @@ import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role
 
 type G = GameObjects.Graphics;
 /** Draws atlas frame bottom-centred at (px, py); false if the frame is missing (caller falls back to boxes). */
-export type Put = (frame: string, px: number, py: number, depth: number, flip?: boolean) => boolean;
+export type Put = (frame: string, px: number, py: number, depth: number, flip?: boolean, angle?: number) => boolean;
 const noPut: Put = () => false;
 
 const LOT = [0xa39684, 0x998c7a]; // piazzale in pietra (milestone 21b; was dark cement)
@@ -108,7 +108,7 @@ const feet = (x: number, y: number) => { const p = gridToIso(x, y); return { x: 
 export function drawCustomer(g: G, over: G, s: GameState, c: Customer, put: Put = noPut, depth = 0) {
     const angry = c.state === 'leaving_angry';
     const f = feet(c.x, c.y);
-    const drawn = put(personFrame(s, c), f.x, f.y + 2 - (c.path.length ? walkBob(c) : 0), depth, goesLeft(c, c.path[0]));
+    const drawn = put(personFrame(s, c), f.x, f.y + 2 - (c.path.length ? walkBob(c) : 0), depth, goesLeft(c, c.path[0]), c.path.length ? walkSway(c) : 0);
     if (!drawn) box(g, c.x, c.y, CUSTOMER_H, angry ? CUSTOMER_ANGRY : CUSTOMER, 0.35);
     if (c.state === 'leaving' || angry || c.kind === 'ispettore') return; // the inspector has no patience to lose
     // patience bar over the head
@@ -151,7 +151,7 @@ export function drawStaff(g: G, s: GameState, st: Staff, put: Put = noPut, depth
         if (put(frame, p.x, p.y + 4, depth, turned)) return;
     }
     const seat = st.role === 'banconiere' ? DELI_PX : SEAT_PX;
-    if (seated ? put(frame, at.x + (turned ? -seat.x : seat.x), at.y + seat.y, depth, st.role === 'banconiere' ? turned : !turned) : put(frame, f.x, f.y + 2 - (st.path.length ? walkBob(st) : 0), depth, goesLeft(st, st.path[0]))) return;
+    if (seated ? put(frame, at.x + (turned ? -seat.x : seat.x), at.y + seat.y, depth, st.role === 'banconiere' ? turned : !turned) : put(frame, f.x, f.y + 2 - (st.path.length ? walkBob(st) : 0), depth, goesLeft(st, st.path[0]), st.path.length ? walkSway(st) : 0)) return;
     box(g, st.x - o, st.y - o, 24, ROLE_COLOR[st.role], 0.38);
     box(g, st.x - o, st.y - o, 28, 0xf4efe6, 0.24); // berretto bianco
     if (st.job?.units) box(g, st.x + 0.15, st.y + 0.15, 16, CRATE, 0.3); // scatolone in mano

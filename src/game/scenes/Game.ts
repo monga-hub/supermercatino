@@ -97,10 +97,10 @@ export class Game extends Scene {
         this.load.atlas('kit', 'assets/kit.png', 'assets/kit.json');
     }
 
-    put: Put = (frame, x, y, depth, flip = false) => {
+    put: Put = (frame, x, y, depth, flip = false, angle = 0) => {
         if (!this.textures.get('kit').has(frame)) return false;
         const im = (this.sprites[this.used++] ??= this.add.image(0, 0, 'kit').setOrigin(0.5, 1).setScale(KIT_SCALE));
-        im.setFrame(frame).setPosition(x, y).setDepth(depth).setFlipX(flip).setVisible(true);
+        im.setFrame(frame).setPosition(x, y).setDepth(depth).setFlipX(flip).setRotation(angle).setVisible(true);
         return true;
     };
 

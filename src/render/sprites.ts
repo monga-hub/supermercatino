@@ -63,7 +63,9 @@ const STRIDE = 4;
 const CYCLE = [0, 1, 2, 1];
 const step = (p: { x: number; y: number }) => CYCLE[Math.floor((p.x + p.y) * STRIDE) % CYCLE.length];
 /** Screen px a walker rises mid-step, 0 with a foot down: the Gemini walk frames barely differ, the bounce sells the walk (playtest 2026-11-27). */
-export const walkBob = (p: { x: number; y: number }) => 2.5 * Math.sin(((p.x + p.y) * STRIDE * Math.PI) / 2) ** 2;
+export const walkBob = (p: { x: number; y: number }) => 3 * Math.sin(((p.x + p.y) * STRIDE * Math.PI) / 2) ** 2;
+/** Radians a walker leans onto the stepping foot, left then right: a waddle, since the painted legs hardly move (playtest 2026-11-27). */
+export const walkSway = (p: { x: number; y: number }) => 0.09 * Math.sin(((p.x + p.y) * STRIDE * Math.PI) / 2);
 /** Game seconds per scan pose while a customer pays (GAME_MIN_PER_SEC 3: ~0.3 s real at 1x). */
 const SCAN_SEC = 54;
 
