@@ -88,6 +88,13 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 
 ## Polish & juice
 
+- [ ] Lavoratori come Theme Hospital: umore, abilità che crescono, promozioni; prenderli in mano e spostarli.
+  - Source: utente 2026-11-27 (screenshot scheda di Theme Hospital)
+  - Rough size: M · Rough value: M
+- [ ] Cassiera che sparisce durante il livello 1 — non riprodotta; servono dettagli (quando, dopo cosa).
+  - Source: playtest utente 2026-11-27
+  - Rough size: S · Rough value: H
+
 - [ ] Vetrine, finestre e tenda a righe sulla facciata; clienti che arrivano a piedi dal marciapiede invece di comparire sulla porta.
   - Source: milestone 21b, 2026-11-27
   - Rough size: M · Rough value: M
@@ -129,7 +136,7 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: milestone 09, 2026-11-26
   - Rough size: M · Rough value: S
 
-- [ ] Muri interni tra stanze diverse (magazzino/sala) e icone faccina felice/arrabbiata e cestino già nel kit da usare nell'HUD.
+- [x] ~~Muri interni tra stanze diverse~~ → milestone 23-interfaccia-insegna.md. Restano le icone faccina felice/arrabbiata e cestino già nel kit da usare nell'HUD.
   - Source: milestone 09, 2026-11-26
   - Rough size: S · Rough value: S
 

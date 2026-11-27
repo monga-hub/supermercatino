@@ -331,6 +331,15 @@ export class Game extends Scene {
         return r;
     }
 
+    /** The staff member drawn under this pointer: a box over the body standing on its feet. */
+    staffAt(p: Input.Pointer) {
+        return this.sim.staff.find((st) => {
+            const f = gridToIso(st.x, st.y);
+            const dx = p.worldX - f.x, dy = p.worldY - (f.y + TILE_H / 2);
+            return Math.abs(dx) < 16 && dy < 8 && dy > -52;
+        });
+    }
+
     cellOf(p: Input.Pointer): Cell {
         return cellAt(p.worldX, p.worldY);
     }
@@ -465,6 +474,8 @@ export class Game extends Scene {
             }
             const tapped = isTap && this.iconCommand(p);
             if (tapped) return void this.run(tapped);
+            const st = isTap && !this.tool && this.staffAt(p);
+            if (st) return void hud.openSheet(st.id); // the worker's card
             if (!this.tool) return;
             if (this.tool.kind === 'room' || isTap) {
                 const cmd = this.commandFor(p);

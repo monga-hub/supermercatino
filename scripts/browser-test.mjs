@@ -379,6 +379,32 @@ await check('long press on an object: move, rotate, remove', async () => {
     await pl.close();
 });
 
+await check('tap a worker: their card, fire from it', async () => {
+    const pw = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    pw.on('pageerror', (e) => errors.push(e.message));
+    await pw.goto(new URL('?manual', base).href);
+    await pw.waitForFunction(() => typeof window.hudButtons === 'function');
+    await pw.waitForTimeout(200);
+    const st = async () => JSON.parse(await pw.evaluate(() => window.render_game_to_text()));
+    const run = (c) => pw.evaluate((x) => window.dispatch(x), c);
+    for (const c of [{ type: 'buildRoom', room: 'sala_vendita', x: 6, y: 6, w: 4, h: 4 }, { type: 'placeObject', object: 'porta', x: 9, y: 7 }])
+        expect((await run(c)).ok, JSON.stringify(c));
+    expect((await run({ type: 'hire', candidateId: (await st()).candidates.find((c) => c.role === 'magazziniere').id })).ok, 'hire');
+    const m = (await st()).staff[0];
+    const p = await pw.evaluate(([x, y]) => window.cellToScreen(x, y), [m.x, m.y]);
+    await pw.mouse.click(p.x, p.y - 20 * p.zoom); // on the body, above the feet
+    await pw.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    const texts = await pw.evaluate(() => window.hudText());
+    expect(texts.includes(m.name) && texts.includes('⚡ Energia'), `no card: ${texts}`);
+    const fire = (await pw.evaluate(() => window.hudButtons())).find((b) => b.label.includes('Licenzia'));
+    expect(fire, 'no Licenzia');
+    await pw.mouse.click(fire.x, fire.y);
+    await pw.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    expect((await st()).staff.length === 0, 'not fired');
+    expect(!(await pw.evaluate(() => window.hudText())).includes('⚡ Energia'), 'card still open');
+    await pw.close();
+});
+
 // milestone 21: grouped bottom bar on a phone, upright and sideways
 for (const [w, h] of [[390, 844], [844, 390]]) await check(`phone ${w}x${h}: grouped bar on one row, level items only, goal bars`, async () => {
     const pp = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });

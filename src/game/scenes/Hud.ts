@@ -1,6 +1,6 @@
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { setSpeed, togglePause, type GameState, type Speed } from '../../sim/state.ts';
-import { ROOMS, OBJECTS, CATEGORIES, ONLY_IN, ROLES, TRAITS, ORDER_UNITS, UNIT_COST, REP_MIN, DAY_OPEN_MIN, BAD_DAYS, INSPECTION_DAY } from '../../sim/config.ts';
+import { ROOMS, OBJECTS, CATEGORIES, ONLY_IN, ROLES, TRAITS, ENERGY_MAX, ORDER_UNITS, UNIT_COST, REP_MIN, DAY_OPEN_MIN, BAD_DAYS, INSPECTION_DAY } from '../../sim/config.ts';
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
 import { gridToIso, TILE_H } from '../../render/iso.ts';
@@ -11,13 +11,27 @@ import { GUIDE, NEWS, guideStep, newsDue, markSeen } from '../../sim/tutorial.ts
 import { DPR } from '../dpr.ts';
 
 // Arial Black is missing on iPhone (Safari fell back to Times): Avenir Next at weight 900 looks the same there.
-const TEXT = { fontFamily: '"Arial Black", "Avenir Next", "Helvetica Neue", Arial, sans-serif', fontStyle: '900', fontSize: 22, color: '#fff3d6', stroke: '#3a2418', strokeThickness: 5, resolution: DPR };
-const LIGHT = '#fff3d6';
-const DARK = '#3a2418';
-const BTN_BG = '#7a2e1f';
-const BTN_ACTIVE_BG = '#e0a030';
-const GROUP_BG = '#3d5a80';
+/** "Insegna" palette (playtest 2026-11-27): 80s Italian supermarket signs. Cream panels, navy ink, tomato red, blue, mustard. */
+export const C = { cream: 0xf6ecd6, creamLo: 0xd8c59c, ink: 0x1f2a44, red: 0xc8202e, blue: 0x1f4e9c, gold: 0xf2b134, green: 0x6dbf4b };
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
+const LIGHT = '#fff6e0';
+const DARK = hex(C.ink);
+const BTN_BG = hex(C.cream);
+const GROUP_BG = hex(C.blue);
+const RED_BG = hex(C.red);
+const TEXT = { fontFamily: '"Arial Black", "Avenir Next", "Helvetica Neue", Arial, sans-serif', fontStyle: '900', fontSize: 22, color: DARK, stroke: LIGHT, strokeThickness: 0, resolution: DPR };
+const num = (c: string) => parseInt(c.slice(1, 7), 16);
+const shade = (n: number, f: number) => (Math.round(((n >> 16) & 255) * f) << 16) | (Math.round(((n >> 8) & 255) * f) << 8) | Math.round((n & 255) * f);
+const isLight = (n: number) => 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 150;
+/** Raised button / panel face: darker lip below, highlight on top. */
+export function bevel(g: GameObjects.Graphics, x: number, y: number, w: number, h: number, face: number, r = 8) {
+    r = Math.min(r, h / 2 - 1, w / 2 - 1);
+    g.fillStyle(shade(face, 0.62), 1).fillRoundedRect(x, y + 3, w, h, r);
+    g.fillStyle(face, 1).fillRoundedRect(x, y, w, h, r);
+    g.fillStyle(0xffffff, 0.28).fillRoundedRect(x + 4, y + 2, w - 8, Math.min(5, h / 4), Math.min(r, 2));
+}
+/** Text colour that reads on this face. */
+const inkOn = (face: number) => (isLight(face) ? DARK : LIGHT);
 /** Icon height on buttons, CSS px. */
 const ICON_H = 26;
 const BAR_H = 20;
@@ -40,6 +54,9 @@ export class Hud extends Scene {
     hint: GameObjects.Text;
     arrow: GameObjects.Text;
     speedBtns: Btn[] = [];
+    /** Cream bars behind the top HUD and the bottom rows; button faces, redrawn each frame. */
+    frame: GameObjects.Graphics;
+    chrome: GameObjects.Graphics;
     gear: Btn;
     /** Pause state before the ⚙ menu paused the game. */
     wasPaused = false;
@@ -53,6 +70,12 @@ export class Hud extends Scene {
     /** Day summary / level outcome card, rebuilt when its content changes. */
     card: GameObjects.Container | null = null;
     cardBtns: GameObjects.Text[] = [];
+    /** Worker's card (Theme Hospital style): open for this staff id. */
+    sheetId: number | null = null;
+    sheet: GameObjects.Container | null = null;
+    sheetKey = '';
+    sheetBtns: GameObjects.Text[] = [];
+    panelBtns: GameObjects.Text[] = [];
     cardKey = '';
     /** Pina's bubble: guide step or "Novità". */
     bubble: GameObjects.Container | null = null;
@@ -101,7 +124,7 @@ export class Hud extends Scene {
 
     button(label: string, onClick: () => void, active: () => boolean, bg = BTN_BG, fg?: string, show?: () => boolean, frame?: string, size = 16): Btn {
         const t = this.add
-            .text(0, 0, label, { ...TEXT, fontSize: size, strokeThickness: 0, backgroundColor: bg, padding: { x: 10, y: 7 } })
+            .text(0, 0, label, { ...TEXT, fontSize: size, padding: { x: 10, y: 7 } })
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', onClick);
         let icon: GameObjects.Image | undefined;
@@ -115,14 +138,16 @@ export class Hud extends Scene {
 
     create() {
         this.cameras.main.setZoom(DPR).setOrigin(0, 0);
-        this.clock = this.add.text(10, 4, '', { ...TEXT, fontSize: 19, strokeThickness: 4 });
-        this.dayT = this.add.text(10, 28, '', { ...TEXT, fontSize: 11, strokeThickness: 3 });
-        this.money = this.add.text(0, 6, '', { ...TEXT, fontSize: 19, strokeThickness: 4 }).setOrigin(1, 0);
+        this.frame = this.add.graphics().setDepth(-2);
+        this.chrome = this.add.graphics().setDepth(-1);
+        this.clock = this.add.text(10, 4, '', { ...TEXT, fontSize: 19 });
+        this.dayT = this.add.text(10, 28, '', { ...TEXT, fontSize: 11, color: hex(C.blue) });
+        this.money = this.add.text(0, 6, '', { ...TEXT, fontSize: 19 }).setOrigin(1, 0);
         this.bars = this.add.graphics();
-        this.barTexts = [0, 1, 2].map(() => this.add.text(0, 0, '', { ...TEXT, fontSize: 12, strokeThickness: 3 }).setOrigin(0.5));
-        this.hint = this.add.text(0, 0, '', { ...TEXT, fontSize: 15, strokeThickness: 4, backgroundColor: '#000000aa', padding: { x: 10, y: 6 } }).setOrigin(0.5, 0);
-        this.toast = this.add.text(0, 100, '', { ...TEXT, fontSize: 17, strokeThickness: 4, backgroundColor: '#000000aa', padding: { x: 10, y: 6 }, align: 'center', wordWrap: { width: 360 } }).setOrigin(0.5, 0).setVisible(false).setDepth(10);
-        this.arrow = this.add.text(0, 0, '▼', { ...TEXT, fontSize: 30, color: '#ffd23f', strokeThickness: 6 }).setOrigin(0.5, 1).setDepth(15).setVisible(false);
+        this.barTexts = [0, 1, 2].map(() => this.add.text(0, 0, '', { ...TEXT, fontSize: 12 }).setOrigin(0.5));
+        this.hint = this.add.text(0, 0, '', { ...TEXT, fontSize: 15, color: LIGHT, backgroundColor: DARK + 'e6', padding: { x: 10, y: 6 } }).setOrigin(0.5, 0);
+        this.toast = this.add.text(0, 100, '', { ...TEXT, fontSize: 17, color: LIGHT, backgroundColor: DARK + 'e6', padding: { x: 10, y: 6 }, align: 'center', wordWrap: { width: 360 } }).setOrigin(0.5, 0).setVisible(false).setDepth(10);
+        this.arrow = this.add.text(0, 0, '▼', { ...TEXT, fontSize: 30, color: hex(C.gold), stroke: DARK, strokeThickness: 6 }).setOrigin(0.5, 1).setDepth(15).setVisible(false);
 
         // speed: index 0 = pause, 1..3 = speed
         this.speedBtns = ['II', '1x', '2x', '3x'].map((label, i) =>
@@ -133,7 +158,7 @@ export class Hud extends Scene {
             this.wasPaused = this.sim.paused;
             this.sim.paused = true;
             this.registry.set('menu', 'pausa');
-        }, () => false, GROUP_BG, undefined, undefined, undefined, 19);
+        }, () => false, GROUP_BG, undefined, undefined, undefined, 21);
 
         const same = (t: Tool) => JSON.stringify(this.tool) === JSON.stringify(t);
         const toggle = (t: Tool) => () => this.setTool(same(t) ? null : t);
@@ -177,7 +202,7 @@ export class Hud extends Scene {
             this.button('🗑', () => {
                 const c = at();
                 if (c && this.run({ type: 'demolish', ...c }).ok) game().edit = null;
-            }, () => false, '#8e2a1f', undefined, undefined, undefined, 24),
+            }, () => false, RED_BG, undefined, undefined, undefined, 24),
         ];
         for (const b of this.editBtns) b.t.setDepth(6);
         for (const g of this.groups) g.btn.t.setPadding(g.btn.icon ? 8 + g.btn.icon.displayWidth + 4 : 8, 7, 8, 7); // tighter: the group bar fits a phone
@@ -204,12 +229,12 @@ export class Hud extends Scene {
         this.scale.on('resize', () => {
             this.layout();
             this.cardKey = ''; // rebuild the card and the bubble for the new size
-            this.bubbleKey = '';
+            this.bubbleKey = '-';
             if (this.panel) this.openPanel();
         });
-        window.hudButtons = () => [...this.speedBtns, this.gear, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns, ...this.editBtns, ...this.cardBtns.map((t) => ({ t, active: () => false }))]
+        window.hudButtons = () => [...this.speedBtns, this.gear, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns, ...this.editBtns, ...[...this.cardBtns, ...this.sheetBtns, ...this.panelBtns].map((t) => ({ t, active: () => false }))]
             .filter((b) => b.t.visible)
-            .map((b) => ({ label: b.t.text, x: b.t.x + b.t.width / 2, y: b.t.y + b.t.height / 2, w: b.t.width, active: b.active() }));
+            .map((b) => ({ label: b.t.text, x: b.t.x + (0.5 - b.t.originX) * b.t.width, y: b.t.y + (0.5 - b.t.originY) * b.t.height + (b.t.parentContainer?.y ?? 0), w: b.t.width, active: b.active() }));
         window.hudText = () => (this.children.list as GameObjects.Text[]).concat(...this.children.list.flatMap((c) => (c as GameObjects.Container).list ?? []) as GameObjects.Text[])
             .filter((o) => o.type === 'Text' && o.visible && o.text).map((o) => o.text);
         this.layout();
@@ -263,7 +288,7 @@ export class Hud extends Scene {
         }
         const wide = W >= 700;
         this.barsBox = wide ? { x: x + 8, y: 10, w: W - 10 - 120 - this.gear.t.width - x - 16 } : { x: 10, y: 46, w: W - 20 };
-        this.topH = this.barsBox.y + BAR_H + 6;
+        this.topH = Math.max(this.barsBox.y + BAR_H + 6, this.dayT.y + this.dayT.height + 4);
         this.hint.setPosition(W / 2, this.topH + 6);
         this.toast.setY(this.topH + 44);
         // bottom: group bar, then the open group's items, then the shelf goods
@@ -287,7 +312,12 @@ export class Hud extends Scene {
             this.flow(this.catBtns, top, W);
         } else for (const b of this.catBtns) this.vis(b, false);
         this.rowsTop = top;
-        this.bubbleKey = '';
+        this.bubbleKey = '-'; // rebuild (or remove) the bubble
+        const f = this.frame.clear();
+        f.fillStyle(C.cream, 0.96).fillRect(0, 0, W, this.topH);
+        f.fillStyle(C.blue, 1).fillRect(0, this.topH, W, 3);
+        f.fillStyle(C.cream, 0.96).fillRect(0, top - 8, W, H - top + 8);
+        f.fillStyle(C.blue, 1).fillRect(0, top - 11, W, 3);
     }
 
     drawBars() {
@@ -305,9 +335,9 @@ export class Hud extends Scene {
         items.forEach(([v, goal, label], i) => {
             const bx = x + i * (bw + 6);
             const f = Math.max(0, Math.min(1, v / goal));
-            b.fillStyle(0x000000, 0.45).fillRect(bx, y, bw, BAR_H);
-            b.fillStyle(f >= 1 ? 0x4caf50 : 0xe0a030, 1).fillRect(bx, y, bw * f, BAR_H);
-            b.lineStyle(2, 0x3a2418, 1).strokeRect(bx, y, bw, BAR_H);
+            b.fillStyle(C.creamLo, 1).fillRoundedRect(bx, y, bw, BAR_H, 6);
+            if (f > 0.04) b.fillStyle(f >= 1 ? C.green : C.gold, 1).fillRoundedRect(bx, y, bw * f, BAR_H, 6);
+            b.lineStyle(2, C.ink, 1).strokeRoundedRect(bx, y, bw, BAR_H, 6);
             const t = this.barTexts[i].setPosition(bx + bw / 2, y + BAR_H / 2);
             if (t.text !== label) t.setText(label);
             t.setScale(Math.min(1, (bw - 6) / t.width));
@@ -334,6 +364,7 @@ export class Hud extends Scene {
     closePanel() {
         this.panel?.destroy();
         this.panel = null;
+        this.panelBtns = [];
     }
 
     /** Staff panel (hire/fire) or Merce panel (order goods). Rebuilt whenever what it shows changes. */
@@ -348,7 +379,8 @@ export class Hud extends Scene {
         const viewH = this.rowsTop - 8 - y0;
         this.panelRect = { x: x0, y: y0, w, h: viewH };
         const c = (this.panel = this.add.container(0, 0).setDepth(5));
-        const bg = this.add.rectangle(x0, y0, w, viewH, 0x2b1d16, 0.96).setOrigin(0).setStrokeStyle(3, 0xe0a030);
+        c.add(this.sheetBg(x0, y0, w, viewH));
+        const bg = this.add.rectangle(x0, y0, w, viewH, 0, 0.001).setOrigin(0);
         // swallows taps so they don't reach the shop below; drag or wheel scrolls the body
         bg.setInteractive()
             .on('pointermove', (p: Input.Pointer) => p.isDown && this.scrollPanel((p.prevPosition.y - p.y) / DPR))
@@ -358,29 +390,32 @@ export class Hud extends Scene {
         const body = this.add.container(0, 0);
         c.add(body);
         let y = y0 + 48; // body starts under the fixed title row
-        const small = { ...TEXT, fontSize: 14, strokeThickness: 0, color: '#d9c7a7' };
-        const row = (title: string, sub: string, label: string, cmd: Command) => {
-            body.add(this.add.text(x0 + 12, y, title, { ...TEXT, fontSize: 17, strokeThickness: 0 }));
+        const small = { ...TEXT, fontSize: 14, color: '#5a5f6e' };
+        const row = (title: string, sub: string, label: string, cmd: Command | (() => void), face = C.blue) => {
+            body.add(this.add.text(x0 + 12, y, title, { ...TEXT, fontSize: 17 }));
             const subT = this.add.text(x0 + 12, y + 22, sub, { ...small, wordWrap: { width: w - 140 } });
             body.add(subT);
             const b = this.add
-                .text(x0 + w - 12, y + 6, label, { ...TEXT, fontSize: 16, strokeThickness: 0, backgroundColor: BTN_BG, padding: { x: 10, y: 6 } })
+                .text(x0 + w - 12, y + 6, label, { ...TEXT, fontSize: 16, color: inkOn(face), padding: { x: 10, y: 6 } })
                 .setOrigin(1, 0)
                 .setInteractive({ useHandCursor: true })
                 .on('pointerdown', () => {
+                    if (typeof cmd === 'function') return cmd();
                     this.run(cmd);
                     this.openPanel();
                 });
+            body.add(this.pill(b, face));
             body.add(b);
+            this.panelBtns.push(b);
             y += Math.max(50, 22 + subT.height + 10);
         };
         const header = (t: string) => {
-            body.add(this.add.text(x0 + 12, y, t, { ...TEXT, fontSize: 19, color: '#e0a030', strokeThickness: 0 }));
+            body.add(this.add.text(x0 + 12, y, t, { ...TEXT, fontSize: 19, color: hex(C.blue) }));
             y += 30;
         };
-        c.add(this.add.text(x0 + 12, y0 + 12, this.panelKind === 'merce' ? 'Merce in magazzino' : 'Staff', { ...TEXT, fontSize: 19, color: '#e0a030', strokeThickness: 0 }));
+        c.add(this.add.text(x0 + 12, y0 + 12, this.panelKind === 'merce' ? 'Merce in magazzino' : 'Staff', { ...TEXT, fontSize: 19, color: hex(C.blue) }));
         c.add(
-            this.add.text(x0 + w - 12, y0 + 10, '✕', { ...TEXT, fontSize: 22, strokeThickness: 0 })
+            this.add.text(x0 + w - 12, y0 + 10, '✕', { ...TEXT, fontSize: 22, color: hex(C.red) })
                 .setOrigin(1, 0).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.closePanel()),
         );
         if (this.panelKind === 'merce') {
@@ -404,17 +439,21 @@ export class Hud extends Scene {
                 y += 30;
             }
             for (const st of s.staff)
-                row(`${st.name} · €${st.wage}/giorno`, `${ROLES[st.role].label} · ${STAFF_STATE[st.state]} · energia ${Math.round(st.energy)}%`, 'Licenzia', { type: 'fire', staffId: st.id });
+                row(`${st.name} · €${st.wage}/giorno`, `${ROLES[st.role].label} · ${STAFF_STATE[st.state]}`, 'Scheda', () => {
+                    this.closePanel();
+                    this.openSheet(st.id);
+                });
         }
         const maxScroll = Math.max(0, y - y0 - viewH + 8);
-        const more = this.add.text(x0 + w / 2, y0 + viewH - 4, '▼ trascina per vedere il resto', { ...small, backgroundColor: '#2b1d16' }).setOrigin(0.5, 1);
+        const more = this.add.text(x0 + w / 2, y0 + viewH - 4, '▼ trascina per vedere il resto', { ...small, backgroundColor: hex(C.cream) }).setOrigin(0.5, 1);
         c.add(more);
         this.scrollPanel = (dy) => {
             this.panelScroll = Math.min(maxScroll, Math.max(0, this.panelScroll + dy));
             body.y = -this.panelScroll;
-            for (const o of body.list as GameObjects.Text[]) {
+            for (const o of (body.list as GameObjects.Text[]).filter((x) => x.type === 'Text')) {
                 const top = o.y - this.panelScroll - (o.originY ?? 0) * o.height;
                 o.setVisible(top >= y0 + 44 && top + o.height <= y0 + viewH - (this.panelScroll < maxScroll ? 24 : 4));
+                (o.getData('pill') as GameObjects.Graphics | undefined)?.setVisible(o.visible);
             }
             more.setVisible(this.panelScroll < maxScroll);
         };
@@ -464,16 +503,15 @@ export class Hud extends Scene {
         if (!show) return;
         // phone sideways: beside the group bar, small; else above the bottom rows, leaving room for the arrow
         const low = this.H < 500;
-        const g = this.groups.map((x) => x.btn.t).filter((x) => x.visible);
-        const x0 = low ? Math.max(...g.map((x) => x.x + x.width)) + 10 : 10;
-        const w = low ? this.W - 10 - x0 : Math.min(460, this.W - 20);
+        const w = low ? Math.min(420, this.W / 2) : Math.min(460, this.W - 20);
+        const x0 = low ? this.W - 10 - w : 10; // sideways: top right, clear of the bottom rows
         const pina = this.add.image(0, 0, 'kit', 'signora_idle');
         pina.setOrigin(0, 1).setScale((low ? 44 : 64) / pina.height);
         const tw = w - pina.displayWidth - 28;
         const t = this.add.text(0, 0, text + (this.news ? (low ? ' (tocca per chiudere)' : '\n(tocca per chiudere)') : ''), { ...TEXT, fontSize: low ? 13 : 14, strokeThickness: 0, color: DARK, wordWrap: { width: tw }, lineSpacing: 2 });
         const h = Math.max(low ? 48 : 70, t.height + (low ? 12 : 20));
-        const y0 = low ? this.H - 8 - h : this.rowsTop - 34 - h;
-        const bg = this.add.rectangle(x0, y0, w, h, 0xfff3d6, 0.97).setOrigin(0).setStrokeStyle(3, 0xe0a030);
+        const y0 = low ? this.topH + 8 : this.rowsTop - 34 - h;
+        const bg = this.add.rectangle(x0, y0, w, h, C.cream, 0.98).setOrigin(0).setStrokeStyle(3, C.blue);
         pina.setOrigin(0, 1).setPosition(x0 + 6, y0 + h - 4);
         t.setPosition(x0 + pina.displayWidth + 16, y0 + (h - t.height) / 2);
         const c = (this.bubble = this.add.container(0, 0, [bg, pina, t]).setDepth(8));
@@ -567,7 +605,7 @@ export class Hud extends Scene {
         if (menu === 'briefing')
             return this.drawCard(lv ? `Livello ${s.level}: ${lv.name}` : 'Negozio libero', [
                 ...(lv ? [lv.blurb, ''] : []),
-                `Hai ${days} giorni per arrivare a:`,
+                `Hai ${days === 1 ? 'un giorno' : `${days} giorni`} per arrivare a:`,
                 `• Cassa ${eur(g.money)}`,
                 `• Reputazione ${g.reputation}%`,
                 `• ${g.served} clienti serviti`,
@@ -613,10 +651,10 @@ export class Hud extends Scene {
         const c = (this.card = this.add.container(0, 0).setDepth(20));
         c.add(this.add.rectangle(0, 0, width, height, 0x000000, 0.5).setOrigin(0).setInteractive());
         const x0 = (width - w) / 2;
-        const titleT = this.add.text(x0 + 16, 0, title, { ...TEXT, fontSize: 22, color: bad ? '#ff8a7a' : '#e0a030', strokeThickness: 0 });
-        const bodyT = this.add.text(x0 + 16, 0, body.join('\n'), { ...TEXT, fontSize: compact ? 14 : 15, strokeThickness: 0, lineSpacing: compact ? 1 : 4, wordWrap: { width: w - 32 } });
+        const titleT = this.add.text(x0 + 16, 0, title, { ...TEXT, fontSize: 22, color: hex(bad ? C.red : C.blue) });
+        const bodyT = this.add.text(x0 + 16, 0, body.join('\n'), { ...TEXT, fontSize: compact ? 14 : 15, lineSpacing: compact ? 1 : 4, wordWrap: { width: w - 32 } });
         const btns = buttons.map((b) => this.add
-            .text(0, 0, b.label, { ...TEXT, fontSize: 19, strokeThickness: 0, backgroundColor: BTN_ACTIVE_BG, color: DARK, padding: { x: 18, y: 9 } })
+            .text(0, 0, b.label, { ...TEXT, fontSize: 19, color: LIGHT, padding: { x: 18, y: 9 } })
             .setOrigin(0.5, 0)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', b.fn));
@@ -624,7 +662,7 @@ export class Hud extends Scene {
         const bodyH = body.length ? 10 + bodyT.height : 0;
         const h = 16 + titleT.height + bodyH + 16 + btnsH + 16;
         const y0 = Math.max(8, (height - h) / 2);
-        const bg = this.add.rectangle(x0, y0, w, h, 0x2b1d16, 0.97).setOrigin(0).setStrokeStyle(3, 0xe0a030);
+        const bg = this.sheetBg(x0, y0, w, h);
         titleT.setY(y0 + 16);
         bodyT.setY(titleT.y + titleT.height + 10);
         let y = titleT.y + titleT.height + bodyH + 16;
@@ -632,8 +670,100 @@ export class Hud extends Scene {
             b.setPosition(width / 2, y);
             y += b.height + 10;
         }
-        c.add([bg, titleT, bodyT, ...btns]);
+        c.add([bg, titleT, bodyT, ...btns.flatMap((b) => [this.pill(b, C.red), b])]);
         this.cardBtns = btns;
+    }
+
+    openSheet(id: number) {
+        this.sheetId = id;
+        this.sheetKey = '';
+    }
+
+    /** The worker's card: portrait, role, character, energy and pace bars, wage; fire them or find them in the shop. */
+    showSheet() {
+        const st = this.sheetId === null || this.registry.get('menu') || this.sim.summary ? undefined : this.sim.staff.find((x) => x.id === this.sheetId);
+        const key = st ? JSON.stringify([st.id, Math.round(st.energy), st.state, this.W, this.H]) : '';
+        if (key === this.sheetKey) return;
+        this.sheetKey = key;
+        this.sheet?.destroy();
+        this.sheet = null;
+        this.sheetBtns = [];
+        if (!st) return void (this.sheetId = null);
+        const close = () => { this.sheetId = null; };
+        const w = Math.min(380, this.W - 24), x0 = (this.W - w) / 2;
+        const c = (this.sheet = this.add.container(0, 0).setDepth(21));
+        c.add(this.add.rectangle(0, 0, this.W, this.H, 0, 0.45).setOrigin(0).setInteractive().on('pointerdown', close));
+        const h = 316, y0 = Math.max(8, (this.H - h) / 2);
+        c.add(this.sheetBg(x0, y0, w, h));
+        c.add(this.add.rectangle(x0, y0, w, h, 0, 0.001).setOrigin(0).setInteractive()); // taps on the card stay on it
+        c.add(this.add.text(x0 + 18, y0 + 14, st.name, { ...TEXT, fontSize: 24, color: hex(C.blue) }));
+        c.add(this.add.text(x0 + w - 16, y0 + 10, '✕', { ...TEXT, fontSize: 26, color: hex(C.red), padding: { x: 4, y: 2 } }).setOrigin(1, 0).setInteractive({ useHandCursor: true }).on('pointerdown', close));
+        // portrait in a frame
+        const px = x0 + 18, py = y0 + 54, pw = 104, ph = 132;
+        const g = this.add.graphics();
+        g.fillStyle(C.blue, 1).fillRoundedRect(px, py, pw, ph, 10);
+        g.fillStyle(0xe9f1f7, 1).fillRoundedRect(px + 4, py + 4, pw - 8, ph - 8, 8);
+        g.fillStyle(C.creamLo, 1).fillRect(px + 4, py + ph - 34, pw - 8, 30);
+        c.add(g);
+        const frame = this.textures.get('kit').has(`${st.role}_idle`) ? `${st.role}_idle` : `${st.role}_walk_0`;
+        const img = this.add.image(px + pw / 2, py + ph - 10, 'kit', frame).setOrigin(0.5, 1);
+        img.setScale(Math.min((ph - 20) / img.height, (pw - 16) / img.width));
+        c.add(img);
+        // right column
+        const x1 = px + pw + 14, cw = x0 + w - 16 - x1;
+        let y = py;
+        const line = (t: string, style: object) => {
+            const o = this.add.text(x1, y, t, { ...TEXT, ...style, wordWrap: { width: cw } });
+            c.add(o);
+            y += o.height + 4;
+        };
+        line(ROLES[st.role].label, { fontSize: 17 });
+        line(`${TRAITS[st.trait].label}: ${TRAITS[st.trait].desc}`, { fontSize: 13, color: '#5a5f6e' });
+        y += 4;
+        const bar = (label: string, f: number, color: number) => {
+            c.add(this.add.text(x1, y, label, { ...TEXT, fontSize: 13 }));
+            const b = this.add.graphics();
+            b.fillStyle(C.creamLo, 1).fillRoundedRect(x1, y + 19, cw, 14, 5);
+            if (f > 0.05) b.fillStyle(color, 1).fillRoundedRect(x1, y + 19, cw * Math.min(1, f), 14, 5);
+            b.lineStyle(2, C.ink, 1).strokeRoundedRect(x1, y + 19, cw, 14, 5);
+            c.add(b);
+            y += 40;
+        };
+        const e = st.energy / ENERGY_MAX;
+        bar('⚡ Energia', e, e > 0.6 ? C.green : e > 0.3 ? C.gold : C.red);
+        bar('🏃 Velocità', TRAITS[st.trait].speed / 1.5, C.blue);
+        y = Math.max(y, py + ph) + 10;
+        c.add(this.add.text(px, y, `💶 €${st.wage} al giorno   📍 ${STAFF_STATE[st.state]}`, { ...TEXT, fontSize: 14, wordWrap: { width: w - 36 } }));
+        const by = y0 + h - 60;
+        const mk = (label: string, face: number, fn: () => void, x: number) => {
+            const t = this.add.text(x, by, label, { ...TEXT, fontSize: 18, color: LIGHT, padding: { x: 16, y: 9 } }).setOrigin(0.5, 0)
+                .setInteractive({ useHandCursor: true }).on('pointerdown', fn);
+            c.add([this.pill(t, face), t]);
+            this.sheetBtns.push(t);
+        };
+        mk('🚪 Licenzia', C.red, () => { this.run({ type: 'fire', staffId: st.id }); close(); }, x0 + w * 0.3);
+        mk('🔍 Trova', C.blue, () => {
+            const p = gridToIso(st.x, st.y);
+            this.game_.cameras.main.centerOn(p.x, p.y);
+            close();
+        }, x0 + w * 0.72);
+    }
+
+    /** Cream sheet with a blue rim, the shape of every card and panel. */
+    sheetBg(x: number, y: number, w: number, h: number) {
+        const g = this.add.graphics();
+        g.fillStyle(C.ink, 0.35).fillRoundedRect(x + 4, y + 6, w, h, 14);
+        g.fillStyle(C.blue, 1).fillRoundedRect(x, y, w, h, 14);
+        g.fillStyle(C.cream, 1).fillRoundedRect(x + 4, y + 4, w - 8, h - 8, 11);
+        return g;
+    }
+
+    /** Raised face behind a text button (after its layout: origin-aware). */
+    pill(t: GameObjects.Text, face: number) {
+        const g = this.add.graphics();
+        bevel(g, t.x - t.originX * t.width, t.y - t.originY * t.height, t.width, t.height, face);
+        t.setData('pill', g);
+        return g;
     }
 
     /** The three edit buttons in a row just above the edited object. */
@@ -674,10 +804,12 @@ export class Hud extends Scene {
         }
         this.drawBars();
         this.placeEditBtns(blockedNow(this));
-        for (const b of [...this.speedBtns, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns, ...this.editBtns]) {
-            const on = b.active();
-            b.t.setBackgroundColor(on ? BTN_ACTIVE_BG : b.bg);
-            b.t.setColor(on ? DARK : (b.fg ?? LIGHT));
+        const ch = this.chrome.clear();
+        for (const b of [...this.speedBtns, this.gear, ...this.groups.flatMap((x) => [x.btn, ...x.items]), ...this.catBtns, ...this.editBtns]) {
+            if (!b.t.visible) continue;
+            const face = b.active() ? C.gold : num(b.bg);
+            bevel(ch, b.t.x, b.t.y, b.t.width, b.t.height, face);
+            b.t.setColor(b.fg ?? inkOn(face));
         }
         const menu = this.registry.get('menu');
         const blocked = !!(menu || s.summary || s.outcome);
@@ -686,9 +818,10 @@ export class Hud extends Scene {
             .setVisible(s.paused && !blocked && !this.panel && guideStep(s) < 0);
         if (this.panel && this.panelState() !== this.panelKey) this.openPanel();
         this.showCard();
-        this.updateBubble(blocked);
-        this.updateArrow(time, blocked);
+        this.showSheet();
+        this.updateBubble(blocked || !!this.sheet);
+        this.updateArrow(time, blocked || !!this.sheet);
     }
 }
 
-const blockedNow = (h: Hud) => !!(h.registry.get('menu') || h.sim.summary || h.sim.outcome || h.panel);
+const blockedNow = (h: Hud) => !!(h.registry.get('menu') || h.sim.summary || h.sim.outcome || h.panel || h.sheet);
