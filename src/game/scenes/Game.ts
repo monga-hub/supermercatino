@@ -240,7 +240,7 @@ export class Game extends Scene {
             if (!t) {
                 t = this.add.image(0, 0, 'kit', 'icona_soldi').setOrigin(0.5, 1).setDepth(9500);
                 // tappable: a warm glow (WebGL filters; the canvas renderer has none and just pulses)
-                if (this.renderer.type === Phaser.WEBGL) t.setData('glow', t.enableFilters().filters!.internal.addGlow(0xffe27a, 4, 0, 1, false, 8, 10));
+                if (this.renderer.type === Phaser.WEBGL) t.setData('glow', t.enableFilters().filters!.internal.addGlow(0xffe27a, 4, 0, 1, false, 8, 10).setPaddingOverride(null)); // padded: the halo isn't cut square
                 this.icons.set(w.key, t);
             }
             const p = gridToIso(w.x, w.y);
