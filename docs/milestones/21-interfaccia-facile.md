@@ -63,3 +63,4 @@ L'utente fa giocare il livello 1 a qualcuno che non l'ha mai visto: segue le fre
   - Testo nitido: canvas a `devicePixelRatio` (max 3) con `zoom 1/DPR` (`src/game/dpr.ts`, `main.ts`); la camera dell'HUD zooma di DPR, quindi il layout resta in px CSS.
   - Hook nuovi per i test: `hudButtons()`, `hudText()`.
   - Pressione lunga (450 ms, senza strumento) su un oggetto: `Game.edit`, cella evidenziata in giallo; comando sim `move` (check = piazzamento gratis senza l'oggetto). Novità 'edit' la prima volta che c'è un arredo.
+  - Magazzino (richiesta utente 2026-11-27): i cubi colorati di prova sono diventati bancali dipinti, uno per categoria (`art/sheets/magazzino.jpg`, Gemini chat nuova, frame `merce_<Categoria>`).

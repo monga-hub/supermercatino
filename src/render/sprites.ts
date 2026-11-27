@@ -15,6 +15,8 @@ export const SPRITES = {
     frigo: 'frigo',
     frigoVuoto: 'frigo_vuoto',
     shelf: (c: Category) => `scaffale_${c}`,
+    /** Warehouse pallet of a category (milestone 21). */
+    stock: (c: Category) => `merce_${c}`,
 };
 
 /** Every character frame personFrame() can return (tests/assets.test.ts checks they exist). */

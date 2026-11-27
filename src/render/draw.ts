@@ -205,7 +205,9 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
             g.fillEllipse(f.x, f.y, TILE_W * 0.4, TILE_H * 0.4);
         } })),
         ...s.customers.map((c) => ({ d: c.x + c.y + 0.01, draw: (z: number) => drawCustomer(g, over, s, c, put, z) })),
-        ...crates(s).map((c) => ({ d: c.x + c.y - 0.01, draw: () => {
+        ...crates(s).map((c) => ({ d: c.x + c.y - 0.01, draw: (z: number) => {
+            const p = gridToIso(c.x, c.y);
+            if (put(SPRITES.stock(c.cat), p.x, p.y + TILE_H, z)) return; // a pallet of that goods
             box(g, c.x, c.y, c.h, CRATE, 0.6);
             box(g, c.x, c.y, c.h + 2, CATEGORY_COLOR[c.cat], 0.3);
         } })),
