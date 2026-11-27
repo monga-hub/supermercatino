@@ -22,7 +22,7 @@ LEG_WINDOW = {'mamma': (0.2, 0.64), 'vecchietta': (0.35, 0.74)}
 NO_LEG_SWAP = {'pulizie'}
 # Where the legs start, as a fraction of the figure's height, where thighs overlap (one run) and the automatic search stops at the knees.
 LEG_TOP = {'giovane': 0.63, 'ponzone': 0.77, 'furbetto': 0.74, 'capo': 0.62, 'mamma': 0.71, 'magazziniera': 0.66, 'orso': 0.88}
-SEATED = 1.3  # seated cashiers drawn bigger, to match the two-cell counter (playtest 2026-11-27)
+SEATED = 1.0  # seated cashiers at walking size: the counter fits one floor tile (playtest 2026-11-27)
 STATES = lambda b: [b, f'{b}_mezzo', f'{b}_vuoto']
 WALK = lambda n: [f'{n}_walk_0', f'{n}_walk_1', f'{n}_walk_2']
 # Mamma is painted facing screen left, unlike the rest (draw.ts mirrors by walking direction, assuming bottom-right): mirrored here (playtest 2026-11-27).
@@ -44,7 +44,8 @@ SHEETS = [
     # playtest 2026-11-27: men at the till, women in the warehouse too; a straight checkout lane
     ('cassiere_m.jpg', 3, 2, ('h', 46), WALK('cassiere_m') + [('cassiere_m_seduto', SEATED), ('cassiere_m_scan_0', SEATED), ('cassiere_m_scan_1', SEATED)]),
     ('magazziniera.jpg', 3, 2, ('h', 46), WALK('magazziniera') + ['magazziniera_carry_0', 'magazziniera_carry_1', 'magazziniera_carry_2']),
-    ('cassa.jpg', 2, 1, ('w', 1.0), [('cassa', 1.1), ('sgabello', 0.3)]),  # playtest 2026-11-27: register at the exit end, by the cashier; one cell
+    ('cassa.jpg', 2, 1, ('foot', 1.0), ['cassa', None]),  # playtest 2026-11-27: register at the exit end, by the cashier; inside one floor tile
+    ('cassa.jpg', 2, 1, ('w', 1.0), [None, ('sgabello', 0.3)]),
     ('guardia.jpg', 3, 2, ('h', 48), WALK('guardia') + ['guardia_idle', 'guardia_fischio', 'guardia_ferma']),
     ('capo.jpg', 3, 2, ('h', 46), WALK('capo') + ['capo_idle', 'capo_scrive', 'capo_indica']),
     ('pulizie.jpg', 3, 2, ('h', 46), WALK('pulizie') + ['pulizie_mop_0', 'pulizie_mop_1', 'pulizie_mop_2']),

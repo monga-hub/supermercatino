@@ -129,7 +129,7 @@ const SEAT_OFFSET = 0.45;
 /** Seated cashier sprite: screen px from the till's cell centre, behind the register, facing the customers. */
 const SEAT_PX = { x: 17, y: -6 };
 /** Cashier's stool: this far behind the checkout lane's cell (milestone 24). */
-export const LANE_SEAT = 0.5;
+export const LANE_SEAT = 0.3;
 /** The painted counter's plinth reaches a little below its footprint: lifted so the low front wall hides it. */
 const TILL_LIFT = 3;
 /** Seat behind a checkout lane at (x, y), turned or not. */
