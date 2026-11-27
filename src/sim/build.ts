@@ -36,15 +36,20 @@ export const objectAt = (s: GameState, x: number, y: number) => s.objects.find((
 /** Edge between two cells, either order. */
 export const edgeKey = (ax: number, ay: number, bx: number, by: number) => (ax + ay * 1000 < bx + by * 1000 ? `${ax},${ay}|${bx},${by}` : `${bx},${by}|${ax},${ay}`);
 
+/** Back-of-house rooms: walled off from the rest (playtest 2026-11-27: sales floor and checkout stay one open space). */
+export const STAFF_ONLY: RoomType[] = ['magazzino', 'spogliatoio'];
+/** A wall stands between these two kinds of room. */
+export const walled = (a: RoomType, b: RoomType) => a !== b && (STAFF_ONLY.includes(a) || STAFF_ONLY.includes(b));
+
 /**
- * Doorways in the walls between rooms of different types (Theme Hospital style, playtest 2026-11-27):
- * the middle one or two cells of each shared side. Rooms of the same type side by side stay one open area.
+ * Doorways in the walls around staff-only rooms (Theme Hospital style): the middle one or two cells of each shared side.
+ * Other rooms side by side stay one open area.
  */
 export function doorways(s: GameState): Set<string> {
     const out = new Set<string>();
     for (const a of s.rooms)
         for (const b of s.rooms) {
-            if (a.type === b.type) continue;
+            if (!walled(a.type, b.type)) continue;
             const side: [number, number, number, number][] = [];
             for (let x = a.x; x < a.x + a.w; x++)
                 for (let y = a.y; y < a.y + a.h; y++)
@@ -55,12 +60,12 @@ export function doorways(s: GameState): Set<string> {
     return out;
 }
 
-/** May a walker step from a to b? Only through a doorway where two kinds of room meet. */
+/** May a walker step from a to b? Into or out of a staff-only room only through a doorway. */
 export function crossing(s: GameState) {
     const open = doorways(s);
     return (a: { x: number; y: number }, b: { x: number; y: number }) => {
         const ra = roomAt(s, a.x, a.y), rb = roomAt(s, b.x, b.y);
-        return !ra || !rb || ra.type === rb.type || open.has(edgeKey(a.x, a.y, b.x, b.y));
+        return !ra || !rb || !walled(ra.type, rb.type) || open.has(edgeKey(a.x, a.y, b.x, b.y));
     };
 }
 

@@ -16,6 +16,8 @@ Secondo giro di feedback del 2026-11-27: grafica nuova per muri e cassa (una lin
 - **Tab per mansione** nel pannello Staff: si apre sul primo ruolo che non ha ancora nessuno.
 - **Scheda**: al posto del ritratto, una vista dal vivo del negozio centrata sul lavoratore ("● in diretta", DynamicTexture che ridisegna la scena Game).
 
+- **Muri solo attorno al magazzino** (e allo spogliatoio, anch'esso solo per lo staff): sala vendita, casse, banco e panetteria restano uno spazio aperto (`walled()` in `build.ts`).
+
 ## Out of scope
 
 - Cassa lunga due celle: resta una cella, il banco dritto la riempie.
@@ -32,6 +34,7 @@ Secondo giro di feedback del 2026-11-27: grafica nuova per muri e cassa (una lin
 - [x] Cassa dritta, cassiere dietro, clienti davanti in fila lungo il banco (`tests/customers.test.ts` "queue on distinct cells"); verificato dallo screenshot.
 - [x] Cassieri uomini e magazziniere donne, sprite dal nome; nomi adatti per i ruoli a sprite unico (`tests/sprites.test.ts`).
 - [x] Candidati divisi per mansione con tab; verificato dagli screenshot.
+- [x] Niente muro tra sala e casse, solo attorno alle stanze dello staff (`tests/walls.test.ts`).
 - [x] Scheda con vista dal vivo del lavoratore; verificato dallo screenshot, giudizio finale al playtest.
 
 ## Exit condition
