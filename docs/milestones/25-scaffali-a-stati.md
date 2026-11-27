@@ -32,3 +32,4 @@ Playtest del 2026-11-27: rifare la grafica di ogni mobile con la merce, uno per 
 ## Exit condition
 
 L'utente vede sul telefono uno scaffale passare da pieno a mezzo a vuoto mentre i clienti comprano, e tornare pieno quando arriva il magazziniere.
+- Playtest 2026-11-27: scaffali disallineati (le gondole di Gemini hanno il piede di lato) → `('foot', 1.0)` in `tools/kit.py`: piede sul vertice basso della cella, tutto dentro la cella, stessi scala e ancora per i tre stati.

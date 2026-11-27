@@ -10,6 +10,9 @@ RES = 2  # frames stored at 2x, drawn at 0.5 scale: sharp when zoomed in
 
 # (sheet, cols, rows, size, names), size per piece or per sheet:
 #   ('w', f): each piece scaled to f x tile width, anchored bottom-centre of the piece (furniture: stands on the cell's bottom vertex);
+#   ('foot', f): the first piece's lowest point (its front foot) on the cell's bottom vertex, scaled so its far side reaches
+#             f x half a tile from there: off-centre gondolas stay inside their cell (playtest 2026-11-27); the other
+#             pieces (same unit, other states) take the same scale and anchor;
 #   ('h', px): the whole sheet scaled so its first piece is px tall, anchored on each cell's centre line
 #             (characters: walk frames don't jitter sideways, seated/reaching poses keep their relative size).
 SEATED = 1.3  # seated cashiers drawn bigger, to match the two-cell counter (playtest 2026-11-27)
@@ -19,7 +22,7 @@ SHEETS = [
     ('arredi.jpg', 3, 3, ('w', 1.0), ['scaffale', None, None, None, None, None, None, None, None]),  # goods: STATES sheets; till: cassa.jpg; door: see WALLS
     # milestone 25: one sheet per unit, full / half / empty
     *[(f'{sheet}.jpg', 3, 1, size, STATES(base)) for sheet, base, size in [
-        ('scaffale_pasta', 'scaffale_Pasta', ('w', 1.0)), ('scaffale_frutta', 'scaffale_Frutta', ('w', 1.0)), ('scaffale_detersivi', 'scaffale_Detersivi', ('w', 1.0)),
+        ('scaffale_pasta', 'scaffale_Pasta', ('foot', 1.0)), ('scaffale_frutta', 'scaffale_Frutta', ('foot', 1.0)), ('scaffale_detersivi', 'scaffale_Detersivi', ('foot', 1.0)),
         ('frigo', 'frigo', ('h', 96)), ('forno_stati', 'forno', ('w', 1.0)), ('bancone_stati', 'bancone', ('w', 1.0))]],  # fridge by height: its door opens wide
     *[(f'{sheet}.jpg', 3, 3, ('h', h), WALK(kind) + [f'{kind}_angry_0', f'{kind}_angry_1', f'{kind}_angry_2',
                                                     f'{kind}_idle', f'{kind}_pay', f'{kind}_pick'])
@@ -97,6 +100,12 @@ def pieces():
             name, w = name if isinstance(name, tuple) else (name, None)  # 'w': own width; 'h': size multiplier
             p, left = cutout(img.crop(((i % cols) * cw, (i // cols) * ch, (i % cols + 1) * cw, (i // cols + 1) * ch)))
             if kind == 'w': f = k = (w or v) * TILE_W * RES / p.width; ax = 0.5
+            elif kind == 'foot':
+                if f is None:
+                    a = np.array(p.getchannel('A')) > 128; ys, xs = np.nonzero(a)
+                    xb = xs[ys >= ys.max() - 2].mean()  # front foot
+                    f, foot = v * TILE_W / 2 * RES / max(xb, p.width - xb), xb / p.width
+                k = f; ax = foot
             else: f = f or v * RES / p.height; k = f * (w or 1); ax = min(1, max(0, (cw / 2 - left) / p.width))
             yield name, p.resize((max(1, round(p.width * k)), max(1, round(p.height * k))), Image.LANCZOS), round(ax, 3)
 
