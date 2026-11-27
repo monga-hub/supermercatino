@@ -473,8 +473,8 @@ for (const [w, h] of [[390, 844], [844, 390]]) await check(`phone ${w}x${h}: gro
     expect(s1.objects.some((o) => o.type === 'scaffale'), 'shelf not placed with a tap and ✓');
     const texts = await pp.evaluate(() => window.hudText());
     const eur = (n) => `€${n.toLocaleString('it-IT')}`;
-    expect(texts.includes(`${eur(s1.money)} / ${eur(850)}`), `money bar: ${texts}`);
-    expect(texts.includes(`Serviti ${s1.servedTotal} / 45`) && texts.includes(`Rep ${s1.reputation}% / 45%`), `goal bars: ${texts}`);
+    expect(texts.includes(`${eur(s1.money)} / ${eur(700)}`), `money bar: ${texts}`);
+    expect(texts.includes(`Serviti ${s1.servedTotal} / 30`) && texts.includes(`Rep ${s1.reputation}% / 45%`), `goal bars: ${texts}`);
     expect(texts.some((x) => x.startsWith('Metti un altro scaffale')), `guide did not move on: ${texts}`);
     const shot = await pp.screenshot({ path: `output/21-test-${w}x${h}.png` });
     // milestone 21b: no empty background left in the frame (the old dark brown #2b1d16)

@@ -151,8 +151,8 @@ export const TIP = 1;
 // --- Day and level (milestone 06)
 
 /** A new customer every N game minutes, from reputation 0% to 100% (only with a door and a reachable till). */
-export const SPAWN_EVERY_MIN_AT_0 = 16;
-export const SPAWN_EVERY_MIN_AT_100 = 6;
+export const SPAWN_EVERY_MIN_AT_0 = 32;
+export const SPAWN_EVERY_MIN_AT_100 = 12;
 
 /** No new customers in the last N game minutes before closing. */
 export const LAST_ARRIVAL_MIN = 60;
