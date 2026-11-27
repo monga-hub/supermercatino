@@ -4,6 +4,7 @@ import {
     REP_MIN, SPILL_REP,
 } from './config.ts';
 import { checkout } from './customers.ts';
+import { cash } from './fx.ts';
 import { goalsOf } from './levels.ts';
 import type { GameState } from './state.ts';
 
@@ -17,6 +18,7 @@ export function closeDay(s: GameState) {
     s.reputation = Math.max(0, s.reputation - SPILL_REP * s.spills.length); // dirt left on the floor
     const wages = s.staff.reduce((sum, st) => sum + st.wage, 0);
     s.money -= wages + DAILY_RENT;
+    cash.on?.(-(wages + DAILY_RENT));
     s.redDays = s.money < BANKRUPT_BELOW ? s.redDays + 1 : 0;
     s.lowRepDays = s.reputation < REP_MIN ? s.lowRepDays + 1 : 0;
     s.summary = {

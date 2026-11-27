@@ -15,6 +15,7 @@ import { KIT_SCALE } from '../../render/sprites.ts';
 import type { Hud } from './Hud.ts';
 import { snap, cues, type Snap } from '../../audio/cues.ts';
 import { play } from '../../audio/synth.ts';
+import { cash } from '../../sim/fx.ts';
 import { DPR } from '../dpr.ts';
 
 // zooms are in CSS px per world px; the camera's own zoom is DPR times that (main.ts)
@@ -26,6 +27,12 @@ const ICON_SCALE: Record<string, number> = { p: 0.75, w: 0.6, v: 0.6 };
 const ZOOM_MAX = 2.5;
 const TAP_SLOP = 10; // px a pointer may move and still count as a tap
 const LONG_MS = 450; // hold this long on an object to edit it (milestone 21)
+/** Signed euros: "+€12", "−€150". */
+export const money = (n: number) => `${n > 0 ? '+' : '−'}€${Math.abs(n).toLocaleString('it-IT')}`;
+export const CASH_STYLE = (n: number) => ({
+    fontFamily: '"Arial Black", "Avenir Next", "Helvetica Neue", Arial, sans-serif', fontStyle: '900', fontSize: 13,
+    color: n > 0 ? '#8df05a' : '#ff5b4a', stroke: '#1c1f2a', strokeThickness: 4, resolution: DPR * 3,
+});
 const OK = 0x4caf50;
 const BAD = 0xe53935;
 
@@ -111,6 +118,7 @@ export class Game extends Scene {
         this.drawSign();
         this.setupCamera();
         this.setupInput();
+        cash.on = (n, x, y) => (x === undefined || y === undefined ? this.game.events.emit('cash', n) : this.floatCash(n, x, y));
         this.registry.events.on('changedata-tool', () => { this.preview.clear(); this.pending = null; });
         this.saved = this.saving ? loadGame(localStorage.getItem(SAVE_KEY)) : null;
         if (this.saving) this.progress = loadProgress(localStorage.getItem(PROGRESS_KEY));
@@ -314,6 +322,15 @@ export class Game extends Scene {
         drawFloor(this.floor, this.sim);
         this.drawSign();
         this.frameLot();
+    }
+
+    /** "+€12" / "−€150" popping up from a cell and fading out, like damage numbers (playtest 2026-11-27). */
+    floatCash(n: number, x: number, y: number) {
+        const p = gridToIso(x, y);
+        const k = (18 * DPR) / (13 * this.cameras.main.zoom); // ~18 CSS px whatever the zoom
+        const t = this.add.text(p.x, p.y - 20, money(n), CASH_STYLE(n)).setOrigin(0.5, 1).setDepth(9500).setScale(1.5 * k);
+        this.tweens.add({ targets: t, scale: k, duration: 160, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: t, y: t.y - 40 * k, alpha: 0, delay: 250, duration: 1100, ease: 'Cubic.easeIn', onComplete: () => t.destroy() });
     }
 
     /** Shop sign over the door: the level's name (milestone 21b). */

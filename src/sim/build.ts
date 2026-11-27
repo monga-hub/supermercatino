@@ -5,6 +5,7 @@ import { nextDay } from './day.ts';
 import type { GameState, RoomType, ObjectType, Category, Room, ShopObject } from './state.ts';
 import { hire, fire, rerouteStaff } from './staff.ts';
 import { allows } from './levels.ts';
+import { cash } from './fx.ts';
 
 const FIXED = 'In questo negozio le stanze sono già fatte';
 
@@ -182,6 +183,7 @@ export function apply(s: GameState, c: Command): Result {
     const r = check(s, c);
     if (!r.ok) return r;
     s.money -= r.cost;
+    if (r.cost) cash.on?.(-r.cost, 'x' in c ? c.x : undefined, 'y' in c ? c.y : undefined);
     if (['restock', 'collect', 'clean', 'removeCart', 'catch'].includes(c.type)) s.taps[c.type] = (s.taps[c.type] ?? 0) + 1;
     if (c.type === 'buildRoom') {
         s.rooms.push({ id: s.nextId++, type: c.room, x: c.x, y: c.y, w: c.w, h: c.h });

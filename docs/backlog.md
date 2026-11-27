@@ -168,3 +168,5 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: gameplan
 - [ ] Prezzi regolabili dal giocatore o fissi? (default v1: fissi)
   - Source: gameplan
+
+- [x] Numeri dei soldi che salgono come i danni nei giochi d'azione (playtest 2026-11-27): "+€7" verde dalla cassa, "−€150" rosso dal mobile comprato, stipendi/multe/ordini sotto il contatore dei soldi. `src/sim/fx.ts` (`cash.on`), `Game.floatCash`; test `tests/cash.test.ts`. Fatto subito, senza milestone.

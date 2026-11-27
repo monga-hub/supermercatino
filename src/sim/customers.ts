@@ -10,6 +10,7 @@ import {
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
 import { crossing, cellsOf } from './build.ts';
+import { cash } from './fx.ts';
 import { cashierAt, pace, tired, wantsBreak } from './staff.ts';
 import { spawnEveryMin } from './day.ts';
 import { maybeSpill, spillNear } from './dirt.ts';
@@ -125,6 +126,7 @@ function inspect(s: GameState) {
     const fine = s.spills.length * INSPECTION_FINE;
     const rep = fine ? 0 : INSPECTION_BONUS;
     s.money -= fine;
+    if (fine) cash.on?.(-fine);
     s.reputation = Math.min(100, s.reputation + rep);
     s.inspection = { fine, rep };
 }
@@ -287,6 +289,7 @@ export function checkout(s: GameState, c: Customer, tip: number, w = walkableFor
     if (happyBear) s.happyBears++;
     s.reputation = Math.min(100, s.reputation + REP_SERVED + (happyBear ? BEAR_BONUS_REP : 0));
     const till = s.objects.find((o) => c.goal?.kind === 'till' && o.id === c.goal.id);
+    if (paid) cash.on?.(paid, till?.x, till?.y);
     const cashier = till && cashierAt(s, till);
     if (cashier && !tired(cashier)) c.patience = Math.min(PATIENCE_START, c.patience + TRAITS[cashier.trait].patienceBonus);
     s.servedToday++;

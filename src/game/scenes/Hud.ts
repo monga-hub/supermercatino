@@ -4,7 +4,7 @@ import { ROOMS, OBJECTS, CATEGORIES, ONLY_IN, ROLES, TRAITS, ENERGY_MAX, ORDER_U
 import type { Command } from '../../sim/build.ts';
 import { CATEGORY_COLOR, ROOM_FLOOR, GROUND } from '../../render/draw.ts';
 import { gridToIso, TILE_H } from '../../render/iso.ts';
-import type { Tool, Game } from './Game.ts';
+import { type Tool, type Game, money, CASH_STYLE } from './Game.ts';
 import * as audio from '../../audio/synth.ts';
 import { LEVELS, FREE_AFTER, allows, goalsOf, levelOf, levelOpen, freeOpen, PROGRESS_KEY } from '../../sim/levels.ts';
 import { GUIDE, NEWS, guideStep, newsDue, markSeen } from '../../sim/tutorial.ts';
@@ -235,6 +235,11 @@ export class Hud extends Scene {
         });
 
         this.game.events.on('toast', (msg: string) => this.showToast(msg));
+        this.game.events.on('cash', (n: number) => { // no place (wages, fines, orders): under the money counter
+            const t = this.add.text(this.money.x, this.money.y + this.money.height + 4, money(n), { ...CASH_STYLE(n), fontSize: 18, resolution: DPR })
+                .setOrigin(1, 0).setDepth(30);
+            this.tweens.add({ targets: t, y: t.y + 30, alpha: 0, delay: 600, duration: 1400, ease: 'Cubic.easeIn', onComplete: () => t.destroy() });
+        });
         this.scale.on('resize', () => {
             this.layout();
             this.cardKey = ''; // rebuild the card and the bubble for the new size
