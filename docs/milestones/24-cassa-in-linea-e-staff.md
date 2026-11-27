@@ -16,7 +16,7 @@ Secondo giro di feedback del 2026-11-27: grafica nuova per muri e cassa (una lin
 - **Tab per mansione** nel pannello Staff: si apre sul primo ruolo che non ha ancora nessuno.
 - **Scheda**: al posto del ritratto, una vista dal vivo del negozio centrata sul lavoratore ("● in diretta", DynamicTexture che ridisegna la scena Game).
 
-- **Muri solo attorno al magazzino** (e allo spogliatoio, anch'esso solo per lo staff): sala vendita, casse, banco e panetteria restano uno spazio aperto (`walled()` in `build.ts`).
+- **Muri solo attorno al magazzino** (e allo spogliatoio, anch'esso solo per lo staff): sala vendita, casse, banco e panetteria restano uno spazio aperto (`walled()` in `build.ts`). Il muro prende l'aspetto della stanza su cui affaccia: piastrelle bianche dentro magazzino e spogliatoio, intonaco e mattoni uniformi dal lato della sala (senza finestre né poster dove dà sul magazzino).
 
 ## Out of scope
 

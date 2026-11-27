@@ -90,7 +90,7 @@ MURETTO_H = 16  # low front walls
 # (frame, panel index in pareti2.jpg, horizontal crop as fractions of the panel): textures are front views.
 # Panels: outer wall with window, inner tiled wall, outer wall with poster, sliding door (playtest 2026-11-27).
 WALLS = [('muro', 0, (0.03, 0.24)), ('muro_finestra', 0, (0.12, 0.88)), ('muro_poster', 2, (0.12, 0.88)), ('porta', 3, (0.04, 0.96)),
-         ('muro_interno', 1, (0.06, 0.56))]
+         ('muro_interno', 1, (0.14, 0.62))]
 WALL_TOP = 0.2  # the panels fade out at the top: dropped
 
 def slant(tex, dark, wall_h=WALL_H):

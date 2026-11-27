@@ -1,7 +1,7 @@
 // Where walls and the door are drawn. Pure: tests/walls.test.ts.
 // Edges of cell (x, y) on screen: 'l' = top-left (-x), 'r' = top-right (-y), 'fr' = bottom-right (+x), 'fl' = bottom-left (+y).
 import { roomAt, doorways, edgeKey, walled } from '../sim/build.ts';
-import type { GameState, ShopObject } from '../sim/state.ts';
+import type { GameState, ShopObject, RoomType } from '../sim/state.ts';
 
 export type Edge = 'l' | 'r' | 'fr' | 'fl';
 const DIRS: [Edge, number, number][] = [['l', -1, 0], ['r', 0, -1], ['fr', 1, 0], ['fl', 0, 1]];
@@ -20,15 +20,16 @@ export function doorEdge(s: GameState, d: Pick<ShopObject, 'x' | 'y'>): Edge {
 export function walls(s: GameState) {
     const door = s.objects.filter((o) => o.type === 'porta').map((d) => `${d.x},${d.y},${doorEdge(s, d)}`);
     const open = doorways(s);
-    const out: { x: number; y: number; side: Edge; low?: boolean; inner?: boolean }[] = [];
+    /** room: the room whose side of the wall faces the viewer (the wall's look follows it). */
+    const out: { x: number; y: number; side: Edge; room: RoomType; low?: boolean; inner?: boolean }[] = [];
     for (const r of s.rooms)
         for (let y = r.y; y < r.y + r.h; y++)
             for (let x = r.x; x < r.x + r.w; x++)
                 for (const [side, dx, dy] of DIRS) {
                     const n = roomAt(s, x + dx, y + dy), back = side === 'l' || side === 'r';
                     if (door.includes(`${x},${y},${side}`)) continue;
-                    if (!n) out.push({ x, y, side, ...(back ? {} : { low: true }) });
-                    else if (back && walled(n.type, r.type) && !open.has(edgeKey(x, y, x + dx, y + dy))) out.push({ x, y, side, inner: true });
+                    if (!n) out.push({ x, y, side, room: r.type, ...(back ? {} : { low: true }) });
+                    else if (back && walled(n.type, r.type) && !open.has(edgeKey(x, y, x + dx, y + dy))) out.push({ x, y, side, room: r.type, inner: true });
                 }
     return out;
 }

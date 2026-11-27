@@ -4,6 +4,7 @@ import { gridToIso, TILE_W, TILE_H } from './iso.ts';
 import { SPRITES, SPILL_FRAMES, personFrame } from './sprites.ts';
 import { walls, doorEdge, type Edge } from './walls.ts';
 import { cashierAt } from '../sim/staff.ts';
+import { STAFF_ONLY } from '../sim/build.ts';
 import { terrain, props, decor, MARGIN, type Ground, type Prop } from './scenery.ts';
 import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role, Category } from '../sim/state.ts';
 
@@ -215,6 +216,12 @@ function panel(put: Put, name: string, x: number, y: number, edge: Edge, depth: 
     const e = EDGE[edge], p = gridToIso(x, y);
     return put(`${name}_${e.side}`, p.x + e.dx, p.y + e.dy, depth);
 }
+/**
+ * The look of a wall follows the room it faces (playtest 2026-11-27): white tiles inside the warehouse and the locker room,
+ * plaster and brick everywhere else (plain where it backs onto the warehouse, so the sales floor looks the same all round).
+ */
+const wallFrame = (w: ReturnType<typeof walls>[number]) =>
+    w.low ? 'muretto' : STAFF_ONLY.includes(w.room) ? 'muro_interno' : w.inner ? 'muro' : outerWall(w.x, w.y);
 /** Outer walls: mostly plain, a window every few cells, now and then a poster. */
 const outerWall = (x: number, y: number) => { const h = (x * 7 + y * 13) % 6; return h === 0 ? 'muro_poster' : h === 3 ? 'muro_finestra' : 'muro'; };
 
@@ -226,7 +233,7 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
     g.clear();
     over.clear();
     const items: { d: number; draw: (depth: number) => void }[] = [
-        ...walls(s).map((w) => ({ d: w.x + w.y + (w.low ? 0.6 : -0.5), draw: (z: number) => panel(put, w.low ? 'muretto' : w.inner ? 'muro_interno' : outerWall(w.x, w.y), w.x, w.y, w.side, z) })),
+        ...walls(s).map((w) => ({ d: w.x + w.y + (w.low ? 0.6 : -0.5), draw: (z: number) => panel(put, wallFrame(w), w.x, w.y, w.side, z) })),
         ...s.objects.filter((o) => o.type === 'cassa' && !cashierAt(s, o)).map((o) => ({ d: o.x + o.y - 0.9, draw: (z: number) => { // empty stool
             const p = feet(o.x - (o.rot ? 0 : LANE_SEAT), o.y - (o.rot ? LANE_SEAT : 0));
             put('sgabello', p.x, p.y + 4, z);
