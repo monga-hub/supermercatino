@@ -12,7 +12,7 @@ development (scaffold completato)
 
 ## Current milestone
 
-[25 — Scaffali pieno / mezzo / vuoto](milestones/25-scaffali-a-stati.md) (implementato, in attesa di playtest). 24 in attesa di playtest. 23 in attesa di playtest. Poi 22 livelli 4–7. 21b in attesa di playtest. 20 e 21 in attesa di playtest. 07–19 in attesa di playtest.
+[25 — Scaffali pieno / mezzo / vuoto](milestones/25-scaffali-a-stati.md) (approvato). 24 in attesa di playtest. 23 in attesa di playtest. Poi 22 livelli 4–7. 21b in attesa di playtest. 20 e 21 in attesa di playtest. 07–19 in attesa di playtest.
 
 ## Last action
 

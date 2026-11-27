@@ -2,7 +2,7 @@
 
 ## Status
 
-implemented (in attesa di playtest)
+done (approvato dall'utente il 2026-11-27)
 
 ## Objective
 
