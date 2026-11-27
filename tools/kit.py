@@ -12,6 +12,7 @@ RES = 2  # frames stored at 2x, drawn at 0.5 scale: sharp when zoomed in
 #   ('w', f): each piece scaled to f x tile width, anchored bottom-centre of the piece (furniture: stands on the cell's bottom vertex);
 #   ('h', px): the whole sheet scaled so its first piece is px tall, anchored on each cell's centre line
 #             (characters: walk frames don't jitter sideways, seated/reaching poses keep their relative size).
+SEATED = 1.3  # seated cashiers drawn bigger, to match the two-cell counter (playtest 2026-11-27)
 WALK = lambda n: [f'{n}_walk_0', f'{n}_walk_1', f'{n}_walk_2']
 SHEETS = [
     ('arredi.jpg', 3, 3, ('w', 1.0), ['scaffale', 'scaffale_Pasta', 'scaffale_Latticini', 'scaffale_Salumi', 'scaffale_Pane',
@@ -21,11 +22,11 @@ SHEETS = [
       for sheet, kind, h in [('cliente', 'signora', 44), ('mamma', 'mamma', 44), ('vecchietta', 'vecchietta', 38),
                              ('giovane', 'giovane', 46), ('ponzone', 'ponzone', 46), ('orso', 'orso', 58),
                              ('ispettore', 'ispettore', 48), ('furbetto', 'furbetto', 46)]],
-    ('cassiere.jpg', 3, 2, ('h', 46), WALK('cassiere') + ['cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1']),
+    ('cassiere.jpg', 3, 2, ('h', 46), WALK('cassiere') + [('cassiere_seduto', SEATED), ('cassiere_scan_0', SEATED), ('cassiere_scan_1', SEATED)]),
     ('icone.jpg', 3, 2, ('w', 0.66), ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_felice', 'icona_arrabbiato', 'icona_cestino']),
     ('magazziniere.jpg', 3, 2, ('h', 46), WALK('magazziniere') + ['magazziniere_carry_0', 'magazziniere_carry_1', 'magazziniere_carry_2']),
     # playtest 2026-11-27: men at the till, women in the warehouse too; a straight checkout lane
-    ('cassiere_m.jpg', 3, 2, ('h', 46), WALK('cassiere_m') + ['cassiere_m_seduto', 'cassiere_m_scan_0', 'cassiere_m_scan_1']),
+    ('cassiere_m.jpg', 3, 2, ('h', 46), WALK('cassiere_m') + [('cassiere_m_seduto', SEATED), ('cassiere_m_scan_0', SEATED), ('cassiere_m_scan_1', SEATED)]),
     ('magazziniera.jpg', 3, 2, ('h', 46), WALK('magazziniera') + ['magazziniera_carry_0', 'magazziniera_carry_1', 'magazziniera_carry_2']),
     ('cassa.jpg', 2, 1, ('w', 1.0), [('cassa', 1.5), ('sgabello', 0.3)]),  # playtest 2026-11-27: register at the exit end, by the cashier; 1.5 = two cells' width
     ('guardia.jpg', 3, 2, ('h', 48), WALK('guardia') + ['guardia_idle', 'guardia_fischio', 'guardia_ferma']),
@@ -79,11 +80,11 @@ def pieces():
         f = None
         for i, name in enumerate(names):
             if not name: continue
-            name, w = name if isinstance(name, tuple) else (name, v)
+            name, w = name if isinstance(name, tuple) else (name, None)  # 'w': own width; 'h': size multiplier
             p, left = cutout(img.crop(((i % cols) * cw, (i // cols) * ch, (i % cols + 1) * cw, (i // cols + 1) * ch)))
-            if kind == 'w': f, ax = w * TILE_W * RES / p.width, 0.5
-            else: f, ax = f or v * RES / p.height, min(1, max(0, (cw / 2 - left) / p.width))
-            yield name, p.resize((max(1, round(p.width * f)), max(1, round(p.height * f))), Image.LANCZOS), round(ax, 3)
+            if kind == 'w': f = k = (w or v) * TILE_W * RES / p.width; ax = 0.5
+            else: f = f or v * RES / p.height; k = f * (w or 1); ax = min(1, max(0, (cw / 2 - left) / p.width))
+            yield name, p.resize((max(1, round(p.width * k)), max(1, round(p.height * k))), Image.LANCZOS), round(ax, 3)
 
 WALL_H = 60  # game px
 MURETTO_H = 16  # low front walls
