@@ -200,17 +200,12 @@ export class Hud extends Scene {
             return o ? { x: o.x, y: o.y } : null;
         };
         this.editBtns = [
-            this.button('✋', () => {
-                const e = game().edit;
-                if (!e) return;
-                e.moving = !e.moving;
-                if (e.moving) this.showToast('Tocca dove vuoi metterlo');
-            }, () => !!game().edit?.moving, GROUP_BG, undefined, undefined, undefined, 24),
             this.button('🔄', () => { const c = at(); if (c) this.run({ type: 'rotate', ...c }); }, () => false, GROUP_BG, undefined, undefined, undefined, 24),
             this.button('🗑', () => {
                 const c = at();
                 if (c && this.run({ type: 'demolish', ...c }).ok) game().edit = null;
             }, () => false, RED_BG, undefined, undefined, undefined, 24),
+            this.button('✓', () => { game().edit = null; }, () => false, hex(C.green), LIGHT, undefined, undefined, 24),
         ];
         const pend = () => game().pending;
         this.pendBtns = [
@@ -836,7 +831,7 @@ export class Hud extends Scene {
     placeEditBtns(blocked: boolean) {
         const game = this.game_;
         const o = game.edit && (game.edit.room ?? this.sim.objects.find((x) => x.id === game.edit!.id));
-        const btns = game.edit?.room ? [this.editBtns[2]] : this.editBtns; // a room can only go
+        const btns = game.edit?.room ? [this.editBtns[1]] : this.editBtns; // a room can only go
         for (const b of this.editBtns) this.vis(b, !!o && !blocked && btns.includes(b));
         const pd = game.pending;
         for (const b of this.pendBtns) this.vis(b, !!pd && !blocked);

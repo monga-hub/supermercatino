@@ -365,24 +365,28 @@ await check('long press on an object: move, rotate, remove', async () => {
         await pl.mouse.click(b.x, b.y);
         await frames();
     };
-    await hold(9, 9);
+    // playtest 2026-11-27: a plain tap on furniture picks it up; taps move it, ✓ puts it down
+    const click = async (x, y) => { const p = await at(x, y); await pl.mouse.click(p.x, p.y); await frames(); };
+    await click(9, 9);
     await tap('🔄');
     expect((await st()).objects[0].rot === 1, 'not rotated');
     const money = (await st()).money;
-    await tap('✋');
-    const to = await at(10, 10);
-    await pl.mouse.click(to.x, to.y);
-    await frames();
+    await click(10, 10);
+    await click(10, 9);
     const s1 = await st();
-    expect(s1.objects[0].x === 10 && s1.objects[0].y === 10 && s1.money === money, `not moved: ${JSON.stringify(s1.objects)}`);
-    expect(!(await pl.evaluate(() => window.hudButtons())).some((b) => b.label === '✋'), 'editor still open after the move');
-    await hold(10, 10);
+    expect(s1.objects[0].x === 10 && s1.objects[0].y === 9 && s1.money === money, `not moved twice: ${JSON.stringify(s1.objects)}`);
+    await tap('✓');
+    expect(!(await pl.evaluate(() => window.hudButtons())).some((b) => b.label === '🗑'), 'editor still open after ✓');
+    await click(10, 9);
+    await tap('✓');
+    expect((await st()).objects[0].x === 10, 'a tap and ✓ moved it');
+    await hold(10, 9);
     await tap('🗑');
     expect((await st()).objects.length === 0, 'not removed');
     // free shop: an empty room's long press offers only 🗑
     await hold(9, 9);
     const labels = (await pl.evaluate(() => window.hudButtons())).map((b) => b.label);
-    expect(labels.includes('🗑') && !labels.includes('✋') && !labels.includes('🔄'), `room editor: ${labels}`);
+    expect(labels.includes('🗑') && !labels.includes('✓') && !labels.includes('🔄'), `room editor: ${labels}`);
     await tap('🗑');
     expect((await st()).rooms.length === 0, 'room not removed');
     await pl.close();

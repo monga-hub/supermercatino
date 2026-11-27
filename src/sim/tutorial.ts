@@ -28,7 +28,7 @@ export const guideStep = (s: GameState) => (s.level === 1 ? GUIDE.findIndex((st)
 
 /** First-time bubbles: the first moment each mechanic shows up in a game. */
 export const NEWS: { key: string; text: string; when: (s: GameState) => boolean }[] = [
-    { key: 'edit', text: 'Tieni premuto un arredo: puoi spostarlo ✋, girarlo 🔄 o toglierlo 🗑.', when: (s) => s.objects.some((o) => o.type !== 'porta') },
+    { key: 'edit', text: 'Tocca un arredo per spostarlo: poi tocca dove va, 🔄 lo gira, 🗑 lo toglie, ✓ fatto.', when: (s) => s.objects.some((o) => o.type !== 'porta') },
     { key: 'collect', text: 'Conto pronto! Tocca 💰 sulla cassa: incassi subito, con la mancia.', when: (s) => count(s, 'cassa').some((o) => readyAt(s, o.id)) },
     { key: 'restock', text: 'Uno scaffale si svuota: tocca 📦 e il magazziniere lo riempie per primo.', when: (s) => s.objects.some((o) => o.category && o.type !== 'forno' && o.stock! < TAP_ICON_BELOW) },
     { key: 'spill', text: 'Una macchia di yogurt! I clienti si arrabbiano: toccala e l\'addetto pulizie corre.', when: (s) => s.spills.length > 0 },

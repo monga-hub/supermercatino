@@ -24,3 +24,7 @@ Dal playtest: quando metti un mobile non si compra subito. Prima lo provi: lo sp
 ## Exit condition
 
 L'utente mette uno scaffale, lo sposta e lo gira prima di comprarlo, poi tocca ✓.
+
+## Spostare i mobili già comprati (playtest 2026-11-27)
+
+- [x] Un tocco su un mobile lo prende: ogni tocco lo sposta lì (gratis), 🔄 lo gira, 🗑 lo toglie, ✓ lo posa. Anche con un arredo scelto, se non ce n'è uno in prova. La pressione lunga fa lo stesso. — test: `scripts/browser-test.mjs` "long press on an object"

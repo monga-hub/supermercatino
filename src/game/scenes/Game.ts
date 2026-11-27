@@ -190,7 +190,7 @@ export class Game extends Scene {
         this.press = null;
         const c = this.downCell(p);
         const o = objectAt(this.sim, c.x, c.y);
-        if (o) this.edit = { id: o.id, moving: false };
+        if (o) this.edit = { id: o.id, moving: true };
         else if (!this.sim.level && roomAt(this.sim, c.x, c.y)) this.edit = { id: -1, moving: false, room: c };
         else return;
         this.longFired = true;
@@ -483,16 +483,22 @@ export class Game extends Scene {
             const isTap = p.getDistance() <= TAP_SLOP * DPR;
             if (isTap && this.edit) {
                 if (this.edit.room) return void (this.edit = null);
+                // picked up (playtest 2026-11-27): every tap moves it there, ✓ puts it down
                 const o = this.sim.objects.find((x) => x.id === this.edit!.id)!;
                 const c = this.cellOf(p);
-                if (!this.edit.moving) this.edit = null; // tapped elsewhere: done
-                else if (this.run({ type: 'move', x: o.x, y: o.y, toX: c.x, toY: c.y }).ok) this.edit = null;
+                if (!cellsOf(o).some((q) => q.x === c.x && q.y === c.y)) this.run({ type: 'move', x: o.x, y: o.y, toX: c.x, toY: c.y });
                 return;
             }
             const tapped = isTap && this.iconCommand(p);
             if (tapped) return void this.run(tapped);
             const st = isTap && !this.tool && this.staffAt(p);
             if (st) return void hud.openSheet(st.id); // the worker's card
+            const c = this.cellOf(p), o = isTap && !this.pending && objectAt(this.sim, c.x, c.y);
+            if (o && o.type !== 'porta') { // tap on furniture: pick it up to move it (playtest 2026-11-27)
+                this.edit = { id: o.id, moving: true };
+                this.game.events.emit('toast', 'Tocca dove spostarlo, 🔄 per girarlo, ✓ fatto');
+                return;
+            }
             if (!this.tool) return;
             const cmd = (this.tool.kind === 'room' || isTap) && this.commandFor(p);
             if (cmd && cmd.type === 'placeObject') {
