@@ -88,6 +88,15 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 
 ## Polish & juice
 
+- [ ] Più folla — Theme Hospital ha decine di personaggi piccoli in coda, guardarli è metà del divertimento; da noi pochi clienti grandi. Più clienti (più lenti a spendere?) o camera più lontana.
+  - Source: confronto Theme Hospital, 2026-11-27
+  - Rough size: M · Rough value: M
+  - Notes: tocca il bilanciamento (spawn, obiettivi): rifare `output/balance.ts` e `output/levels-balance.ts`.
+
+- [x] Esterno, decorazioni e muri leggibili (confronto Theme Hospital) → milestone 21b-atmosfera.md
+  - Source: confronto Theme Hospital, 2026-11-27
+  - Rough size: M · Rough value: L
+
 - [x] Fila visibile — chi aspetta alla cassa si mette in coda su celle diverse invece di sovrapporsi sulla stessa.
   - Source: milestone 03, 2026-11-26
   - Rough size: S · Rough value: M

@@ -25,7 +25,7 @@ Completare la campagna con le meccaniche che i livelli 1–3 non toccano, una o 
 
 ## Dependencies
 
-- **Depends on:** 20 (sistema livelli), 21 (fumetti "Novità")
+- **Depends on:** 20 (sistema livelli), 21 (fumetti "Novità"), 21b (esterno e decorazioni per i negozi grandi)
 - **Blocks:** nessuno
 
 ## Acceptance criteria

@@ -16,6 +16,9 @@ Rendere il gioco leggibile per chi lo apre la prima volta, soprattutto sul telef
 - Fumetto "Novità" la prima volta che compare in partita una meccanica del livello (prima icona 📦, prima macchia, primo furbetto...): una frase, si chiude con un tocco; ricordato nei progressi.
 - Testi nitidi sul telefono (risoluzione del testo Phaser = devicePixelRatio).
 - Messaggi di errore più chiari dove servono (es. "Lo scaffale va nella sala vendita (pavimento giallo)").
+- **Il mondo riempie lo schermo** (confronto con Theme Hospital, 2026-11-27): HUD in alto su una riga (giorno, ora, €, velocità) con icone al posto delle parole; Audio e Staff fuori dalla fila delle velocità; stats e obiettivi nelle barre; la camera del livello riempie lo spazio libero tra HUD e barra, niente vuoto marrone sopra e sotto.
+- **Tasti con icone**: frame del kit (scaffale, cassa, persona, cassa di merce, martello) al posto delle sole parole.
+- **Pina consigliera**: i passi della guida e le "Novità" li dice un personaggio con la faccia in un fumetto in basso (come il consigliere di Theme Hospital), non una banda nera. Faccia della signora Pina dal kit o un ritaglio Gemini.
 
 ## Out of scope
 
@@ -25,7 +28,7 @@ Rendere il gioco leggibile per chi lo apre la prima volta, soprattutto sul telef
 ## Dependencies
 
 - **Depends on:** 20 (livelli, sblocchi, progressi)
-- **Blocks:** 22 (i fumetti "Novità" servono alle meccaniche dei livelli 4–7)
+- **Blocks:** 21b, 22 (i fumetti "Novità" servono alle meccaniche dei livelli 4–7)
 
 ## Acceptance criteria
 
@@ -34,6 +37,7 @@ Rendere il gioco leggibile per chi lo apre la prima volta, soprattutto sul telef
 - [ ] Ogni "Novità" compare una volta sola, anche dopo il ricaricamento — test: `tests/tutorial.test.ts`
 - [ ] Barre obiettivi in alto coerenti con la sim — test: `scripts/browser-test.mjs` (`render_game_to_text`)
 - [ ] Su telefono verticale e orizzontale la barra sta su una riga e niente si sovrappone — screenshot Playwright a 390×844 e 844×390
+- [ ] A 390×844 il negozio del livello 1 occupa almeno metà dell'altezza e l'HUD in alto al massimo una riga più le barre — screenshot Playwright
 - [ ] Un giocatore nuovo finisce il livello 1 seguendo solo la guida — verified by user playtest
 
 ## Exit condition
@@ -47,4 +51,5 @@ L'utente fa giocare il livello 1 a qualcuno che non l'ha mai visto: segue le fre
 
 ## Notes
 
+- Punti 1, 6, 7, 8 del confronto con Theme Hospital (2026-11-27); i punti 2, 3, 5 (esterno, decorazioni, muri) vanno nel 21b.
 - Assorbe il backlog "Barra strumenti raggruppata" (milestone 18) e la nota di STATE sui testi sfocati su retina.
