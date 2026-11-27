@@ -175,3 +175,4 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
 - [ ] Personaggi visti di spalle quando camminano verso il fondo (in alto sullo schermo): ora mostrano sempre la faccia. Servono fogli Gemini nuovi con la vista da dietro, e fotogrammi delle gambe più diversi tra loro.
   - Source: playtest 2026-11-27
 - [x] Signora con la gamba destra sempre avanti (playtest 2026-11-27): terzo fotogramma ricostruito con le gambe specchiate (`SWAP_LEGS` in `tools/kit.py`). Altri personaggi con lo stesso difetto: da controllare al playtest.
+- [x] Stessa gamba sempre avanti anche negli altri personaggi: `walk_2` di tutti ricostruito con le gambe specchiate (`swap_legs`), tranne l'addetta alle pulizie (il mocio passa davanti alle gambe).
