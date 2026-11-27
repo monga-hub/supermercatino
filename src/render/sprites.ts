@@ -1,6 +1,6 @@
 // Frame names in public/assets/kit.json (built by tools/kit.py from art/sheets/), and which one a character shows.
 import type { Category, Customer, GameState, Staff } from '../sim/state.ts';
-import { CUSTOMER_TYPES, GIVE_SEC, BOSS_EVERY_SEC } from '../sim/config.ts';
+import { CUSTOMER_TYPES, GIVE_SEC, BOSS_EVERY_SEC, FEMALE_NAMES } from '../sim/config.ts';
 
 export const SPRITES = {
     cassa: 'cassa',
@@ -23,8 +23,8 @@ export const SPRITES = {
 const walk = (n: string) => [0, 1, 2].map((i) => `${n}_${i}`);
 export const PEOPLE_FRAMES = [
     ...Object.keys(CUSTOMER_TYPES).flatMap((k) => [...walk(`${k}_walk`), ...walk(`${k}_angry`), `${k}_idle`, `${k}_pay`]),
-    ...walk('cassiere_walk'), 'cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1',
-    ...walk('magazziniere_walk'), ...walk('magazziniere_carry'),
+    ...['cassiere', 'cassiere_m'].flatMap((n) => [...walk(`${n}_walk`), `${n}_seduto`, `${n}_scan_0`, `${n}_scan_1`]),
+    ...['magazziniere', 'magazziniera'].flatMap((n) => [...walk(`${n}_walk`), ...walk(`${n}_carry`)]),
     ...walk('pulizie_walk'), ...walk('pulizie_mop'),
     ...walk('banconiere_walk'), 'banconiere_idle', 'banconiere_slice_0', 'banconiere_slice_1', 'banconiere_give',
     ...walk('guardia_walk'), 'guardia_idle', 'guardia_fischio', 'guardia_ferma',
@@ -35,7 +35,7 @@ export const PEOPLE_FRAMES = [
 export const SPILL_FRAMES = ['macchia_0', 'macchia_1', 'macchia_2'];
 
 /** Wall and door panels, one per back-edge orientation (tools/kit.py WALLS). */
-export const WALL_FRAMES = ['muro', 'muro_poster', 'porta', 'muretto'].flatMap((n) => [`${n}_l`, `${n}_r`]);
+export const WALL_FRAMES = ['muro', 'muro_finestra', 'muro_poster', 'muro_interno', 'porta', 'muretto'].flatMap((n) => [`${n}_l`, `${n}_r`]);
 
 /** Tap icon badges (Game.drawIcons). */
 export const ICON_FRAMES = ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_pulisci', 'icona_carrello', 'icona_beccato', 'icona_pausa', 'icona_stanco'];
@@ -59,7 +59,9 @@ export function personFrame(s: GameState, p: Customer | Staff): string {
         return `${p.kind}_${away ? 'angry' : 'walk'}_${step(p)}`;
     }
     if (p.role === 'pulizie') return p.state === 'cleaning' ? `pulizie_mop_${CYCLE[Math.floor(s.clockSec / SCAN_SEC) % CYCLE.length]}` : `pulizie_walk_${step(p)}`;
-    if (p.role === 'magazziniere') return `magazziniere_${p.job?.units ? 'carry' : 'walk'}_${step(p)}`;
+    const she = FEMALE_NAMES.includes(p.name);
+    if (p.role === 'magazziniere') return `${she ? 'magazziniera' : 'magazziniere'}_${p.job?.units ? 'carry' : 'walk'}_${step(p)}`;
+    const who = p.role === 'cassiere' && !she ? 'cassiere_m' : p.role; // the red-smock lady, or the young man
     if (p.role === 'guardia' || p.role === 'capo') {
         if (p.path.length || p.state === 'arriving') return `${p.role}_walk_${step(p)}`;
         const w = p.wait ?? 0;
@@ -67,9 +69,9 @@ export function personFrame(s: GameState, p: Customer | Staff): string {
         return w > BOSS_EVERY_SEC - 0.6 ? 'capo_indica' : Math.floor(s.clockSec / (SCAN_SEC * 4)) % 2 ? 'capo_scrive' : 'capo_idle';
     }
     const deli = p.role === 'banconiere';
-    if (p.state !== 'at_till') return `${p.role}_walk_${step(p)}`;
+    if (p.state !== 'at_till') return `${who}_walk_${step(p)}`;
     const busy = s.customers.find((c) => c.state === 'paying' && c.goal?.kind === 'till' && c.goal.id === p.tillId);
     const pose = Math.floor(s.clockSec / SCAN_SEC) % 2;
     if (deli) return !busy ? 'banconiere_idle' : busy.timer < GIVE_SEC ? 'banconiere_give' : `banconiere_slice_${pose}`;
-    return busy ? `cassiere_scan_${pose}` : 'cassiere_seduto';
+    return busy ? `${who}_scan_${pose}` : `${who}_seduto`;
 }

@@ -20,7 +20,7 @@ export function doorEdge(s: GameState, d: Pick<ShopObject, 'x' | 'y'>): Edge {
 export function walls(s: GameState) {
     const door = s.objects.filter((o) => o.type === 'porta').map((d) => `${d.x},${d.y},${doorEdge(s, d)}`);
     const open = doorways(s);
-    const out: { x: number; y: number; side: Edge; low?: boolean }[] = [];
+    const out: { x: number; y: number; side: Edge; low?: boolean; inner?: boolean }[] = [];
     for (const r of s.rooms)
         for (let y = r.y; y < r.y + r.h; y++)
             for (let x = r.x; x < r.x + r.w; x++)
@@ -28,7 +28,7 @@ export function walls(s: GameState) {
                     const n = roomAt(s, x + dx, y + dy), back = side === 'l' || side === 'r';
                     if (door.includes(`${x},${y},${side}`)) continue;
                     if (!n) out.push({ x, y, side, ...(back ? {} : { low: true }) });
-                    else if (back && n.type !== r.type && !open.has(edgeKey(x, y, x + dx, y + dy))) out.push({ x, y, side });
+                    else if (back && n.type !== r.type && !open.has(edgeKey(x, y, x + dx, y + dy))) out.push({ x, y, side, inner: true });
                 }
     return out;
 }

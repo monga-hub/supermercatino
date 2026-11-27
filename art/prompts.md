@@ -77,3 +77,10 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 
 - `guardia.jpg` 3×2 — guardia giurata anni '80 robusta, baffoni neri, divisa blu con berretto a visiera e distintivo argento, camicia azzurra, cravatta scura, fischietto al collo. Riga 1 camminata ×3; riga 2 ferma con le mani dietro la schiena, fischia indicando col braccio alzato, palmo alzato "alt".
 - `capo.jpg` 3×2 — capo reparto magro e pignolo sui quarant'anni, capelli grigi all'indietro, occhialoni squadrati, camicia bianca a maniche corte con la penna nel taschino, cravatta marrone larga, pantaloni beige, mocassini, cartellina. Riga 1 camminata svelta con la cartellina sotto il braccio ×3; riga 2 fermo con la cartellina, scrive, indica con la penna.
+
+## Playtest 2026-11-27 (milestone 24) — chat nuova per foglio
+
+- `pareti2.jpg` 4×1 — pannelli frontali piatti (non isometrici): muro esterno intonaco crema + mattoni con finestra; muro interno piastrelle bianche con fascia blu e rossa; muro esterno con poster della pasta; porta scorrevole di vetro. `tools/kit.py` taglia la fascia sbiadita in alto (`WALL_TOP`).
+- `cassa.jpg` 3×1 (testa comune degli arredi) — banco cassa dritto e stretto col nastro nero e il registratore in fondo, in diagonale da basso-sinistra ad alto-destra, niente U; lo stesso col cassetto aperto (non usato); sgabello rosso.
+- `cassiere_m.jpg` 3×2 (testa comune dei personaggi) — cassiere giovane, ricci scuri, baffetti, cappellino di carta, camice rosso. Riga 1 camminata ×3; riga 2 seduto sullo sgabello: mani sulle ginocchia, alza un articolo, batte i tasti.
+- `magazziniera.jpg` 3×2 — magazziniera giovane, coda di cavallo, cappellino bianco, camice verde. Riga 1 camminata ×3; riga 2 con lo scatolone ×3.

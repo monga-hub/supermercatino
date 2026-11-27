@@ -178,11 +178,14 @@ function queueCells(s: GameState, w: Walkable, till: ShopObject, n: number): Cel
     const d = door(s);
     const adj = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => ({ x: till.x + dx, y: till.y + dy })).filter((c) => w(c.x, c.y));
     // ponytail: A* from the door per till per tick while someone queues; cache per layout change if lots get big
-    const front = (d && pathToObject(w, d, till)?.slice(-1)[0]) || adj[0];
+    // the checkout lane is served from its front side (the cashier sits behind it): +x, or +y when turned
+    const lane = till.type === 'cassa' ? (till.rot ? { x: till.x, y: till.y + 1 } : { x: till.x + 1, y: till.y }) : null;
+    const front = (lane && w(lane.x, lane.y) && d && findPath(w, d, lane) ? lane : null) || (d && pathToObject(w, d, till)?.slice(-1)[0]) || adj[0];
     if (!front) return [];
     const cells = [front];
     const used = new Set([`${front.x},${front.y}`]);
-    const [dx, dy] = [front.x - till.x, front.y - till.y];
+    // along the lane (towards the sales floor), else straight away from the till
+    const [dx, dy] = front === lane ? (till.rot ? [-1, 0] : [0, -1]) : [front.x - till.x, front.y - till.y];
     for (let cur = front; cells.length < n; ) {
         const next = [[dx, dy], [dy, dx], [-dy, -dx]].map(([a, b]) => ({ x: cur.x + a, y: cur.y + b }))
             .find((c) => w(c.x, c.y) && !used.has(`${c.x},${c.y}`) && (!w.cross || w.cross(cur, c)));

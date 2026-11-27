@@ -1,8 +1,8 @@
-import { Scene, type GameObjects, type Input } from 'phaser';
-import { setSpeed, togglePause, type GameState, type Speed } from '../../sim/state.ts';
+import { Scene, type GameObjects, type Input, type Textures } from 'phaser';
+import { setSpeed, togglePause, type GameState, type Speed, type Role } from '../../sim/state.ts';
 import { ROOMS, OBJECTS, CATEGORIES, ONLY_IN, ROLES, TRAITS, ENERGY_MAX, ORDER_UNITS, UNIT_COST, REP_MIN, DAY_OPEN_MIN, BAD_DAYS, INSPECTION_DAY } from '../../sim/config.ts';
 import type { Command } from '../../sim/build.ts';
-import { CATEGORY_COLOR, ROOM_FLOOR } from '../../render/draw.ts';
+import { CATEGORY_COLOR, ROOM_FLOOR, GROUND } from '../../render/draw.ts';
 import { gridToIso, TILE_H } from '../../render/iso.ts';
 import type { Tool, Game } from './Game.ts';
 import * as audio from '../../audio/synth.ts';
@@ -13,6 +13,7 @@ import { DPR } from '../dpr.ts';
 // Arial Black is missing on iPhone (Safari fell back to Times): Avenir Next at weight 900 looks the same there.
 /** "Insegna" palette (playtest 2026-11-27): 80s Italian supermarket signs. Cream panels, navy ink, tomato red, blue, mustard. */
 export const C = { cream: 0xf6ecd6, creamLo: 0xd8c59c, ink: 0x1f2a44, red: 0xc8202e, blue: 0x1f4e9c, gold: 0xf2b134, green: 0x6dbf4b };
+const GROUND_BG = GROUND.grass[1];
 const hex = (c: number) => '#' + c.toString(16).padStart(6, '0');
 const LIGHT = '#fff6e0';
 const DARK = hex(C.ink);
@@ -40,6 +41,9 @@ const BAR_H = 20;
 type Btn = { t: GameObjects.Text; icon?: GameObjects.Image; active: () => boolean; bg: string; fg?: string; show?: () => boolean };
 /** Bottom bar group: opens a row of items, or a panel (Staff, Merce). */
 type Group = { key: string; btn: Btn; items: Btn[] };
+
+/** Short role names for the Staff panel's tabs. */
+const ROLE_TAB: Record<Role, string> = { cassiere: 'Cassa', magazziniere: 'Magazzino', pulizie: 'Pulizie', banconiere: 'Banco', guardia: 'Guardia', capo: 'Capo' };
 
 const STAFF_STATE: Record<string, string> = { arriving: 'in arrivo', idle: 'in attesa', cleaning: 'pulisce', cart: 'sposta un carrello', resting: 'in pausa', at_till: 'al suo posto', fetching: 'va in magazzino', delivering: 'porta la merce' };
 
@@ -75,6 +79,7 @@ export class Hud extends Scene {
     sheet: GameObjects.Container | null = null;
     sheetKey = '';
     sheetBtns: GameObjects.Text[] = [];
+    live: Textures.DynamicTexture | undefined;
     panelBtns: GameObjects.Text[] = [];
     cardKey = '';
     /** Pina's bubble: guide step or "Novità". */
@@ -82,6 +87,7 @@ export class Hud extends Scene {
     bubbleKey = '';
     news: { key: string; text: string } | null = null;
     panelKind: 'staff' | 'merce' = 'staff';
+    staffTab: Role = 'cassiere';
     panelKey = '';
     panelScroll = 0;
     panelRect = { x: 0, y: 0, w: 0, h: 0 };
@@ -357,6 +363,9 @@ export class Hud extends Scene {
         if (!same) {
             this.panelKind = kind;
             this.panelScroll = 0;
+            // first the role nobody does yet (the guide hires a cashier, then a stocker)
+            const roles = (Object.keys(ROLES) as Role[]).filter((r) => allows(this.sim, 'roles', r));
+            this.staffTab = roles.find((r) => !this.sim.staff.some((st) => st.role === r)) ?? this.staffTab;
             this.openPanel();
         }
     }
@@ -389,7 +398,26 @@ export class Hud extends Scene {
         // scrollable body: rows outside the panel are hidden (hidden objects get no taps)
         const body = this.add.container(0, 0);
         c.add(body);
-        let y = y0 + 48; // body starts under the fixed title row
+        // Staff: one tab per role this shop hires (playtest 2026-11-27), fixed under the title
+        const roles = (Object.keys(ROLES) as Role[]).filter((r) => allows(s, 'roles', r));
+        if (!roles.includes(this.staffTab)) this.staffTab = roles[0];
+        let tabsH = 0;
+        if (this.panelKind === 'staff') {
+            let tx = x0 + 12, ty = y0 + 44;
+            for (const r of roles) {
+                const on = r === this.staffTab;
+                const t = this.add.text(0, 0, ROLE_TAB[r], { ...TEXT, fontSize: 14, color: DARK, padding: { x: 9, y: 5 } })
+                    .setInteractive({ useHandCursor: true }).on('pointerdown', () => { this.staffTab = r; this.panelScroll = 0; this.openPanel(); });
+                if (tx + t.width > x0 + w - 12) { tx = x0 + 12; ty += t.height + 8; }
+                t.setPosition(tx, ty);
+                tx += t.width + 6;
+                c.add([this.pill(t, on ? C.gold : C.creamLo), t]);
+                this.panelBtns.push(t);
+                tabsH = ty + t.height + 8 - (y0 + 44);
+            }
+        }
+        const head = y0 + 44 + tabsH;
+        let y = head + 4; // body starts under the fixed title row (and tabs)
         const small = { ...TEXT, fontSize: 14, color: '#5a5f6e' };
         const row = (title: string, sub: string, label: string, cmd: Command | (() => void), face = C.blue) => {
             body.add(this.add.text(x0 + 12, y, title, { ...TEXT, fontSize: 17 }));
@@ -429,9 +457,9 @@ export class Hud extends Scene {
             body.add(note);
             y += note.height + 12;
         } else {
-            header('Candidati');
-            for (const k of s.candidates)
-                row(`${k.name} · €${k.wage}/giorno`, `${ROLES[k.role].label} · ${TRAITS[k.trait].label}: ${TRAITS[k.trait].desc}`, 'Assumi', { type: 'hire', candidateId: k.id });
+            header(`Candidati: ${ROLES[this.staffTab].label.toLowerCase()}`);
+            for (const k of s.candidates.filter((x) => x.role === this.staffTab))
+                row(`${k.name} · €${k.wage}/giorno`, `${TRAITS[k.trait].label}: ${TRAITS[k.trait].desc}`, 'Assumi', { type: 'hire', candidateId: k.id });
             y += 8;
             header('Assunti');
             if (!s.staff.length) {
@@ -452,7 +480,7 @@ export class Hud extends Scene {
             body.y = -this.panelScroll;
             for (const o of (body.list as GameObjects.Text[]).filter((x) => x.type === 'Text')) {
                 const top = o.y - this.panelScroll - (o.originY ?? 0) * o.height;
-                o.setVisible(top >= y0 + 44 && top + o.height <= y0 + viewH - (this.panelScroll < maxScroll ? 24 : 4));
+                o.setVisible(top >= head && top + o.height <= y0 + viewH - (this.panelScroll < maxScroll ? 24 : 4));
                 (o.getData('pill') as GameObjects.Graphics | undefined)?.setVisible(o.visible);
             }
             more.setVisible(this.panelScroll < maxScroll);
@@ -702,13 +730,11 @@ export class Hud extends Scene {
         const px = x0 + 18, py = y0 + 54, pw = 104, ph = 132;
         const g = this.add.graphics();
         g.fillStyle(C.blue, 1).fillRoundedRect(px, py, pw, ph, 10);
-        g.fillStyle(0xe9f1f7, 1).fillRoundedRect(px + 4, py + 4, pw - 8, ph - 8, 8);
-        g.fillStyle(C.creamLo, 1).fillRect(px + 4, py + ph - 34, pw - 8, 30);
         c.add(g);
-        const frame = this.textures.get('kit').has(`${st.role}_idle`) ? `${st.role}_idle` : `${st.role}_walk_0`;
-        const img = this.add.image(px + pw / 2, py + ph - 10, 'kit', frame).setOrigin(0.5, 1);
-        img.setScale(Math.min((ph - 20) / img.height, (pw - 16) / img.width));
-        c.add(img);
+        // a live view of the shop around them, like Theme Hospital's little window (redrawn each frame: updateLive)
+        this.live ??= this.textures.addDynamicTexture('live', (pw - 8) * DPR, (ph - 8) * DPR)!;
+        c.add(this.add.image(px + 4, py + 4, 'live').setOrigin(0).setDisplaySize(pw - 8, ph - 8));
+        c.add(this.add.text(px + 8, py + 7, '● in diretta', { ...TEXT, fontSize: 10, color: hex(C.red), backgroundColor: LIGHT + 'cc', padding: { x: 3, y: 1 } }));
         // right column
         const x1 = px + pw + 14, cw = x0 + w - 16 - x1;
         let y = py;
@@ -747,6 +773,15 @@ export class Hud extends Scene {
             this.game_.cameras.main.centerOn(p.x, p.y);
             close();
         }, x0 + w * 0.72);
+    }
+
+    /** Draw the Game scene into the card's window, centred on the worker. */
+    updateLive() {
+        const st = this.sheet && this.live && this.sim.staff.find((x) => x.id === this.sheetId);
+        if (!st || !this.live) return;
+        const p = gridToIso(st.x, st.y);
+        this.live.camera.setZoom(1.1 * DPR).centerOn(p.x, p.y - 4);
+        this.live.clear().fill(GROUND_BG).draw(this.game_.children).render();
     }
 
     /** Cream sheet with a blue rim, the shape of every card and panel. */
@@ -819,6 +854,7 @@ export class Hud extends Scene {
         if (this.panel && this.panelState() !== this.panelKey) this.openPanel();
         this.showCard();
         this.showSheet();
+        this.updateLive();
         this.updateBubble(blocked || !!this.sheet);
         this.updateArrow(time, blocked || !!this.sheet);
     }

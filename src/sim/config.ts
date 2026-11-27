@@ -118,6 +118,10 @@ export const TRAITS = {
 export const WAGE_SPREAD = 5;
 
 export const STAFF_NAMES = ['Pina', 'Gino', 'Rosa', 'Tonino', 'Carla', 'Beppe', 'Lucia', 'Franco', 'Assunta', 'Mimmo', 'Teresa', 'Salvo'] as const;
+/** Women's names: their sprite (playtest 2026-11-27: cashiers and stockers come as both). */
+export const FEMALE_NAMES: readonly string[] = ['Pina', 'Rosa', 'Carla', 'Lucia', 'Assunta', 'Teresa'];
+/** Roles drawn with one sprite only: their candidates get a name to match. */
+export const ROLE_SEX: Record<string, 'f' | 'm'> = { pulizie: 'f', banconiere: 'm', guardia: 'm', capo: 'm' };
 
 /** Staff walking speed, cells per second. */
 export const STAFF_SPEED = 2.5;

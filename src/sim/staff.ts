@@ -1,5 +1,5 @@
 // Staff: candidates, hiring, and per-role behaviour. Pure, deterministic.
-import { SERVED_BY, ROLES, TRAITS, STAFF_NAMES, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW,
+import { SERVED_BY, ROLES, TRAITS, STAFF_NAMES, FEMALE_NAMES, ROLE_SEX, CANDIDATES_PER_ROLE, WAGE_SPREAD, STAFF_SPEED, SHELF_CAPACITY, AUTO_RESTOCK_BELOW,
     ENERGY_MAX, ENERGY_DRAIN_PER_H, REST_PER_H, BREAK_BELOW, TIRED_SPEED, GAME_MIN_PER_SEC, STEP_MS,
     TAP_ICON_BELOW, GUARD_RADIUS, BOSS_EVERY_SEC } from './config.ts';
 import { allows } from './levels.ts';
@@ -17,8 +17,10 @@ export function refillCandidates(s: GameState) {
             const trait = pick(s, Object.keys(TRAITS) as Trait[]);
             const wage = TRAITS[trait].wage + ROLES[role].extra + Math.round((rand(s) * 2 - 1) * WAGE_SPREAD);
             const used = new Set([...s.candidates, ...s.staff].map((c) => c.name));
-            const free = STAFF_NAMES.filter((n) => !used.has(n));
-            s.candidates.push({ id: s.nextId++, role, name: pick(s, free.length ? free : STAFF_NAMES), trait, wage });
+            const sex = ROLE_SEX[role];
+            const names = STAFF_NAMES.filter((n) => !sex || FEMALE_NAMES.includes(n) === (sex === 'f'));
+            const free = names.filter((n) => !used.has(n));
+            s.candidates.push({ id: s.nextId++, role, name: pick(s, free.length ? free : names), trait, wage });
         }
     }
 }

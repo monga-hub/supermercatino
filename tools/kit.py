@@ -15,7 +15,7 @@ RES = 2  # frames stored at 2x, drawn at 0.5 scale: sharp when zoomed in
 WALK = lambda n: [f'{n}_walk_0', f'{n}_walk_1', f'{n}_walk_2']
 SHEETS = [
     ('arredi.jpg', 3, 3, ('w', 1.0), ['scaffale', 'scaffale_Pasta', 'scaffale_Latticini', 'scaffale_Salumi', 'scaffale_Pane',
-                                      'scaffale_Frutta', 'scaffale_Detersivi', 'cassa', None]),  # door: see WALLS
+                                      'scaffale_Frutta', 'scaffale_Detersivi', None, None]),  # till: cassa.jpg; door: see WALLS
     *[(f'{sheet}.jpg', 3, 3, ('h', h), WALK(kind) + [f'{kind}_angry_0', f'{kind}_angry_1', f'{kind}_angry_2',
                                                     f'{kind}_idle', f'{kind}_pay', f'{kind}_pick'])
       for sheet, kind, h in [('cliente', 'signora', 44), ('mamma', 'mamma', 44), ('vecchietta', 'vecchietta', 38),
@@ -24,6 +24,10 @@ SHEETS = [
     ('cassiere.jpg', 3, 2, ('h', 46), WALK('cassiere') + ['cassiere_seduto', 'cassiere_scan_0', 'cassiere_scan_1']),
     ('icone.jpg', 3, 2, ('w', 0.66), ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_felice', 'icona_arrabbiato', 'icona_cestino']),
     ('magazziniere.jpg', 3, 2, ('h', 46), WALK('magazziniere') + ['magazziniere_carry_0', 'magazziniere_carry_1', 'magazziniere_carry_2']),
+    # playtest 2026-11-27: men at the till, women in the warehouse too; a straight checkout lane
+    ('cassiere_m.jpg', 3, 2, ('h', 46), WALK('cassiere_m') + ['cassiere_m_seduto', 'cassiere_m_scan_0', 'cassiere_m_scan_1']),
+    ('magazziniera.jpg', 3, 2, ('h', 46), WALK('magazziniera') + ['magazziniera_carry_0', 'magazziniera_carry_1', 'magazziniera_carry_2']),
+    ('cassa.jpg', 3, 1, ('w', 1.0), [('cassa', 1.05), None, ('sgabello', 0.3)]),
     ('guardia.jpg', 3, 2, ('h', 48), WALK('guardia') + ['guardia_idle', 'guardia_fischio', 'guardia_ferma']),
     ('capo.jpg', 3, 2, ('h', 46), WALK('capo') + ['capo_idle', 'capo_scrive', 'capo_indica']),
     ('pulizie.jpg', 3, 2, ('h', 46), WALK('pulizie') + ['pulizie_mop_0', 'pulizie_mop_1', 'pulizie_mop_2']),
@@ -83,8 +87,11 @@ def pieces():
 
 WALL_H = 60  # game px
 MURETTO_H = 16  # low front walls
-# (frame, panel index in pareti.jpg, horizontal crop as fractions of the panel): textures are front views.
-WALLS = [('muro', 0, (0.0, 0.5)), ('muro_poster', 1, (0.25, 0.75)), ('porta', 2, (0.08, 0.92))]
+# (frame, panel index in pareti2.jpg, horizontal crop as fractions of the panel): textures are front views.
+# Panels: outer wall with window, inner tiled wall, outer wall with poster, sliding door (playtest 2026-11-27).
+WALLS = [('muro', 0, (0.03, 0.24)), ('muro_finestra', 0, (0.12, 0.88)), ('muro_poster', 2, (0.12, 0.88)), ('porta', 3, (0.04, 0.96)),
+         ('muro_interno', 1, (0.06, 0.56))]
+WALL_TOP = 0.2  # the panels fade out at the top: dropped
 
 def slant(tex, dark, wall_h=WALL_H):
     """Front-view texture -> wall standing on a cell's top-left edge (frame bottom-centre = edge midpoint + 8 px down)."""
@@ -97,16 +104,16 @@ def slant(tex, dark, wall_h=WALL_H):
     return out
 
 def walls():
-    path = ROOT / 'art/sheets/pareti.jpg'
+    path = ROOT / 'art/sheets/pareti2.jpg'
     if not path.exists(): return []
-    img = Image.open(path).convert('RGBA'); cw = img.width // 3
+    img = Image.open(path).convert('RGBA'); cw = img.width // 4
     out = []
     for name, i, (a, b) in WALLS:
         panel, _ = cutout(img.crop((i * cw, 0, (i + 1) * cw, img.height)))
-        tex = panel.crop((round(a * panel.width), 0, round(b * panel.width), panel.height))
+        tex = panel.crop((round(a * panel.width), round(WALL_TOP * panel.height), round(b * panel.width), panel.height))
         out += [(f'{name}_l', slant(tex, False), 0.5), (f'{name}_r', slant(tex, True).transpose(Image.FLIP_LEFT_RIGHT), 0.5)]
         if name == 'muro':  # low front wall (cutaway): the bottom of the plain wall
-            low = tex.crop((0, round(tex.height * 0.62), tex.width, tex.height))
+            low = tex.crop((0, round(tex.height * 0.6), tex.width, tex.height))
             out += [('muretto_l', slant(low, False, MURETTO_H), 0.5), ('muretto_r', slant(low, True, MURETTO_H).transpose(Image.FLIP_LEFT_RIGHT), 0.5)]
     return out
 

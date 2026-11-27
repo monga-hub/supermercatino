@@ -3,6 +3,7 @@ import type { GameObjects } from 'phaser';
 import { gridToIso, TILE_W, TILE_H } from './iso.ts';
 import { SPRITES, SPILL_FRAMES, personFrame } from './sprites.ts';
 import { walls, doorEdge, type Edge } from './walls.ts';
+import { cashierAt } from '../sim/staff.ts';
 import { terrain, props, decor, MARGIN, type Ground, type Prop } from './scenery.ts';
 import type { GameState, RoomType, ObjectType, ShopObject, Customer, Staff, Role, Category } from '../sim/state.ts';
 
@@ -126,6 +127,8 @@ export const ROLE_COLOR: Record<Role, number> = { cassiere: 0xc0392b, magazzinie
 const SEAT_OFFSET = 0.45;
 /** Seated cashier sprite: screen px from the till's cell centre, behind the register, facing the customers. */
 const SEAT_PX = { x: 17, y: -6 };
+/** Cashier's stool: this far behind the checkout lane's cell (milestone 24). */
+export const LANE_SEAT = 0.5;
 /** Deli man: standing behind the counter, facing the customers. */
 const DELI_PX = { x: -6, y: -20 };
 
@@ -136,6 +139,10 @@ export function drawStaff(g: G, s: GameState, st: Staff, put: Put = noPut, depth
     const seated = st.state === 'at_till';
     const at = feet(st.x, st.y);
     const turned = seated && !!s.objects.find((o) => o.id === st.tillId)?.rot; // till mirrored: seat and facing mirror too
+    if (seated && st.role === 'cassiere') { // straight checkout lane: seated behind it, facing the customers' side
+        const p = feet(st.x - (turned ? 0 : LANE_SEAT), st.y - (turned ? LANE_SEAT : 0));
+        if (put(frame, p.x, p.y + 4, depth, turned)) return;
+    }
     const seat = st.role === 'banconiere' ? DELI_PX : SEAT_PX;
     if (seated ? put(frame, at.x + (turned ? -seat.x : seat.x), at.y + seat.y, depth, st.role === 'banconiere' ? turned : !turned) : put(frame, f.x, f.y + 2, depth, goesLeft(st, st.path[0]))) return;
     box(g, st.x - o, st.y - o, 24, ROLE_COLOR[st.role], 0.38);
@@ -208,7 +215,8 @@ function panel(put: Put, name: string, x: number, y: number, edge: Edge, depth: 
     const e = EDGE[edge], p = gridToIso(x, y);
     return put(`${name}_${e.side}`, p.x + e.dx, p.y + e.dy, depth);
 }
-const poster = (x: number, y: number) => (x * 7 + y * 13) % 5 === 0;
+/** Outer walls: mostly plain, a window every few cells, now and then a poster. */
+const outerWall = (x: number, y: number) => { const h = (x * 7 + y * 13) % 6; return h === 0 ? 'muro_poster' : h === 3 ? 'muro_finestra' : 'muro'; };
 
 /**
  * Things layer, redrawn every frame. Sprites get depth 1 + (x + y), so nearer ones cover farther ones.
@@ -218,7 +226,11 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
     g.clear();
     over.clear();
     const items: { d: number; draw: (depth: number) => void }[] = [
-        ...walls(s).map((w) => ({ d: w.x + w.y + (w.low ? 0.6 : -0.5), draw: (z: number) => panel(put, w.low ? 'muretto' : poster(w.x, w.y) ? 'muro_poster' : 'muro', w.x, w.y, w.side, z) })),
+        ...walls(s).map((w) => ({ d: w.x + w.y + (w.low ? 0.6 : -0.5), draw: (z: number) => panel(put, w.low ? 'muretto' : w.inner ? 'muro_interno' : outerWall(w.x, w.y), w.x, w.y, w.side, z) })),
+        ...s.objects.filter((o) => o.type === 'cassa' && !cashierAt(s, o)).map((o) => ({ d: o.x + o.y - 0.9, draw: (z: number) => { // empty stool
+            const p = feet(o.x - (o.rot ? 0 : LANE_SEAT), o.y - (o.rot ? LANE_SEAT : 0));
+            put('sgabello', p.x, p.y + 4, z);
+        } })),
         ...s.objects.map((o) => {
             if (o.type !== 'porta') return { d: o.x + o.y, draw: (z: number) => drawObject(g, o, 1, put, z) };
             const edge = doorEdge(s, o);

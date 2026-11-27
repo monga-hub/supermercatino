@@ -17,7 +17,7 @@ export const GUIDE: Step[] = [
     { text: 'Metti un altro scaffale con un\'altra merce: i clienti chiedono di tutto.', aim: 'scaffale', done: (s) => new Set(count(s, 'scaffale').map((o) => o.category)).size > 1 },
     { text: 'Metti la cassa nell\'area casse (pavimento verde).', aim: 'cassa', done: (s) => count(s, 'cassa').length > 0 },
     { text: 'Apri Staff e assumi un cassiere: senza di lui la cassa non serve.', aim: 'staff', done: (s) => has(s, 'cassiere') },
-    { text: 'Assumi anche un magazziniere: riempie gli scaffali dal magazzino.', aim: 'staff', done: (s) => has(s, 'magazziniere') },
+    { text: 'Apri Staff e assumi anche un magazziniere: riempie gli scaffali dal magazzino.', aim: 'staff', done: (s) => has(s, 'magazziniere') },
     { text: 'Tutto pronto! Premi 1x per aprire il negozio.', aim: 'play', done: (s) => s.day > 1 || s.clockSec > DAY_OPEN_MIN * 60 },
     { text: 'Quando sulla cassa compare 💰, toccalo: incassi subito, con la mancia.', aim: 'collect', done: (s) => !!s.taps.collect },
     { text: 'Quando uno scaffale si svuota compare 📦: toccalo e il magazziniere corre.', aim: 'restock', done: (s) => !!s.taps.restock },
