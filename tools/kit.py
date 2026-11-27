@@ -82,12 +82,13 @@ def pieces():
             yield name, p.resize((max(1, round(p.width * f)), max(1, round(p.height * f))), Image.LANCZOS), round(ax, 3)
 
 WALL_H = 60  # game px
+MURETTO_H = 16  # low front walls
 # (frame, panel index in pareti.jpg, horizontal crop as fractions of the panel): textures are front views.
 WALLS = [('muro', 0, (0.0, 0.5)), ('muro_poster', 1, (0.25, 0.75)), ('porta', 2, (0.08, 0.92))]
 
-def slant(tex, dark):
+def slant(tex, dark, wall_h=WALL_H):
     """Front-view texture -> wall standing on a cell's top-left edge (frame bottom-centre = edge midpoint + 8 px down)."""
-    w, h = 32 * RES, WALL_H * RES
+    w, h = 32 * RES, wall_h * RES
     tex = tex.resize((w, h), Image.LANCZOS)
     top = Image.new('RGBA', (w, 3 * RES), (70, 40, 25, 255)); tex.paste(top, (0, 0))  # wall cap
     if dark: tex = Image.eval(tex.convert('RGB'), lambda c: int(c * 0.82)).convert('RGBA')
@@ -104,6 +105,9 @@ def walls():
         panel, _ = cutout(img.crop((i * cw, 0, (i + 1) * cw, img.height)))
         tex = panel.crop((round(a * panel.width), 0, round(b * panel.width), panel.height))
         out += [(f'{name}_l', slant(tex, False), 0.5), (f'{name}_r', slant(tex, True).transpose(Image.FLIP_LEFT_RIGHT), 0.5)]
+        if name == 'muro':  # low front wall (cutaway): the bottom of the plain wall
+            low = tex.crop((0, round(tex.height * 0.62), tex.width, tex.height))
+            out += [('muretto_l', slant(low, False, MURETTO_H), 0.5), ('muretto_r', slant(low, True, MURETTO_H).transpose(Image.FLIP_LEFT_RIGHT), 0.5)]
     return out
 
 def main():

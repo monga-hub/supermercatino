@@ -8,7 +8,7 @@ import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.t
 import type { GameState, Role, Trait, Staff, ShopObject, Cart } from './state.ts';
 import { updateCleaner } from './dirt.ts';
 import { tricking, catchFurbetto, readyAt } from './customers.ts';
-import { check, apply, type Command } from './build.ts';
+import { check, apply, crossing, type Command } from './build.ts';
 
 /** Top up the candidate list to CANDIDATES_PER_ROLE per role. */
 export function refillCandidates(s: GameState) {
@@ -40,7 +40,7 @@ function walkableFor(s: GameState): Walkable {
     const open = new Set<string>();
     for (const r of s.rooms) for (let x = r.x; x < r.x + r.w; x++) for (let y = r.y; y < r.y + r.h; y++) open.add(`${x},${y}`);
     for (const o of s.objects) if (o.type !== 'porta') open.delete(`${o.x},${o.y}`);
-    return (x, y) => open.has(`${x},${y}`);
+    return Object.assign((x: number, y: number) => open.has(`${x},${y}`), { cross: crossing(s) });
 }
 
 /** Tired: below the break threshold (milestone 18). Work pace: TIRED_SPEED when tired, else the trait's speed. */

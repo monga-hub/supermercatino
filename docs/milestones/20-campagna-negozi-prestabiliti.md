@@ -19,7 +19,7 @@ Far entrare un giocatore nuovo nelle meccaniche una alla volta. Oggi la partita 
 - "Negozio libero" = la partita attuale (lotto vuoto, tutto sbloccato, obiettivi di oggi), sbloccata dopo il livello 3.
 - Livelli 1–3:
   1. **Alimentari da Pina** (piccolo, sala + casse + magazzino già pieno): scaffali, cassa, cassiere, tocco 💰. Solo signore. Niente imprevisti.
-  2. **Minimarket Il Girasole**: + magazziniere, ordini merce, tocco 📦. Arrivano mamme e vecchiette.
+  2. **Minimarket Il Girasole**: + magazziniere, ordini merce, tocco 📦. Arrivano le mamme (le vecchiette dal livello 1 dopo il playtest).
   3. **Superette San Rocco**: + tutti i clienti normali, macchie, addetto pulizie, cestino.
 - Bilanciamento con `output/levels-balance.ts` per livello (8 semi): con i tocchi si vince sempre, senza tocchi né staff giusto si perde.
 - Salvataggi vecchi: si caricano come "Negozio libero".
@@ -61,7 +61,7 @@ L'utente apre "Campagna", gioca Alimentari da Pina con solo scaffali, cassa e ca
 - Decisioni utente 2026-11-27: ordine 20 → 21 → 22; negozi inventati tipici (niente marchi veri); stanze fisse, solo arredi; partita di oggi tenuta come "Negozio libero".
 - Implementazione: `src/sim/levels.ts` (dati dei livelli, `allows`, `goalsOf`, `sellable`, progressi). `createState(level)`; `level: 0` = Negozio libero, quindi i test vecchi non cambiano. Gli sblocchi stanno nella sim: `check` (oggetti, ordini, stanze e porta fisse), `refillCandidates` (ruoli), `pickKind` e liste spesa (clienti e categorie vendibili), `maybeSpill`, carrelli, ispezione, stanchezza (feature `tiredness`, accesa dal livello 6).
 - Livello 1: oltre a cassiere c'è anche il magazziniere (senza, gli scaffali da 10 si svuotano in un'ora e si perde 8/8). La merce però arriva da sola: magazzino pieno, niente ordini. Gli ordini arrivano al livello 2.
-- Clienti per livello: 1 solo signore; 2 + mamme e vecchiette; 3 + giovani. Chiedono solo categorie vendibili nel negozio (Pasta, Frutta, Detersivi finché non ci sono frigo, bancone e forno).
+- Clienti per livello: 1 signore e vecchiette (playtest 2026-11-27: un giorno solo, €850 / 45% / 45 serviti); 2 + mamme; 3 + giovani. Chiedono solo categorie vendibili nel negozio (Pasta, Frutta, Detersivi finché non ci sono frigo, bancone e forno).
 - La camera inquadra le stanze del negozio, non tutto il lotto (zoom fino a 2×).
 - Menu: Continua / Campagna / Negozio libero (dopo il livello 3). Campagna → lista livelli con ✓ e 🔒. Fine livello: Livello successivo / Rigioca o Riprova / Menu. Progressi in localStorage `supermercatino-campagna`.
 - Bilanciamento (`output/levels-balance.ts`, 8 semi):

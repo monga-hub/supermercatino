@@ -1,6 +1,6 @@
 // Where walls and the door are drawn. Pure: tests/walls.test.ts.
 // Edges of cell (x, y) on screen: 'l' = top-left (-x), 'r' = top-right (-y), 'fr' = bottom-right (+x), 'fl' = bottom-left (+y).
-import { roomAt } from '../sim/build.ts';
+import { roomAt, doorways, edgeKey } from '../sim/build.ts';
 import type { GameState, ShopObject } from '../sim/state.ts';
 
 export type Edge = 'l' | 'r' | 'fr' | 'fl';
@@ -13,14 +13,22 @@ export function doorEdge(s: GameState, d: Pick<ShopObject, 'x' | 'y'>): Edge {
     return (out ?? other ?? DIRS[0])[0];
 }
 
-/** Back walls (Theme Hospital cutaway): top-left and top-right edges of built cells that face the lot; none where the door is. */
+/**
+ * Walls on cell edges (Theme Hospital style). Back edges ('l', 'r') facing the lot or a different kind of room get a full wall,
+ * except doorways and the door; front edges ('fr', 'fl') facing the lot get a low wall (`low`), so the shop stays visible.
+ */
 export function walls(s: GameState) {
     const door = s.objects.filter((o) => o.type === 'porta').map((d) => `${d.x},${d.y},${doorEdge(s, d)}`);
-    const out: { x: number; y: number; side: Edge }[] = [];
+    const open = doorways(s);
+    const out: { x: number; y: number; side: Edge; low?: boolean }[] = [];
     for (const r of s.rooms)
         for (let y = r.y; y < r.y + r.h; y++)
             for (let x = r.x; x < r.x + r.w; x++)
-                for (const [side, dx, dy] of DIRS.slice(0, 2))
-                    if (!roomAt(s, x + dx, y + dy) && !door.includes(`${x},${y},${side}`)) out.push({ x, y, side });
+                for (const [side, dx, dy] of DIRS) {
+                    const n = roomAt(s, x + dx, y + dy), back = side === 'l' || side === 'r';
+                    if (door.includes(`${x},${y},${side}`)) continue;
+                    if (!n) out.push({ x, y, side, ...(back ? {} : { low: true }) });
+                    else if (back && n.type !== r.type && !open.has(edgeKey(x, y, x + dx, y + dy))) out.push({ x, y, side });
+                }
     return out;
 }

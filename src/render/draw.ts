@@ -218,7 +218,7 @@ export function drawThings(g: G, over: G, s: GameState, put: Put = noPut) {
     g.clear();
     over.clear();
     const items: { d: number; draw: (depth: number) => void }[] = [
-        ...walls(s).map((w) => ({ d: w.x + w.y - 0.5, draw: (z: number) => panel(put, poster(w.x, w.y) ? 'muro_poster' : 'muro', w.x, w.y, w.side, z) })),
+        ...walls(s).map((w) => ({ d: w.x + w.y + (w.low ? 0.6 : -0.5), draw: (z: number) => panel(put, w.low ? 'muretto' : poster(w.x, w.y) ? 'muro_poster' : 'muro', w.x, w.y, w.side, z) })),
         ...s.objects.map((o) => {
             if (o.type !== 'porta') return { d: o.x + o.y, draw: (z: number) => drawObject(g, o, 1, put, z) };
             const edge = doorEdge(s, o);

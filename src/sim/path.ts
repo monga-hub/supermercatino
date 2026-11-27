@@ -10,7 +10,7 @@ const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
  * [] if already there, null if unreachable or `to` is not walkable.
  * `from` itself need not be walkable (e.g. standing on a door).
  */
-export function findPath(walkable: (x: number, y: number) => boolean, from: Cell, to: Cell): Cell[] | null {
+export function findPath(walkable: Walkable, from: Cell, to: Cell): Cell[] | null {
     if (from.x === to.x && from.y === to.y) return [];
     if (!walkable(to.x, to.y)) return null;
     const h = (x: number, y: number) => Math.abs(x - to.x) + Math.abs(y - to.y);
@@ -33,7 +33,7 @@ export function findPath(walkable: (x: number, y: number) => boolean, from: Cell
         const gc = g.get(key(cur.x, cur.y))! + 1;
         for (const [dx, dy] of DIRS) {
             const nx = cur.x + dx, ny = cur.y + dy;
-            if (!walkable(nx, ny)) continue;
+            if (!walkable(nx, ny) || (walkable.cross && !walkable.cross(cur, { x: nx, y: ny }))) continue;
             const k = key(nx, ny);
             if (gc < (g.get(k) ?? Infinity)) {
                 g.set(k, gc);
@@ -45,7 +45,8 @@ export function findPath(walkable: (x: number, y: number) => boolean, from: Cell
     return null;
 }
 
-export type Walkable = (x: number, y: number) => boolean;
+/** Cells one may stand on; `cross`, when given, also vets each step between two cells (walls between rooms). */
+export type Walkable = ((x: number, y: number) => boolean) & { cross?: (a: Cell, b: Cell) => boolean };
 
 /** Shortest path to any walkable cell next to an object at (o.x, o.y). */
 export function pathToObject(w: Walkable, from: Cell, o: Cell): Cell[] | null {

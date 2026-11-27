@@ -9,6 +9,7 @@ import {
 } from './config.ts';
 import { findPath, pathToObject, walk, type Cell, type Walkable } from './path.ts';
 import { rand } from './rng.ts';
+import { crossing } from './build.ts';
 import { cashierAt, pace, tired, wantsBreak } from './staff.ts';
 import { spawnEveryMin } from './day.ts';
 import { maybeSpill, spillNear } from './dirt.ts';
@@ -27,7 +28,7 @@ export function walkableFor(s: GameState): Walkable {
     }
     for (const o of s.objects) if (o.type !== 'porta') open.delete(`${o.x},${o.y}`);
     for (const c of s.carts) open.delete(`${c.x},${c.y}`);
-    return (x, y) => open.has(`${x},${y}`);
+    return Object.assign((x: number, y: number) => open.has(`${x},${y}`), { cross: crossing(s) });
 }
 
 const door = (s: GameState) => s.objects.find((o) => o.type === 'porta');
@@ -184,7 +185,7 @@ function queueCells(s: GameState, w: Walkable, till: ShopObject, n: number): Cel
     const [dx, dy] = [front.x - till.x, front.y - till.y];
     for (let cur = front; cells.length < n; ) {
         const next = [[dx, dy], [dy, dx], [-dy, -dx]].map(([a, b]) => ({ x: cur.x + a, y: cur.y + b }))
-            .find((c) => w(c.x, c.y) && !used.has(`${c.x},${c.y}`));
+            .find((c) => w(c.x, c.y) && !used.has(`${c.x},${c.y}`) && (!w.cross || w.cross(cur, c)));
         if (!next) break; // no room: the rest share the last cell
         cells.push(next);
         used.add(`${next.x},${next.y}`);

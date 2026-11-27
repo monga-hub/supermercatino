@@ -33,6 +33,41 @@ export const roomAt = (s: GameState, x: number, y: number) =>
 
 export const objectAt = (s: GameState, x: number, y: number) => s.objects.find((o) => o.x === x && o.y === y);
 
+/** Edge between two cells, either order. */
+export const edgeKey = (ax: number, ay: number, bx: number, by: number) => (ax + ay * 1000 < bx + by * 1000 ? `${ax},${ay}|${bx},${by}` : `${bx},${by}|${ax},${ay}`);
+
+/**
+ * Doorways in the walls between rooms of different types (Theme Hospital style, playtest 2026-11-27):
+ * the middle one or two cells of each shared side. Rooms of the same type side by side stay one open area.
+ */
+export function doorways(s: GameState): Set<string> {
+    const out = new Set<string>();
+    for (const a of s.rooms)
+        for (const b of s.rooms) {
+            if (a.type === b.type) continue;
+            const side: [number, number, number, number][] = [];
+            for (let x = a.x; x < a.x + a.w; x++)
+                for (let y = a.y; y < a.y + a.h; y++)
+                    for (const [dx, dy] of [[1, 0], [0, 1]]) if (roomAt(s, x + dx, y + dy) === b) side.push([x, y, x + dx, y + dy]);
+            const n = side.length, mid = n % 2 ? [(n - 1) / 2] : [n / 2 - 1, n / 2];
+            if (n) for (const i of mid) out.add(edgeKey(...side[i]));
+        }
+    return out;
+}
+
+/** May a walker step from a to b? Only through a doorway where two kinds of room meet. */
+export function crossing(s: GameState) {
+    const open = doorways(s);
+    return (a: { x: number; y: number }, b: { x: number; y: number }) => {
+        const ra = roomAt(s, a.x, a.y), rb = roomAt(s, b.x, b.y);
+        return !ra || !rb || ra.type === rb.type || open.has(edgeKey(a.x, a.y, b.x, b.y));
+    };
+}
+
+/** Cells on either side of a doorway: kept free of furniture. */
+export const inDoorway = (s: GameState, x: number, y: number) =>
+    [...doorways(s)].some((k) => k.split('|').includes(`${x},${y}`));
+
 const roomCost = (type: RoomType, w: number, h: number) => w * h * ROOMS[type].costPerCell;
 
 const overlaps = (a: Room, b: { x: number; y: number; w: number; h: number }) =>
@@ -55,6 +90,7 @@ export function check(s: GameState, c: Command): Result {
         const room = roomAt(s, c.x, c.y);
         if (!room || room.type !== def.room) return fail(`${def.label}: va in ${ROOMS[def.room].label}`);
         if (objectAt(s, c.x, c.y)) return fail('Cella occupata');
+        if (c.object !== 'porta' && inDoorway(s, c.x, c.y)) return fail('Lascia libero il passaggio');
         if (c.object === 'scaffale' && !CATEGORIES.includes(c.category as Category)) return fail('Scegli una categoria');
         const special = Object.entries(ONLY_IN).find(([, cat]) => cat === c.category);
         if (c.object === 'scaffale' && special) return fail(`${c.category}: ci vuole ${OBJECTS[special[0] as ObjectType].label.toLowerCase()}`);

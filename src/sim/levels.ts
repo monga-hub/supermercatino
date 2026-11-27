@@ -39,12 +39,12 @@ export const LEVELS: Level[] = [
         ],
         door: { x: 9, y: 5 },
         money: 1500,
-        days: 2,
-        goals: { money: 1500, reputation: 55, served: 80 },
+        days: 1, // playtest 2026-11-27: two days of the same taps were boring
+        goals: { money: 850, reputation: 45, served: 45 },
         warehouse: { Pasta: 120, Frutta: 120, Detersivi: 120 },
         objects: ['scaffale', 'cassa'],
         roles: ['cassiere', 'magazziniere'],
-        customers: ['signora'],
+        customers: ['signora', 'vecchietta'],
         features: [],
     },
     {
@@ -52,7 +52,7 @@ export const LEVELS: Level[] = [
         blurb: 'Un minimarket di quartiere: più clienti, e la merce adesso la ordini tu.',
         news: [
             'Il magazzino è quasi vuoto: ordina la merce dal tasto Merce.',
-            'Arrivano le mamme col bambino e le vecchiette.',
+            'Arrivano le mamme col bambino.',
         ],
         grid: { w: 14, h: 13 },
         rooms: [
