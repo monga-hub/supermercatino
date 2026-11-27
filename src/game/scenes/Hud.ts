@@ -675,7 +675,9 @@ export class Hud extends Scene {
         const { W: width, H: height } = this;
         const compact = height < 500;
         if (compact) body = body.filter((l) => l !== '');
-        const w = Math.min(compact ? 560 : 420, width - 24);
+        // many buttons on a low screen (the 7 levels in landscape): two columns on a wider card
+        const two = compact && buttons.length > 4;
+        const w = Math.min(two ? 820 : compact ? 560 : 420, width - 24);
         const c = (this.card = this.add.container(0, 0).setDepth(20));
         c.add(this.add.rectangle(0, 0, width, height, 0x000000, 0.5).setOrigin(0).setInteractive());
         const x0 = (width - w) / 2;
@@ -686,7 +688,8 @@ export class Hud extends Scene {
             .setOrigin(0.5, 0)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', b.fn));
-        const btnsH = btns.reduce((h, b) => h + b.height + 10, -10);
+        const rows = two ? Math.ceil(btns.length / 2) : btns.length;
+        const btnsH = rows * ((btns[0]?.height ?? 0) + 10) - 10;
         const bodyH = body.length ? 10 + bodyT.height : 0;
         const h = 16 + titleT.height + bodyH + 16 + btnsH + 16;
         const y0 = Math.max(8, (height - h) / 2);
@@ -694,10 +697,10 @@ export class Hud extends Scene {
         titleT.setY(y0 + 16);
         bodyT.setY(titleT.y + titleT.height + 10);
         let y = titleT.y + titleT.height + bodyH + 16;
-        for (const b of btns) {
-            b.setPosition(width / 2, y);
-            y += b.height + 10;
-        }
+        btns.forEach((b, i) => {
+            const lone = two && i === btns.length - 1 && btns.length % 2; // odd one out: centred below
+            b.setPosition(two && !lone ? width / 2 + (i % 2 ? w / 4 : -w / 4) : width / 2, y + (two ? Math.floor(i / 2) : i) * (b.height + 10));
+        });
         c.add([bg, titleT, bodyT, ...btns.flatMap((b) => [this.pill(b, C.red), b])]);
         this.cardBtns = btns;
     }

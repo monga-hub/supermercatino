@@ -439,7 +439,7 @@ for (const [w, h] of [[390, 844], [844, 390]]) await check(`phone ${w}x${h}: gro
     for (const [fromTop, want] of [[false, 'levels'], [true, 'briefing'], [false, null]]) {
         const m0 = await pp.evaluate(() => window.menuState());
         for (let i = 0; i < 100 && (await pp.evaluate(() => window.menuState())) === m0; i++) {
-            await pp.mouse.click(w / 2, fromTop ? 60 + i * 6 : h - 10 - i * 6);
+            await pp.mouse.click(fromTop ? w * 0.3 : w / 2, fromTop ? 60 + i * 6 : h - 10 - i * 6); // left column: levels go two-across in landscape
             await pp.waitForTimeout(20);
         }
         expect((await pp.evaluate(() => window.menuState())) === want, `menu ${want}`);

@@ -2,7 +2,8 @@
 import { LEVEL, CATEGORIES, ONLY_IN } from './config.ts';
 import type { GameState, RoomType, ObjectType, Category, Role, CustomerKind } from './state.ts';
 
-export type Feature = 'orders' | 'spills' | 'carts' | 'inspection' | 'tiredness';
+export const FEATURES = ['orders', 'spills', 'carts', 'inspection', 'tiredness'] as const;
+export type Feature = (typeof FEATURES)[number];
 export type Level = {
     name: string;
     blurb: string;
@@ -94,6 +95,110 @@ export const LEVELS: Level[] = [
         roles: ['cassiere', 'magazziniere', 'pulizie'],
         customers: ['signora', 'mamma', 'vecchietta', 'giovane'],
         features: ['orders', 'spills'],
+    },
+    {
+        name: 'Alimentari Fratelli Bonetti',
+        blurb: 'I fratelli Bonetti hanno il banco salumi più famoso del rione. Adesso è tuo.',
+        news: [
+            'Il banco salumi: metti il bancone e assumi un banconiere.',
+            'Il frigo dei latticini va nella sala.',
+            'Arriva il Signor Ponzone: paga bene, ma non ha pazienza.',
+        ],
+        grid: { w: 16, h: 13 },
+        rooms: [
+            { type: 'magazzino', x: 1, y: 2, w: 3, h: 5 },
+            { type: 'sala_vendita', x: 4, y: 2, w: 9, h: 6 },
+            { type: 'area_casse', x: 4, y: 8, w: 6, h: 2 },
+            { type: 'banco_salumi', x: 10, y: 8, w: 3, h: 2 },
+        ],
+        door: { x: 12, y: 4 },
+        money: 3000,
+        days: 4,
+        goals: { money: 1800, reputation: 60, served: 260 },
+        warehouse: { Pasta: 20, Frutta: 20, Detersivi: 20, Latticini: 20, Salumi: 20 },
+        objects: ['scaffale', 'cassa', 'cestino', 'bancone', 'frigo'],
+        roles: ['cassiere', 'magazziniere', 'pulizie', 'banconiere'],
+        customers: ['signora', 'mamma', 'vecchietta', 'giovane', 'ponzone'],
+        features: ['orders', 'spills'],
+    },
+    {
+        name: 'Supermercato del Corso',
+        blurb: 'Sul corso passa di tutto: anche chi non vuole pagare.',
+        news: [
+            'Arrivano i furbetti: saltano la fila o scappano senza pagare. Tocca 👮 per beccarli.',
+            'La guardia li becca da sola vicino alle casse.',
+            'Qualcuno lascia il carrello in giro: il magazziniere lo porta via (tocca 🛒).',
+            'Arriva l\'orso: compra di tutto.',
+        ],
+        grid: { w: 18, h: 13 },
+        rooms: [
+            { type: 'magazzino', x: 1, y: 2, w: 3, h: 6 },
+            { type: 'sala_vendita', x: 4, y: 2, w: 11, h: 7 },
+            { type: 'area_casse', x: 4, y: 9, w: 6, h: 2 },
+            { type: 'banco_salumi', x: 10, y: 9, w: 5, h: 2 },
+        ],
+        door: { x: 14, y: 3 }, // far from the tills: the furbetti have a long way to run
+        money: 3500,
+        days: 4,
+        goals: { money: 1750, reputation: 65, served: 290 },
+        warehouse: { Pasta: 20, Frutta: 20, Detersivi: 20, Latticini: 20, Salumi: 20 },
+        objects: ['scaffale', 'cassa', 'cestino', 'bancone', 'frigo'],
+        roles: ['cassiere', 'magazziniere', 'pulizie', 'banconiere', 'guardia'],
+        customers: ['signora', 'mamma', 'vecchietta', 'giovane', 'ponzone', 'orso', 'furbetto'],
+        features: ['orders', 'spills', 'carts'],
+    },
+    {
+        name: 'Supermercato Primavera',
+        blurb: 'Un supermercato vero, col forno del pane. Il personale però si stanca.',
+        news: [
+            'La panetteria: il forno sforna il pane, il banconiere lo cuoce. Il profumo attira gente.',
+            'Il personale si stanca: metti gli armadietti nello spogliatoio per le pause.',
+            'Il terzo giorno passa l\'ispettore sanitario: niente macchie!',
+        ],
+        grid: { w: 20, h: 14 },
+        rooms: [
+            { type: 'magazzino', x: 1, y: 2, w: 3, h: 5 },
+            { type: 'spogliatoio', x: 1, y: 7, w: 3, h: 3 },
+            { type: 'sala_vendita', x: 4, y: 2, w: 12, h: 8 },
+            { type: 'panetteria', x: 16, y: 2, w: 3, h: 4 },
+            { type: 'area_casse', x: 8, y: 10, w: 8, h: 2 },
+            { type: 'banco_salumi', x: 4, y: 10, w: 4, h: 2 },
+        ],
+        door: { x: 15, y: 8 },
+        money: 4500,
+        days: 5,
+        goals: { money: 2100, reputation: 60, served: 470 },
+        warehouse: { Pasta: 25, Frutta: 25, Detersivi: 25, Latticini: 25, Salumi: 25 },
+        objects: ['scaffale', 'cassa', 'cestino', 'bancone', 'frigo', 'forno', 'armadietti'],
+        roles: ['cassiere', 'magazziniere', 'pulizie', 'banconiere', 'guardia'],
+        customers: ['signora', 'mamma', 'vecchietta', 'giovane', 'ponzone', 'orso', 'furbetto'],
+        features: ['orders', 'spills', 'carts', 'inspection', 'tiredness'],
+    },
+    {
+        name: 'Ipermercato Stella',
+        blurb: 'L\'ipermercato in fondo alla statale: folla tutto il giorno. Da solo non ce la fai.',
+        news: [
+            'Il capo reparto incassa, fa pulire e riempire al posto tuo: con questa folla ti serve.',
+            'Tutto sbloccato: è la prova finale.',
+        ],
+        grid: { w: 24, h: 15 },
+        rooms: [
+            { type: 'magazzino', x: 1, y: 2, w: 4, h: 6 },
+            { type: 'spogliatoio', x: 1, y: 8, w: 4, h: 3 },
+            { type: 'sala_vendita', x: 5, y: 2, w: 14, h: 9 },
+            { type: 'panetteria', x: 19, y: 2, w: 3, h: 4 },
+            { type: 'banco_salumi', x: 19, y: 6, w: 3, h: 4 },
+            { type: 'area_casse', x: 5, y: 11, w: 12, h: 2 },
+        ],
+        door: { x: 18, y: 10 },
+        money: 6000,
+        days: 5,
+        goals: { money: 1400, reputation: 45, served: 420 },
+        warehouse: { Pasta: 30, Frutta: 30, Detersivi: 30, Latticini: 30, Salumi: 30 },
+        objects: ['scaffale', 'cassa', 'cestino', 'bancone', 'frigo', 'forno', 'armadietti'],
+        roles: ['cassiere', 'magazziniere', 'pulizie', 'banconiere', 'guardia', 'capo'],
+        customers: ['signora', 'mamma', 'vecchietta', 'giovane', 'ponzone', 'orso', 'furbetto'],
+        features: ['orders', 'spills', 'carts', 'inspection', 'tiredness'],
     },
 ];
 

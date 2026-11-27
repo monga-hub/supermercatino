@@ -6,7 +6,7 @@ import { spawnCustomer } from '../src/sim/customers.ts';
 import { maybeSpill } from '../src/sim/dirt.ts';
 import { closeDay } from '../src/sim/day.ts';
 import { loadGame } from '../src/sim/save.ts';
-import { LEVELS, goalsOf, sellable, loadProgress, winLevel, levelOpen, freeOpen } from '../src/sim/levels.ts';
+import { LEVELS, FEATURES, goalsOf, sellable, loadProgress, winLevel, levelOpen, freeOpen } from '../src/sim/levels.ts';
 import { OBJECTS, ROLES, CUSTOMER_TYPES, INSPECTION_DAY, INSPECTION_HOUR, LEVEL } from '../src/sim/config.ts';
 import type { GameState } from '../src/sim/state.ts';
 import { untilTicks } from './helpers.ts';
@@ -42,6 +42,25 @@ test('every level map is valid: rooms on the lot, no overlaps, door on the sales
         for (const role of l.roles) assert.ok(role in ROLES);
         for (const k of l.customers) assert.ok(k in CUSTOMER_TYPES);
     }
+});
+
+test('every mechanic is unlocked by exactly one level and stays unlocked; the last level has everything (milestone 22)', () => {
+    const all = {
+        objects: Object.keys(OBJECTS).filter((o) => o !== 'porta'), // the door comes with the map
+        roles: Object.keys(ROLES),
+        customers: Object.keys(CUSTOMER_TYPES).filter((k) => k !== 'ispettore'), // comes with the inspection
+        features: [...FEATURES],
+    };
+    for (const [kind, keys] of Object.entries(all) as [keyof typeof all, string[]][])
+        for (const key of keys) {
+            const has = LEVELS.map((l) => (l[kind] as string[]).includes(key));
+            const first = has.indexOf(true);
+            assert.ok(first >= 0, `${kind} ${key}: no level unlocks it`);
+            assert.ok(has.slice(first).every(Boolean), `${kind} ${key}: locked again after level ${first + 1}`);
+        }
+    assert.equal(LEVELS.length, 7);
+    for (const l of LEVELS) assert.ok(!(l.customers as string[]).includes('ispettore'), `${l.name}: the inspector comes only with the inspection`);
+    for (const l of LEVELS) for (const r of l.rooms) if (r.type === 'area_casse') assert.ok(r.h >= 2 || r.w >= 2, `${l.name}: a till is two cells long`);
 });
 
 test('a level starts with its map: rooms and the door are fixed, the player places and removes furniture', () => {

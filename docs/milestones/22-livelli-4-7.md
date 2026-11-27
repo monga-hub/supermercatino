@@ -2,7 +2,7 @@
 
 ## Status
 
-planned
+implementato, in attesa di playtest (2026-11-27)
 
 ## Objective
 
@@ -30,9 +30,9 @@ Completare la campagna con le meccaniche che i livelli 1–3 non toccano, una o 
 
 ## Acceptance criteria
 
-- [ ] Ogni meccanica del gioco è sbloccata da esattamente un livello — test: `tests/levels.test.ts`
-- [ ] Mappe 4–7 valide: ogni arredo sbloccato ha la stanza giusta, la porta è sul bordo della sala — test: `tests/levels.test.ts`
-- [ ] Livelli 4–6 vinti con i tocchi 8/8; il 7 vinto con capo reparto e guardia almeno 6/8, senza automazione al massimo 2/8 — `output/balance.ts`
+- [x] Ogni meccanica del gioco è sbloccata da esattamente un livello — test: `tests/levels.test.ts`
+- [x] Mappe 4–7 valide: ogni arredo sbloccato ha la stanza giusta, la porta è sul bordo della sala — test: `tests/levels.test.ts`
+- [x] Livelli 4–6 vinti con i tocchi 8/8; il 7 vinto con capo reparto e guardia almeno 6/8, senza automazione al massimo 2/8 — `output/levels-balance2.ts`
 - [ ] Il livello 7 dopo i primi 6 sembra una sfida, non un muro — verified by user playtest
 
 ## Exit condition
@@ -47,3 +47,6 @@ L'utente gioca la campagna dal 4 al 7, a ogni livello trova una novità spiegata
 ## Notes
 
 - Nomi dei negozi inventati, niente marchi veri (decisione utente 2026-11-27).
+- Bilanciamento (8 semi, `output/levels-balance2.ts`): 4, 5, 6 con i tocchi 8/8, senza 0/8; 7 con i tocchi 8/8, senza tocchi con capo e guardia 6/8, senza capo né guardia 2/8.
+- Nel 6 le macchie pesano: servono 2 addetti pulizie e 3 cestini, armadietti lontani dal varco.
+- Menu Campagna in orizzontale: con più di 4 pulsanti su schermo basso vanno su due colonne.
