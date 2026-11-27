@@ -170,3 +170,7 @@ Promoted → `[x]` + `→ milestone NN-<slug>.md`. Rejected → `~~title~~` + `R
   - Source: gameplan
 
 - [x] Numeri dei soldi che salgono come i danni nei giochi d'azione (playtest 2026-11-27): "+€7" verde dalla cassa, "−€150" rosso dal mobile comprato, stipendi/multe/ordini sotto il contatore dei soldi. `src/sim/fx.ts` (`cash.on`), `Game.floatCash`; test `tests/cash.test.ts`. Fatto subito, senza milestone.
+
+- [x] Camminata (playtest 2026-11-27): signora e mamma camminavano all'indietro (disegni rivolti a sinistra, specchiati in `tools/kit.py` `FACES_LEFT`); dondolio a ogni passo (`walkBob` in `src/render/sprites.ts`). Fatto subito, senza milestone.
+- [ ] Personaggi visti di spalle quando camminano verso il fondo (in alto sullo schermo): ora mostrano sempre la faccia. Servono fogli Gemini nuovi con la vista da dietro, e fotogrammi delle gambe più diversi tra loro.
+  - Source: playtest 2026-11-27

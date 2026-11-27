@@ -18,6 +18,8 @@ RES = 2  # frames stored at 2x, drawn at 0.5 scale: sharp when zoomed in
 SEATED = 1.3  # seated cashiers drawn bigger, to match the two-cell counter (playtest 2026-11-27)
 STATES = lambda b: [b, f'{b}_mezzo', f'{b}_vuoto']
 WALK = lambda n: [f'{n}_walk_0', f'{n}_walk_1', f'{n}_walk_2']
+# Painted facing screen left, unlike the rest (draw.ts mirrors by walking direction, assuming bottom-right): mirrored here (playtest 2026-11-27).
+FACES_LEFT = {*WALK('signora'), *WALK('mamma'), 'mamma_angry_0', 'mamma_angry_1', 'mamma_angry_2'}
 SHEETS = [
     ('arredi.jpg', 3, 3, ('w', 1.0), ['scaffale', None, None, None, None, None, None, None, None]),  # goods: STATES sheets; till: cassa.jpg; door: see WALLS
     # milestone 25: one sheet per unit, full / half / empty
@@ -107,6 +109,7 @@ def pieces():
                     f, foot = v * TILE_W / 2 * RES / max(xb, p.width - xb), xb / p.width
                 k = f; ax = foot
             else: f = f or v * RES / p.height; k = f * (w or 1); ax = min(1, max(0, (cw / 2 - left) / p.width))
+            if name in FACES_LEFT: p, ax = p.transpose(Image.FLIP_LEFT_RIGHT), 1 - ax
             yield name, p.resize((max(1, round(p.width * k)), max(1, round(p.height * k))), Image.LANCZOS), round(ax, 3)
 
 WALL_H = 60  # game px
