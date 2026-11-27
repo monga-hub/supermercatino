@@ -221,7 +221,7 @@ function panel(put: Put, name: string, x: number, y: number, edge: Edge, depth: 
  * plaster and brick everywhere else (plain where it backs onto the warehouse, so the sales floor looks the same all round).
  */
 const wallFrame = (w: ReturnType<typeof walls>[number]) =>
-    w.low ? 'muretto' : STAFF_ONLY.includes(w.room) ? 'muro_interno' : w.inner ? 'muro' : outerWall(w.x, w.y);
+    w.shutter ? 'serranda' : w.low ? 'muretto' : STAFF_ONLY.includes(w.room) ? 'muro_interno' : w.inner ? 'muro' : outerWall(w.x, w.y);
 /** Outer walls: mostly plain, a window every few cells, now and then a poster. */
 const outerWall = (x: number, y: number) => { const h = (x * 7 + y * 13) % 6; return h === 0 ? 'muro_poster' : h === 3 ? 'muro_finestra' : 'muro'; };
 

@@ -21,7 +21,7 @@ export function walls(s: GameState) {
     const door = s.objects.filter((o) => o.type === 'porta').map((d) => `${d.x},${d.y},${doorEdge(s, d)}`);
     const open = doorways(s);
     /** room: the room whose side of the wall faces the viewer (the wall's look follows it). */
-    const out: { x: number; y: number; side: Edge; room: RoomType; low?: boolean; inner?: boolean }[] = [];
+    const out: { x: number; y: number; side: Edge; room: RoomType; low?: boolean; inner?: boolean; shutter?: boolean }[] = [];
     for (const r of s.rooms)
         for (let y = r.y; y < r.y + r.h; y++)
             for (let x = r.x; x < r.x + r.w; x++)
@@ -29,7 +29,7 @@ export function walls(s: GameState) {
                     const n = roomAt(s, x + dx, y + dy), back = side === 'l' || side === 'r';
                     if (door.includes(`${x},${y},${side}`)) continue;
                     if (!n) out.push({ x, y, side, room: r.type, ...(back ? {} : { low: true }) });
-                    else if (back && walled(n.type, r.type) && !open.has(edgeKey(x, y, x + dx, y + dy))) out.push({ x, y, side, room: r.type, inner: true });
+                    else if (back && walled(n.type, r.type)) out.push({ x, y, side, room: r.type, inner: true, ...(open.has(edgeKey(x, y, x + dx, y + dy)) ? { shutter: true } : {}) }); // doorway: open roller shutter
                 }
     return out;
 }

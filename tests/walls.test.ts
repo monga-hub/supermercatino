@@ -25,7 +25,8 @@ test('walls: back edges, around the warehouse with a doorway, low walls in front
     assert.ok(!has(w, 4, 4, 'l') && !has(w, 4, 4, 'r'), 'no walls inside a room');
     assert.ok(!has(w, 3, 8, 'r') && !has(w, 5, 8, 'r'), 'no wall between sala and checkout area (playtest)');
     assert.ok(full(3, 3, 'r') && full(8, 3, 'r') && w.find((e) => e.x === 3 && e.y === 3 && e.side === 'r')!.inner, 'inner wall to the warehouse');
-    assert.ok(!has(w, 5, 3, 'r') && !has(w, 6, 3, 'r'), 'with a doorway in the middle');
+    const shutter = (x: number, y: number) => w.some((e) => e.x === x && e.y === y && e.side === 'r' && e.shutter);
+    assert.ok(shutter(5, 3) && shutter(6, 3) && !shutter(4, 3), 'with a roller shutter in the doorway (playtest)');
     assert.ok(low(8, 4, 'fr') && low(3, 9, 'fl') && low(6, 7, 'fl'), 'low walls along the front');
     assert.ok(!has(w, 8, 5, 'fr'), 'none where the door is');
 });

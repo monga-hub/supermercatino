@@ -4535,6 +4535,54 @@
     "w": 64,
     "h": 152
    }
+  },
+  "serranda_l": {
+   "frame": {
+    "x": 845,
+    "y": 1735,
+    "w": 64,
+    "h": 152
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 1
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 64,
+    "h": 152
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 152
+   }
+  },
+  "serranda_r": {
+   "frame": {
+    "x": 911,
+    "y": 1735,
+    "w": 64,
+    "h": 152
+   },
+   "anchor": {
+    "x": 0.5,
+    "y": 1
+   },
+   "rotated": false,
+   "trimmed": false,
+   "sourceSize": {
+    "w": 64,
+    "h": 152
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 152
+   }
   }
  },
  "meta": {

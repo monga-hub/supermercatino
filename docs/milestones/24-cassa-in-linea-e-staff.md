@@ -35,6 +35,7 @@ Secondo giro di feedback del 2026-11-27: grafica nuova per muri e cassa (una lin
 - [x] Cassieri uomini e magazziniere donne, sprite dal nome; nomi adatti per i ruoli a sprite unico (`tests/sprites.test.ts`).
 - [x] Candidati divisi per mansione con tab; verificato dagli screenshot.
 - [x] Niente muro tra sala e casse, solo attorno alle stanze dello staff (`tests/walls.test.ts`).
+- [x] Saracinesca aperta nei varchi del magazzino (`tests/walls.test.ts`); verificato dallo screenshot.
 - [x] Scheda con vista dal vivo del lavoratore; verificato dallo screenshot, giudizio finale al playtest.
 
 ## Exit condition

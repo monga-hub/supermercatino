@@ -98,7 +98,7 @@ def slant(tex, dark, wall_h=WALL_H):
     w, h = 32 * RES, wall_h * RES
     tex = tex.resize((w, h), Image.LANCZOS)
     top = Image.new('RGBA', (w, 3 * RES), (70, 40, 25, 255)); tex.paste(top, (0, 0))  # wall cap
-    if dark: tex = Image.eval(tex.convert('RGB'), lambda c: int(c * 0.82)).convert('RGBA')
+    if dark: tex = Image.merge('RGBA', [*Image.eval(tex.convert('RGB'), lambda c: int(c * 0.82)).split(), tex.getchannel('A')])  # keeps holes
     # output (x, y) -> texture (x, y + 16 - x/2) in RES units: the bottom edge rises 16 px over 32 px
     out = tex.transform((w, h + 16 * RES), Image.AFFINE, (1, 0, 0, 0.5, 1, -16 * RES), Image.BICUBIC, fillcolor=(0, 0, 0, 0))
     return out
@@ -115,6 +115,11 @@ def walls():
         if name == 'muro':  # low front wall (cutaway): the bottom of the plain wall
             low = tex.crop((0, round(tex.height * 0.6), tex.width, tex.height))
             out += [('muretto_l', slant(low, False, MURETTO_H), 0.5), ('muretto_r', slant(low, True, MURETTO_H).transpose(Image.FLIP_LEFT_RIGHT), 0.5)]
+    shutter = ROOT / 'art/sheets/serranda.jpg'  # warehouse doorway (playtest 2026-11-27): open roller shutter, panel 0 of 2, housing kept
+    if shutter.exists():
+        img = Image.open(shutter).convert('RGBA')
+        tex, _ = cutout(img.crop((0, 0, img.width // 2, img.height)))  # the empty opening is white and touches the border: transparent
+        out += [('serranda_l', slant(tex, False), 0.5), ('serranda_r', slant(tex, True).transpose(Image.FLIP_LEFT_RIGHT), 0.5)]
     return out
 
 def main():

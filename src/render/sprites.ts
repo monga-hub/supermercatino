@@ -35,7 +35,7 @@ export const PEOPLE_FRAMES = [
 export const SPILL_FRAMES = ['macchia_0', 'macchia_1', 'macchia_2'];
 
 /** Wall and door panels, one per back-edge orientation (tools/kit.py WALLS). */
-export const WALL_FRAMES = ['muro', 'muro_finestra', 'muro_poster', 'muro_interno', 'porta', 'muretto'].flatMap((n) => [`${n}_l`, `${n}_r`]);
+export const WALL_FRAMES = ['muro', 'muro_finestra', 'muro_poster', 'muro_interno', 'porta', 'muretto', 'serranda'].flatMap((n) => [`${n}_l`, `${n}_r`]);
 
 /** Tap icon badges (Game.drawIcons). */
 export const ICON_FRAMES = ['icona_restock', 'icona_arrivo', 'icona_soldi', 'icona_pulisci', 'icona_carrello', 'icona_beccato', 'icona_pausa', 'icona_stanco'];

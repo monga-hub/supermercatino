@@ -81,6 +81,7 @@ Stessa testa comune; righe: camminata ×3, camminata arrabbiata ×3, in coda / p
 ## Playtest 2026-11-27 (milestone 24) — chat nuova per foglio
 
 - `pareti2.jpg` 4×1 — pannelli frontali piatti (non isometrici): muro esterno intonaco crema + mattoni con finestra; muro interno piastrelle bianche con fascia blu e rossa; muro esterno con poster della pasta; porta scorrevole di vetro. `tools/kit.py` taglia la fascia sbiadita in alto (`WALL_TOP`).
+- `serranda.jpg` 2×1 — saracinesca da supermercato, pannelli frontali piatti: APERTA (binari grigi, cassonetto arrotolato in alto con fascia gialla-nera, vano vuoto bianco) e CHIUSA. Il kit usa solo quella aperta; il vano bianco diventa trasparente.
 - `cassa.jpg` 3×1 (testa comune degli arredi) — banco cassa dritto e stretto col nastro nero e il registratore in fondo, in diagonale da basso-sinistra ad alto-destra, niente U; lo stesso col cassetto aperto (non usato); sgabello rosso.
 - `cassiere_m.jpg` 3×2 (testa comune dei personaggi) — cassiere giovane, ricci scuri, baffetti, cappellino di carta, camice rosso. Riga 1 camminata ×3; riga 2 seduto sullo sgabello: mani sulle ginocchia, alza un articolo, batte i tasti.
 - `magazziniera.jpg` 3×2 — magazziniera giovane, coda di cavallo, cappellino bianco, camice verde. Riga 1 camminata ×3; riga 2 con lo scatolone ×3.
