@@ -10,7 +10,7 @@ Rendere il gioco leggibile per chi lo apre la prima volta, soprattutto sul telef
 
 ## Scope
 
-- Barra in basso a gruppi: **Arredi**, **Staff**, **Merce**, **Attrezzi** (Ruota/Demolisci). Ogni gruppo apre una fila con icona dello sprite e prezzo; su telefono sta su una riga.
+- Barra in basso a gruppi: **Arredi**, **Staff**, **Merce** (Attrezzi tolto dopo il playtest: ruota/togli con la pressione lunga, Audio nel menu ⚙). Ogni gruppo apre una fila con icona dello sprite e prezzo; su telefono sta su una riga.
 - Obiettivi sempre visibili in alto: tre barre (cassa, reputazione, serviti) con giorni rimasti.
 - Guida passo passo nel livello 1: lista di passi ("Metti uno scaffale di Pasta", "Metti la cassa", "Assumi un cassiere", "Premi 1x", "Tocca 💰"); freccia/evidenziatura sul tasto o sulla cella del passo corrente; il passo si spunta da solo quando la sim lo vede fatto.
 - Fumetto "Novità" la prima volta che compare in partita una meccanica del livello (prima icona 📦, prima macchia, primo furbetto...): una frase, si chiude con un tocco; ricordato nei progressi.
@@ -58,9 +58,10 @@ L'utente fa giocare il livello 1 a qualcuno che non l'ha mai visto: segue le fre
 - Assorbe il backlog "Barra strumenti raggruppata" (milestone 18) e la nota di STATE sui testi sfocati su retina.
 - Implementazione:
   - `src/sim/tutorial.ts`: `GUIDE` (8 passi del livello 1, `guideStep` = primo non fatto), `NEWS` (10 "Novità": conto, scaffale, macchia, carrello, furbetto, ispettore, Ponzone, orso, pane, stanchezza), `newsDue`, `markSeen`. `GameState.taps` conta i tocchi del giocatore per tipo. `Progress.seen` ricorda le novità già viste.
-  - HUD: in alto ora, giorno, velocità e € su una riga; tre barre obiettivo (sotto su telefono verticale, accanto se largo ≥700 px). In basso gruppi Arredi (Costruisci nel Negozio libero, con stanze e porta) / Staff / Merce / Attrezzi (Ruota, Demolisci, Audio); le voci hanno l'icona del kit e il prezzo.
+  - HUD: in alto ora, giorno, velocità e € su una riga; tre barre obiettivo (sotto su telefono verticale, accanto se largo ≥700 px). In basso gruppi Arredi (Costruisci nel Negozio libero, con stanze e porta) / Staff / Merce; Ruota e Demolisci passano alla pressione lunga (anche sulle stanze vuote del Negozio libero, solo 🗑), Audio al menu ⚙ in alto a destra (Continua / Audio / Nuova partita, mette in pausa mentre è aperto); le voci hanno l'icona del kit e il prezzo.
   - Pina (`signora_idle`) parla in un fumetto sopra la barra (accanto in orizzontale); freccia gialla sul tasto, sulla stanza o sull'icona del passo. Le novità coperte dalla guida (💰, 📦) si segnano viste.
   - Testo nitido: canvas a `devicePixelRatio` (max 3) con `zoom 1/DPR` (`src/game/dpr.ts`, `main.ts`); la camera dell'HUD zooma di DPR, quindi il layout resta in px CSS.
   - Hook nuovi per i test: `hudButtons()`, `hudText()`.
   - Pressione lunga (450 ms, senza strumento) su un oggetto: `Game.edit`, cella evidenziata in giallo; comando sim `move` (check = piazzamento gratis senza l'oggetto). Novità 'edit' la prima volta che c'è un arredo.
   - Magazzino (richiesta utente 2026-11-27): i cubi colorati di prova sono diventati bancali dipinti, uno per categoria (`art/sheets/magazzino.jpg`, Gemini chat nuova, frame `merce_<Categoria>`).
+  - Dopo playtest (2026-11-27): icone da toccare (soldi alla cassa, riempi scaffale) con pulse e glow giallo (filtro Phaser 4, solo WebGL).

@@ -1,6 +1,7 @@
+import * as Phaser from 'phaser';
 import { Scene, type GameObjects, type Input } from 'phaser';
 import { createState, tick, advance, type GameState, type RoomType, type ObjectType, type Category } from '../../sim/state.ts';
-import { apply, check, objectAt, type Command } from '../../sim/build.ts';
+import { apply, check, objectAt, roomAt, type Command } from '../../sim/build.ts';
 import { STEP_MS, TAP_ICON_BELOW, BEAR_BONUS_MONEY, BEAR_BONUS_REP, INSPECTION_DAY } from '../../sim/config.ts';
 import { readyAt, tricking } from '../../sim/customers.ts';
 import { tired } from '../../sim/staff.ts';
@@ -66,7 +67,7 @@ export class Game extends Scene {
     progress: Progress = { won: [], seen: [] };
     saveAt = 0;
     /** Object being edited after a long press (UI only); moving: the next tap on a cell moves it there. */
-    edit: { id: number; moving: boolean } | null = null;
+    edit: { id: number; moving: boolean; room?: { x: number; y: number } } | null = null; // room: free shop, only remove
     /** The press that may become a long press, and whether the current one already did. */
     press: { t: number } | null = null;
     longFired = false;
@@ -183,15 +184,21 @@ export class Game extends Scene {
         this.press = null;
         const c = this.downCell(p);
         const o = objectAt(this.sim, c.x, c.y);
-        if (!o) return;
+        if (o) this.edit = { id: o.id, moving: false };
+        else if (!this.sim.level && roomAt(this.sim, c.x, c.y)) this.edit = { id: -1, moving: false, room: c };
+        else return;
         this.longFired = true;
-        this.edit = { id: o.id, moving: false };
     }
 
     drawSelection() {
         const g = this.sel.clear();
-        const o = this.edit && this.sim.objects.find((x) => x.id === this.edit!.id);
-        if (this.edit && !o) this.edit = null; // removed
+        const e = this.edit, r = e?.room && roomAt(this.sim, e.room.x, e.room.y);
+        if (r) {
+            for (let x = r.x; x < r.x + r.w; x++) for (let y = r.y; y < r.y + r.h; y++) tile(g, x, y, 0xffd23f, 0.35);
+            return;
+        }
+        const o = e && this.sim.objects.find((x) => x.id === e.id);
+        if (e && !o) this.edit = null; // removed
         if (o) tile(g, o.x, o.y, 0xffd23f, this.edit!.moving ? 0.35 + 0.25 * Math.sin(this.time.now / 120) : 0.55);
     }
 
@@ -232,12 +239,21 @@ export class Game extends Scene {
             let t = this.icons.get(w.key);
             if (!t) {
                 t = this.add.image(0, 0, 'kit', 'icona_soldi').setOrigin(0.5, 1).setDepth(9500);
+                // tappable: a warm glow (WebGL filters; the canvas renderer has none and just pulses)
+                if (this.renderer.type === Phaser.WEBGL) t.setData('glow', t.enableFilters().filters!.internal.addGlow(0xffe27a, 4, 0, 1, false, 8, 10));
                 this.icons.set(w.key, t);
             }
             const p = gridToIso(w.x, w.y);
-            const bob = w.cmd ? Math.sin(time / 180) * 3 : 0;
+            const beat = Math.sin(time / 160);
+            const bob = w.cmd ? beat * 3 : 0;
+            const pulse = w.cmd ? 1 + 0.07 * beat : 1; // milestone 21: tap me
+            const glow = t.getData('glow') as { active: boolean; outerStrength: number } | undefined;
+            if (glow) {
+                glow.active = !!w.cmd;
+                glow.outerStrength = 3 + 2 * beat;
+            }
             const lift = ICON_LIFT[w.key[0]];
-            t.setFrame(w.frame).setOrigin(0.5, 1).setPosition(p.x, p.y + TILE_H / 2 - lift + bob).setScale(scale * KIT_SCALE * (ICON_SCALE[w.key[0]] ?? 1)).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
+            t.setFrame(w.frame).setOrigin(0.5, 1).setPosition(p.x, p.y + TILE_H / 2 - lift + bob).setScale(scale * pulse * KIT_SCALE * (ICON_SCALE[w.key[0]] ?? 1)).setVisible(true).setData('cmd', w.cmd).setData('cell', `${w.x},${w.y}`);
         }
     }
 
@@ -440,6 +456,7 @@ export class Game extends Scene {
             if (wasPinch || !p.leftButtonReleased() || hud.onPanel(p.downX, p.downY)) return;
             const isTap = p.getDistance() <= TAP_SLOP * DPR;
             if (isTap && this.edit) {
+                if (this.edit.room) return void (this.edit = null);
                 const o = this.sim.objects.find((x) => x.id === this.edit!.id)!;
                 const c = this.cellOf(p);
                 if (!this.edit.moving) this.edit = null; // tapped elsewhere: done

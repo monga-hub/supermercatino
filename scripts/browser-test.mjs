@@ -370,6 +370,12 @@ await check('long press on an object: move, rotate, remove', async () => {
     await hold(10, 10);
     await tap('🗑');
     expect((await st()).objects.length === 0, 'not removed');
+    // free shop: an empty room's long press offers only 🗑
+    await hold(9, 9);
+    const labels = (await pl.evaluate(() => window.hudButtons())).map((b) => b.label);
+    expect(labels.includes('🗑') && !labels.includes('✋') && !labels.includes('🔄'), `room editor: ${labels}`);
+    await tap('🗑');
+    expect((await st()).rooms.length === 0, 'room not removed');
     await pl.close();
 });
 
@@ -394,7 +400,9 @@ for (const [w, h] of [[390, 844], [844, 390]]) await check(`phone ${w}x${h}: gro
     await pp.goto(new URL('?manual', base).href);
     await pp.waitForFunction(() => typeof window.hudButtons === 'function');
     await pp.waitForTimeout(200);
-    await oneRow(['Costruisci', 'Staff', 'Merce', 'Attrezzi']);
+    await oneRow(['Costruisci', 'Staff', 'Merce']);
+    const gear = (await btns()).find((b) => b.label === '⚙');
+    expect(gear && gear.x + gear.w / 2 <= w && gear.x > w * 0.8 && gear.y < 40, `gear not top right: ${JSON.stringify(gear)}`);
     // level 1: no Merce, Arredi holds only the shelf and the till
     await pp.goto(new URL('?manual&save', base).href);
     await pp.waitForFunction(() => typeof window.menuState === 'function');
@@ -410,7 +418,7 @@ for (const [w, h] of [[390, 844], [844, 390]]) await check(`phone ${w}x${h}: gro
         }
         expect((await pp.evaluate(() => window.menuState())) === want, `menu ${want}`);
     }
-    await oneRow(['Arredi', 'Staff', 'Attrezzi']);
+    await oneRow(['Arredi', 'Staff']);
     expect(!(await btns()).some((b) => b.label === 'Merce'), 'Merce in level 1');
     await tap('Arredi');
     const items = (await btns()).filter((b) => b.label.includes('€')).map((b) => b.label);
@@ -456,8 +464,11 @@ await check('audio starts on a tap and the mute button sticks', async () => {
     const audio = () => pa.evaluate(() => window.audioState());
     await open();
     expect(!(await audio()).started && !(await audio()).muted, 'audio should wait for a gesture, unmuted');
-    // Audio is in the Attrezzi group (milestone 21)
-    for (const label of ['Attrezzi', 'Audio']) {
+    // ⚙ menu: Audio, Continua, Nuova partita
+    const menu = () => pa.evaluate(() => window.menuState());
+    const paused = async () => JSON.parse(await pa.evaluate(() => window.render_game_to_text())).paused;
+    const wasPaused = await paused();
+    for (const label of ['⚙', 'Audio: sì']) {
         const b = (await pa.evaluate(() => window.hudButtons())).find((x) => x.label === label);
         expect(b, `no ${label} button`);
         await pa.mouse.click(b.x, b.y);
@@ -465,6 +476,18 @@ await check('audio starts on a tap and the mute button sticks', async () => {
     }
     expect((await audio()).started, 'no audio context after a tap');
     expect((await audio()).muted, 'Audio button not found');
+    expect((await menu()) === 'pausa' && (await paused()), 'menu open, game paused');
+    const tapL = async (label) => {
+        const b = (await pa.evaluate(() => window.hudButtons())).find((x) => x.label === label);
+        expect(b, `no ${label}`);
+        await pa.mouse.click(b.x, b.y);
+        await pa.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    };
+    await tapL('Continua');
+    expect((await menu()) === null && (await paused()) === wasPaused, 'Continua: menu closed, pause restored');
+    await tapL('⚙');
+    await tapL('Nuova partita');
+    expect((await menu()) === 'start', 'Nuova partita: start menu');
     await open();
     expect((await audio()).muted, 'mute forgotten after reload');
     await pa.evaluate(() => window.advanceTime(60000)); // events while muted: nothing breaks

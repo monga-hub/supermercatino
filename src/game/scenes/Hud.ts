@@ -40,6 +40,9 @@ export class Hud extends Scene {
     hint: GameObjects.Text;
     arrow: GameObjects.Text;
     speedBtns: Btn[] = [];
+    gear: Btn;
+    /** Pause state before the ⚙ menu paused the game. */
+    wasPaused = false;
     groups: Group[] = [];
     catBtns: Btn[] = [];
     /** Move, rotate, remove: over the object being edited after a long press. */
@@ -49,6 +52,7 @@ export class Hud extends Scene {
     panel: GameObjects.Container | null = null;
     /** Day summary / level outcome card, rebuilt when its content changes. */
     card: GameObjects.Container | null = null;
+    cardBtns: GameObjects.Text[] = [];
     cardKey = '';
     /** Pina's bubble: guide step or "Novità". */
     bubble: GameObjects.Container | null = null;
@@ -125,6 +129,12 @@ export class Hud extends Scene {
             this.button(label, () => this.press(i), () => (this.sim.paused ? 0 : this.sim.speed) === i, BTN_BG, undefined, undefined, undefined, 15),
         );
 
+        this.gear = this.button('⚙', () => {
+            this.wasPaused = this.sim.paused;
+            this.sim.paused = true;
+            this.registry.set('menu', 'pausa');
+        }, () => false, GROUP_BG, undefined, undefined, undefined, 19);
+
         const same = (t: Tool) => JSON.stringify(this.tool) === JSON.stringify(t);
         const toggle = (t: Tool) => () => this.setTool(same(t) ? null : t);
         const isObj = (object: string) => () => this.tool?.kind === 'object' && this.tool.object === object;
@@ -149,14 +159,10 @@ export class Hud extends Scene {
             ], 'scaffale'),
             group('staff', 'Staff', [], 'cassiere_walk_0', undefined, () => this.togglePanel('staff')),
             group('merce', 'Merce', [], 'magazziniere_carry_0', () => allows(this.sim, 'features', 'orders'), () => this.togglePanel('merce')),
-            group('attrezzi', 'Attrezzi', [
-                this.button('Ruota', toggle({ kind: 'rotate' }), () => this.tool?.kind === 'rotate', '#6b5a8e', undefined, undefined, undefined, 15),
-                this.button('Demolisci', toggle({ kind: 'demolish' }), () => this.tool?.kind === 'demolish', '#4a4a4a', undefined, undefined, undefined, 15),
-                this.button('Audio', () => audio.setMuted(!audio.muted), () => !audio.muted, GROUP_BG, undefined, undefined, undefined, 15),
-            ]),
         ];
         const game = () => this.game_;
         const at = () => {
+            if (game().edit?.room) return game().edit!.room!;
             const o = game().edit && this.sim.objects.find((x) => x.id === game().edit!.id);
             return o ? { x: o.x, y: o.y } : null;
         };
@@ -201,7 +207,7 @@ export class Hud extends Scene {
             this.bubbleKey = '';
             if (this.panel) this.openPanel();
         });
-        window.hudButtons = () => [...this.speedBtns, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns, ...this.editBtns]
+        window.hudButtons = () => [...this.speedBtns, this.gear, ...this.groups.flatMap((g) => [g.btn, ...g.items]), ...this.catBtns, ...this.editBtns, ...this.cardBtns.map((t) => ({ t, active: () => false }))]
             .filter((b) => b.t.visible)
             .map((b) => ({ label: b.t.text, x: b.t.x + b.t.width / 2, y: b.t.y + b.t.height / 2, w: b.t.width, active: b.active() }));
         window.hudText = () => (this.children.list as GameObjects.Text[]).concat(...this.children.list.flatMap((c) => (c as GameObjects.Container).list ?? []) as GameObjects.Text[])
@@ -246,7 +252,8 @@ export class Hud extends Scene {
     layout() {
         const { W, H } = this;
         this.lvl = this.sim?.level ?? -1;
-        this.money.setX(W - 10);
+        this.gear.t.setPosition(W - 6 - this.gear.t.width, 4);
+        this.money.setX(this.gear.t.x - 8);
         this.toast.setX(W / 2).setWordWrapWidth(Math.min(460, W - 24));
         // top: clock, speeds, money on one row; the goal bars beside them when wide, else under them
         let x = 10 + Math.max(this.clock.width, this.dayT.width, 58) + 8;
@@ -255,7 +262,7 @@ export class Hud extends Scene {
             x += b.t.width + 4;
         }
         const wide = W >= 700;
-        this.barsBox = wide ? { x: x + 8, y: 10, w: W - 10 - 120 - x - 16 } : { x: 10, y: 46, w: W - 20 };
+        this.barsBox = wide ? { x: x + 8, y: 10, w: W - 10 - 120 - this.gear.t.width - x - 16 } : { x: 10, y: 46, w: W - 20 };
         this.topH = this.barsBox.y + BAR_H + 6;
         this.hint.setPosition(W / 2, this.topH + 6);
         this.toast.setY(this.topH + 44);
@@ -517,12 +524,13 @@ export class Hud extends Scene {
     showCard() {
         const s = this.sim;
         const game = this.game_;
-        const menu = this.registry.get('menu') as 'start' | 'levels' | 'briefing' | null;
-        const key = JSON.stringify([menu, s.level, s.summary, s.outcome, game.progress.won]);
+        const menu = this.registry.get('menu') as 'start' | 'levels' | 'briefing' | 'pausa' | null;
+        const key = JSON.stringify([menu, audio.muted, s.level, s.summary, s.outcome, game.progress.won]);
         if (key === this.cardKey) return;
         this.cardKey = key;
         this.card?.destroy();
         this.card = null;
+        this.cardBtns = [];
         const eur = (n: number) => `€${n.toLocaleString('it-IT')}`;
         const { goals: g, days } = goalsOf(s);
         const lv = levelOf(s);
@@ -536,6 +544,12 @@ export class Hud extends Scene {
                 ...(game.saved ? [{ label: 'Continua', fn: () => game.continueSaved() }] : []),
                 { label: 'Campagna', fn: () => this.registry.set('menu', 'levels') },
                 ...(freeOpen(game.progress) ? [{ label: 'Negozio libero', fn: () => game.restart(0) }] : []),
+            ]);
+        if (menu === 'pausa')
+            return this.drawCard('Menu', [], [
+                { label: 'Continua', fn: () => { s.paused = this.wasPaused; close(); } },
+                { label: `Audio: ${audio.muted ? 'no' : 'sì'}`, fn: () => audio.setMuted(!audio.muted) },
+                { label: 'Nuova partita', fn: () => { s.paused = this.wasPaused; game.store(); game.saved = s; this.registry.set('menu', 'start'); } },
             ]);
         if (menu === 'levels')
             return this.drawCard('Campagna', [
@@ -607,33 +621,36 @@ export class Hud extends Scene {
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', b.fn));
         const btnsH = btns.reduce((h, b) => h + b.height + 10, -10);
-        const h = 16 + titleT.height + 10 + bodyT.height + 16 + btnsH + 16;
+        const bodyH = body.length ? 10 + bodyT.height : 0;
+        const h = 16 + titleT.height + bodyH + 16 + btnsH + 16;
         const y0 = Math.max(8, (height - h) / 2);
         const bg = this.add.rectangle(x0, y0, w, h, 0x2b1d16, 0.97).setOrigin(0).setStrokeStyle(3, 0xe0a030);
         titleT.setY(y0 + 16);
         bodyT.setY(titleT.y + titleT.height + 10);
-        let y = bodyT.y + bodyT.height + 16;
+        let y = titleT.y + titleT.height + bodyH + 16;
         for (const b of btns) {
             b.setPosition(width / 2, y);
             y += b.height + 10;
         }
         c.add([bg, titleT, bodyT, ...btns]);
+        this.cardBtns = btns;
     }
 
     /** The three edit buttons in a row just above the edited object. */
     placeEditBtns(blocked: boolean) {
         const game = this.game_;
-        const o = game.edit && this.sim.objects.find((x) => x.id === game.edit!.id);
-        for (const b of this.editBtns) this.vis(b, !!o && !blocked);
+        const o = game.edit && (game.edit.room ?? this.sim.objects.find((x) => x.id === game.edit!.id));
+        const btns = game.edit?.room ? [this.editBtns[2]] : this.editBtns; // a room can only go
+        for (const b of this.editBtns) this.vis(b, !!o && !blocked && btns.includes(b));
         if (!o || blocked) return;
         const cam = game.cameras.main;
         const p = gridToIso(o.x, o.y);
         const sx = ((p.x - cam.worldView.x) * cam.zoom) / DPR;
         const sy = ((p.y + TILE_H / 2 - 70 - cam.worldView.y) * cam.zoom) / DPR; // above a shelf's top
-        const w = this.editBtns.reduce((a, b) => a + b.t.width + 8, -8);
+        const w = btns.reduce((a, b) => a + b.t.width + 8, -8);
         let x = Math.max(6, Math.min(this.W - 6 - w, sx - w / 2));
         const y = Math.max(this.topH + 4, sy - this.editBtns[0].t.height);
-        for (const b of this.editBtns) {
+        for (const b of btns) {
             b.t.setPosition(x, y);
             x += b.t.width + 8;
         }
