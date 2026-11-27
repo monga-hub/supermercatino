@@ -44,7 +44,7 @@ SHEETS = [
     # playtest 2026-11-27: men at the till, women in the warehouse too; a straight checkout lane
     ('cassiere_m.jpg', 3, 2, ('h', 46), WALK('cassiere_m') + [('cassiere_m_seduto', SEATED), ('cassiere_m_scan_0', SEATED), ('cassiere_m_scan_1', SEATED)]),
     ('magazziniera.jpg', 3, 2, ('h', 46), WALK('magazziniera') + ['magazziniera_carry_0', 'magazziniera_carry_1', 'magazziniera_carry_2']),
-    ('cassa.jpg', 2, 1, ('w', 1.0), [('cassa', 1.5), ('sgabello', 0.3)]),  # playtest 2026-11-27: register at the exit end, by the cashier; 1.5 = two cells' width
+    ('cassa.jpg', 2, 1, ('w', 1.0), [('cassa', 1.1), ('sgabello', 0.3)]),  # playtest 2026-11-27: register at the exit end, by the cashier; one cell
     ('guardia.jpg', 3, 2, ('h', 48), WALK('guardia') + ['guardia_idle', 'guardia_fischio', 'guardia_ferma']),
     ('capo.jpg', 3, 2, ('h', 46), WALK('capo') + ['capo_idle', 'capo_scrive', 'capo_indica']),
     ('pulizie.jpg', 3, 2, ('h', 46), WALK('pulizie') + ['pulizie_mop_0', 'pulizie_mop_1', 'pulizie_mop_2']),

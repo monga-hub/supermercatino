@@ -32,9 +32,9 @@ const fail = (reason: string): Result => ({ ok: false, reason });
 export const roomAt = (s: GameState, x: number, y: number) =>
     s.rooms.find((r) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
 
-/** Cells an object stands on: a till is a checkout lane two cells long, up the lane from (x, y) (playtest 2026-11-27). */
-export const cellsOf = (o: Pick<ShopObject, 'type' | 'x' | 'y' | 'rot'>) =>
-    o.type === 'cassa' ? [{ x: o.x, y: o.y }, o.rot ? { x: o.x - 1, y: o.y } : { x: o.x, y: o.y - 1 }] : [{ x: o.x, y: o.y }];
+/** Cells an object stands on: one each (playtest 2026-11-27: a two-cell till did not work). */
+// ponytail: kept as the one footprint hook; multi-cell objects plug in here
+export const cellsOf = (o: Pick<ShopObject, 'type' | 'x' | 'y' | 'rot'>) => [{ x: o.x, y: o.y }];
 
 export const objectAt = (s: GameState, x: number, y: number) => s.objects.find((o) => cellsOf(o).some((c) => c.x === x && c.y === y));
 

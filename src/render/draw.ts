@@ -85,7 +85,7 @@ export function box(g: G, x: number, y: number, h: number, color: number, k = 0.
 
 
 export function drawObject(g: G, o: Pick<ShopObject, 'type' | 'x' | 'y' | 'category' | 'stock' | 'rot'>, alpha = 1, put: Put = noPut, depth = 0) {
-    // stands on its footprint's bottom vertex, centred across it (a till spans two cells); turned = mirrored
+    // stands on its footprint's bottom vertex, centred across it; turned = mirrored
     const cells = cellsOf(o).map((c) => gridToIso(c.x, c.y));
     const px = cells.reduce((t, c) => t + c.x, 0) / cells.length, py = Math.max(...cells.map((c) => c.y)) + TILE_H - (o.type === 'cassa' ? TILL_LIFT : 0);
     if (put(objectFrame(o), px, py, depth, !!o.rot)) return;
@@ -129,13 +129,11 @@ const SEAT_OFFSET = 0.45;
 /** Seated cashier sprite: screen px from the till's cell centre, behind the register, facing the customers. */
 const SEAT_PX = { x: 17, y: -6 };
 /** Cashier's stool: this far behind the checkout lane's cell (milestone 24). */
-export const LANE_SEAT = 0.8;
+export const LANE_SEAT = 0.5;
 /** The painted counter's plinth reaches a little below its footprint: lifted so the low front wall hides it. */
 const TILL_LIFT = 3;
-/** ...and this far up the lane from the register, so the register doesn't hide them. */
-const LANE_ALONG = 0.35;
-/** Seat behind a two-cell checkout lane at (x, y), turned or not. */
-const laneSeat = (x: number, y: number, turned: boolean) => feet(x - (turned ? LANE_ALONG : LANE_SEAT), y - (turned ? LANE_SEAT : LANE_ALONG));
+/** Seat behind a checkout lane at (x, y), turned or not. */
+const laneSeat = (x: number, y: number, turned: boolean) => feet(x - (turned ? 0 : LANE_SEAT), y - (turned ? LANE_SEAT : 0));
 /** Deli man: standing behind the counter, facing the customers. */
 const DELI_PX = { x: -6, y: -20 };
 

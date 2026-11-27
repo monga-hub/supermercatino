@@ -393,10 +393,7 @@ export class Game extends Scene {
         }
         if (t.kind === 'object') {
             const rot = this.pending?.rot;
-            const cmd: Command = { type: 'placeObject', object: t.object, category: t.category, ...c, ...(rot ? { rot } : {}) };
-            // a till is two cells long: tapping its far end works too
-            const down: Command = rot ? { ...cmd, x: c.x + 1 } : { ...cmd, y: c.y + 1 };
-            return t.object === 'cassa' && !check(this.sim, cmd).ok && check(this.sim, down).ok ? down : cmd;
+            return { type: 'placeObject', object: t.object, category: t.category, ...c, ...(rot ? { rot } : {}) };
         }
         return { type: t.kind, ...c };
     }
